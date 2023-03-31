@@ -5,6 +5,9 @@
 import { ArgumentParser } from 'argparse';
 import fs from 'fs';
 import path from 'path';
+import gl from 'gl';
+import pngjs from 'pngjs';
+
 import { MAQualityAssessment } from 'molstar/lib/extensions/model-archive/quality-assessment/behavior';
 import { PDBeStructureQualityReport } from 'molstar/lib/extensions/pdbe';
 import { defaultCanvas3DParams, defaultImagePassParams, HeadlessScreenshotHelperOptions, RawImageData, STYLIZED_POSTPROCESSING } from 'molstar/lib/mol-plugin/util/headless-screenshot';
@@ -18,7 +21,10 @@ import { NaughtyStateSaver, parseIntStrict } from './helpers/helpers';
 import { ImageGenerator } from './image-generator';
 import { addAxisIndicators } from './image/draw';
 import { resizeRawImage, saveRawToPng } from './image/resize';
+import { setFSModule } from 'molstar/lib/mol-util/data-source';
 
+
+setFSModule(fs);
 
 const DEFAULT_PDBE_API_URL = 'https://www.ebi.ac.uk/pdbe/api';
 const DEFAULT_IMAGE_SIZE = '800x800';
@@ -91,7 +97,7 @@ export async function main(args: Args) {
     pluginSpec.behaviors.push(PluginSpec.Behavior(MAQualityAssessment));
 
     const canvasSize = args.size[0] ?? { width: 800, height: 800 };
-    const plugin = new HeadlessPluginContext(pluginSpec, canvasSize, options);
+    const plugin = new HeadlessPluginContext({ gl, pngjs }, pluginSpec, canvasSize, options);
     await plugin.init();
 
     const isAlphaFold = args.pdbid.startsWith('AF-'); // for now, TODO pass through args

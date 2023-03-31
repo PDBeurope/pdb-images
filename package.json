@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "gl": "^6.0.2",
-    "molstar": "^3.32.0",
+    "molstar": "github:midlik/molstar#8147c2e",
     "pngjs": "^6.0.0",
     "tslib": "^2.5.0"
   }

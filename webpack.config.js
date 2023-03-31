@@ -12,7 +12,7 @@ module.exports = [
             // argparse: 'require("argparse")',
             // fs: 'require("fs")',
             // path: 'require("path")',
-            // gl: 'require("gl")',
+            gl: 'require("gl")',
             // pngjs: 'require("pngjs")',
             // 'jpeg-js': 'require("jpeg-js")'
         },
