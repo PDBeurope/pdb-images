@@ -1,7 +1,8 @@
 // Build: npm run build
-// Run:   node build/pdbe-images.js
+// Run:   node build/index.js --help
+//        node build/index.js 1tqn
 
-// import { StereoCamera } from 'molstar/lib/mol-canvas3d/camera/stereo'
+// import { StereoCamera } from 'molstar/lib/commonjs/mol-canvas3d/camera/stereo'
 // import { foo } from './mod';
 import gl from 'gl';
 // import { ArgumentParser } from 'argparse';

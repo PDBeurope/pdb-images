@@ -1,9 +1,9 @@
 import fs from 'fs';
 
-import { PluginStateSnapshotManager } from 'molstar/lib/mol-plugin-state/manager/snapshots';
-import { HeadlessPluginContext } from 'molstar/lib/mol-plugin/headless-plugin-context';
-import { deepEqual } from 'molstar/lib/mol-util';
-import { deepClone } from 'molstar/lib/mol-util/object';
+import { PluginStateSnapshotManager } from 'molstar/lib/commonjs/mol-plugin-state/manager/snapshots';
+import { HeadlessPluginContext } from 'molstar/lib/commonjs/mol-plugin/headless-plugin-context';
+import { deepEqual } from 'molstar/lib/commonjs/mol-util';
+import { deepClone } from 'molstar/lib/commonjs/mol-util/object';
 
 import { ModifiedResidueRecord } from '../api';
 import { SubstructureDef } from './substructure-def';

@@ -1,5 +1,5 @@
-import { ChainIndex, Model, Structure } from 'molstar/lib/mol-model/structure';
-import { Entities } from 'molstar/lib/mol-model/structure/model/properties/common';
+import { ChainIndex, Model, Structure } from 'molstar/lib/commonjs/mol-model/structure';
+import { Entities } from 'molstar/lib/commonjs/mol-model/structure/model/properties/common';
 
 
 type EntityType = ReturnType<Entities['data']['type']['value']>

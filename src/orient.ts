@@ -1,7 +1,7 @@
-import { Mat3, Vec3 } from 'molstar/lib/mol-math/linear-algebra';
-import { PrincipalAxes } from 'molstar/lib/mol-math/linear-algebra/matrix/principal-axes';
-import { Model, Structure } from 'molstar/lib/mol-model/structure';
-import { round } from 'molstar/lib/mol-util';
+import { Mat3, Vec3 } from 'molstar/lib/commonjs/mol-math/linear-algebra';
+import { PrincipalAxes } from 'molstar/lib/commonjs/mol-math/linear-algebra/matrix/principal-axes';
+import { Model, Structure } from 'molstar/lib/commonjs/mol-model/structure';
+import { round } from 'molstar/lib/commonjs/mol-util';
 
 import { warn } from './helpers/helpers';
 

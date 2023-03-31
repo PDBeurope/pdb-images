@@ -1,5 +1,5 @@
-import { MolScriptBuilder } from 'molstar/lib/mol-script/language/builder';
-import { Expression } from 'molstar/lib/mol-script/language/expression';
+import { MolScriptBuilder } from 'molstar/lib/commonjs/mol-script/language/builder';
+import { Expression } from 'molstar/lib/commonjs/mol-script/language/expression';
 
 
 export type SubstructureDef = SubstructureDef.Domain | SubstructureDef.Sets

@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { PNG } from 'pngjs';
-import { RawImageData } from 'molstar/lib/mol-plugin/util/headless-screenshot';
+import { RawImageData } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 
 
 export function resizeRawImage(img: RawImageData, newSize: { width: number, height: number }): RawImageData {

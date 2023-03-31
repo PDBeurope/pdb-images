@@ -1,5 +1,5 @@
-import { RawImageData } from 'molstar/lib/mol-plugin/util/headless-screenshot';
-import { Color } from 'molstar/lib/mol-util/color';
+import { RawImageData } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
+import { Color } from 'molstar/lib/commonjs/mol-util/color';
 
 import { ViewType } from '../captions';
 

@@ -1,4 +1,4 @@
-import { State } from 'molstar/lib/mol-state';
+import { State } from 'molstar/lib/commonjs/mol-state';
 
 
 const REF_INIT = '!';

@@ -1,6 +1,6 @@
-import { Camera } from 'molstar/lib/mol-canvas3d/camera';
-import { Mat3, Vec3 } from 'molstar/lib/mol-math/linear-algebra';
-import { PluginContext } from 'molstar/lib/mol-plugin/context';
+import { Camera } from 'molstar/lib/commonjs/mol-canvas3d/camera';
+import { Mat3, Vec3 } from 'molstar/lib/commonjs/mol-math/linear-algebra';
+import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context';
 
 const ZOOMOUT = 0.75;
 

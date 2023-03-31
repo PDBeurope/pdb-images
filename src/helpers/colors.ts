@@ -1,9 +1,9 @@
-import { Mat3, Vec3 } from 'molstar/lib/mol-math/linear-algebra';
-import { Structure } from 'molstar/lib/mol-model/structure';
-import { ElementSymbolColors } from 'molstar/lib/mol-theme/color/element-symbol';
-import { Color, ColorListEntry } from 'molstar/lib/mol-util/color/color';
-import { ColorLists } from 'molstar/lib/mol-util/color/lists';
-import { Hcl } from 'molstar/lib/mol-util/color/spaces/hcl';
+import { Mat3, Vec3 } from 'molstar/lib/commonjs/mol-math/linear-algebra';
+import { Structure } from 'molstar/lib/commonjs/mol-model/structure';
+import { ElementSymbolColors } from 'molstar/lib/commonjs/mol-theme/color/element-symbol';
+import { Color, ColorListEntry } from 'molstar/lib/commonjs/mol-util/color/color';
+import { ColorLists } from 'molstar/lib/commonjs/mol-util/color/lists';
+import { Hcl } from 'molstar/lib/commonjs/mol-util/color/spaces/hcl';
 
 
 const SET1 = colorArray(ColorLists['set-1'].list.slice(0, 8)); // Discard the last color (gray)

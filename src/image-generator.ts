@@ -1,8 +1,8 @@
-import { Mat3 } from 'molstar/lib/mol-math/linear-algebra';
-import { ModelSymmetry } from 'molstar/lib/mol-model-formats/structure/property/symmetry';
-import { Model } from 'molstar/lib/mol-model/structure';
-import { PluginContext } from 'molstar/lib/mol-plugin/context';
-import { Color } from 'molstar/lib/mol-util/color';
+import { Mat3 } from 'molstar/lib/commonjs/mol-math/linear-algebra';
+import { ModelSymmetry } from 'molstar/lib/commonjs/mol-model-formats/structure/property/symmetry';
+import { Model } from 'molstar/lib/commonjs/mol-model/structure';
+import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context';
+import { Color } from 'molstar/lib/commonjs/mol-util/color';
 
 import { DomainRecord, ModifiedResidueRecord, PDBeAPI, SiftsSource } from './api';
 import { Captions, ImageSpec } from './captions';

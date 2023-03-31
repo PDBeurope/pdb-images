@@ -1,18 +1,14 @@
-// Build: npm run build-tsc
-// Run:   node lib/commonjs/cli/pdbe-images --help
-//        node lib/commonjs/cli/pdbe-images 1tqn
-
 import { ArgumentParser } from 'argparse';
 import fs from 'fs';
 import path from 'path';
 import gl from 'gl';
 import pngjs from 'pngjs';
 
-import { MAQualityAssessment } from 'molstar/lib/extensions/model-archive/quality-assessment/behavior';
-import { PDBeStructureQualityReport } from 'molstar/lib/extensions/pdbe';
-import { defaultCanvas3DParams, defaultImagePassParams, HeadlessScreenshotHelperOptions, RawImageData, STYLIZED_POSTPROCESSING } from 'molstar/lib/mol-plugin/util/headless-screenshot';
-import { HeadlessPluginContext } from 'molstar/lib/mol-plugin/headless-plugin-context';
-import { DefaultPluginSpec, PluginSpec } from 'molstar/lib/mol-plugin/spec';
+import { MAQualityAssessment } from 'molstar/lib/commonjs/extensions/model-archive/quality-assessment/behavior';
+import { PDBeStructureQualityReport } from 'molstar/lib/commonjs/extensions/pdbe';
+import { defaultCanvas3DParams, defaultImagePassParams, HeadlessScreenshotHelperOptions, RawImageData, STYLIZED_POSTPROCESSING } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
+import { HeadlessPluginContext } from 'molstar/lib/commonjs/mol-plugin/headless-plugin-context';
+import { DefaultPluginSpec, PluginSpec } from 'molstar/lib/commonjs/mol-plugin/spec';
 
 import { PDBeAPI } from './api';
 import { ImageSpec } from './captions';
@@ -21,7 +17,7 @@ import { NaughtyStateSaver, parseIntStrict } from './helpers/helpers';
 import { ImageGenerator } from './image-generator';
 import { addAxisIndicators } from './image/draw';
 import { resizeRawImage, saveRawToPng } from './image/resize';
-import { setFSModule } from 'molstar/lib/mol-util/data-source';
+import { setFSModule } from 'molstar/lib/commonjs/mol-util/data-source';
 
 
 setFSModule(fs);
