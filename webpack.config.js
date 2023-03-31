@@ -9,9 +9,11 @@ module.exports = [
             __filename: false,
         },
         externals: {
-            argparse: 'require("argparse")',
-            gl: 'require("gl")',
-            pngjs: 'require("pngjs")',
+            // argparse: 'require("argparse")',
+            // fs: 'require("fs")',
+            // path: 'require("path")',
+            // gl: 'require("gl")',
+            // pngjs: 'require("pngjs")',
             // 'jpeg-js': 'require("jpeg-js")'
         },
         plugins: [

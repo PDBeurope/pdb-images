@@ -29,6 +29,8 @@
   "devDependencies": {
     "@types/gl": "^6.0.2",
     "@types/pngjs": "^6.0.1",
+    "@types/react": "^18.0.9",
+    "@types/react-dom": "^18.0.5",
     "@typescript-eslint/eslint-plugin": "^5.57.0",
     "eslint": "^8.37.0",
     "eslint-config-standard-with-typescript": "^34.0.1",
@@ -41,7 +43,8 @@
   },
   "dependencies": {
     "gl": "^6.0.2",
-    "molstar": "^3.29.0",
-    "pngjs": "^6.0.0"
+    "molstar": "^3.32.0",
+    "pngjs": "^6.0.0",
+    "tslib": "^2.5.0"
   }
 }
