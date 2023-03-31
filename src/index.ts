@@ -1,6 +1,15 @@
-function hello(text: string) {
-    console.log(text);
-    const s = { a: 4 };
-}
+// Build: npm run build
+// Run:   node build/pdbe-images.js
 
-hello('hello world');
+import { StereoCamera } from 'molstar/lib/mol-canvas3d/camera/stereo'
+import { foo } from './mod';
+import gl from 'gl';
+import { ArgumentParser } from 'argparse';
+import { PNG } from 'pngjs';
+
+console.log(foo);
+console.log(PNG);
+console.log(gl);
+console.log(ArgumentParser);
+console.log(StereoCamera);
+console.log('hello');

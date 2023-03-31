@@ -3,6 +3,9 @@ build/
 lib/
 data/
 
+# Mac junk
+.DS_Store
+
 
 # Logs
 logs
