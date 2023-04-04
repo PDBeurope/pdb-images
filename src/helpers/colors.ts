@@ -48,7 +48,6 @@ export function* cycleIterator<T>(values: T[]) {
  * has always the same color as that entity, other units have similar but distinct
  * colors ("sister colors"). */
 export function assignEntityAndUnitColors(structure: Structure) {
-    console.time('assign colors');
     const polymerColors = cycleIterator(ENTITY_COLORS);
     const ligandColors = cycleIterator(LIGAND_COLORS);
     const waterColor = ElementSymbolColors.O;
@@ -77,7 +76,6 @@ export function assignEntityAndUnitColors(structure: Structure) {
         const color = SisterColors.getSisterColor(baseColor, entityInstanceCounters[entityId]++);
         unitColors.push(color);
     }
-    console.timeEnd('assign colors');
     return { entities: entityColors, units: unitColors };
 }
 
