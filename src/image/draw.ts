@@ -1,7 +1,7 @@
 import { RawImageData } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 import { Color } from 'molstar/lib/commonjs/mol-util/color';
 
-import { ViewType } from '../captions';
+import { ViewType } from '../captions/captions';
 
 
 /** Constants defining the position, size, and shape of the axis indicator arrows */

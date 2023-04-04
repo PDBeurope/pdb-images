@@ -1,13 +1,22 @@
-// Saving images, states, and captions
+/**
+ * Copyright (c) 2023 Adam Midlik, licensed under MIT, see LICENSE file for more info.
+ *
+ * @author Adam Midlik <midlik@gmail.com>
+ */
 
-import { chainLabel, ModifiedResidueInfo } from './helpers/helpers';
-import { EntityInfo, LigandInstanceInfo } from './helpers/structure-info';
+import { chainLabel, ModifiedResidueInfo } from '../helpers/helpers';
+import { EntityInfo, LigandInstanceInfo } from '../helpers/structure-info';
+import { TextBuilder } from './text-builder';
 
 
+/** Orientation of a 3D view.
+ * Use `undefined` when only one view is being rendered, thus it is not necessary to specify orientation. */
 export type ViewType = 'front' | 'side' | 'top' | undefined
 
+
+/** Data needed to save an image, related captions, and metadata. */
 export interface ImageSpec {
-    /** File name or path (not necessarily full name, there might be implicit suffix, because of reasons) */
+    /** File name (not necessarily full name, there might be an implicit suffix (legacy reasons)) */
     filename: string,
     /** Alternative description for HTML <img> element */
     alt: string,
@@ -17,7 +26,7 @@ export interface ImageSpec {
     clean_description: string,
     /** PDB or AlphaFoldDB identifier*/
     _entry_id: string,
-    /** View direction */
+    /** View orientation */
     _view: ViewType,
     /** Location of the image in a hierarchy, e.g. ["entity", "1", "database", "CATH", "2.40.128.20"]. Use [] to keep flat hierarchy. */
     _section: string[],
@@ -26,24 +35,29 @@ export interface ImageSpec {
 }
 
 
+/** Functions for generating captions (and `ImageSpec`) for various image types. */
 export namespace Captions {
-    const UL_ = "<ul class='image_legend_ul'>", _UL = '</ul>';
+    const UL_ = "<ul class='image_legend_ul'>", _UL = '</ul>'; // Using apostrophes in HTML because this will have to be stored in JSON
     const LI_ = "<li class='image_legend_li'>", _LI = '</li>';
     const B_ = "<span class='highlight'>", _B = '</span>';
 
+    /** Basic info about the stucture being rendered. */
     export interface StructureContext {
+        /** PDB or AlphaFoldDB identifier */
         pdbId: string,
-        /** Assembly identifier (e.g. '1', '2'), or `null` if this is the deposited model */
-        assemblyId: string | null,
+        /** Assembly identifier (e.g. '1', '2'), or `undefined` if this is the deposited model */
+        assemblyId: string | undefined,
+        /** Optional entity names to override names in `entityInfo` (those come from CIF) */
         entityNames: { [entityId: number]: string[] },
         entityInfo: EntityInfo,
     }
 
+    /** Create captions for `entity` or `assembly` image type. */
     export function forEntryOrAssembly(context: StructureContext & { isPreferredAssembly: boolean, nModels: number, coloring: 'chains' | 'entities', view: ViewType }): ImageSpec {
         const { pdbId, assemblyId, isPreferredAssembly, nModels, coloring, entityInfo, view } = context;
         const colorClause = coloring === 'chains' ? 'by chain' : 'by chemically distinct molecules';
         const modelClause = nModels > 1 ? `ensemble of ${nModels} models` : '';
-        const description = new TextBuilding.Builder();
+        const description = new TextBuilder();
         description.push(structurePhrase(context), 'of PDB entry', B_, pdbId, _B, 'coloured', colorClause, ',', modelClause, ',', viewPhrase(view), '.');
         description.push('This structure contains', ':', UL_);
         for (const entityId in entityInfo) {
@@ -56,7 +70,7 @@ export namespace Captions {
         const colorSuffix = coloring === 'chains' ? 'chain' : 'chemically_distinct_molecules';
         return {
             filename: `${pdbId}_${assemblyPrefix}_${colorSuffix}${viewSuffix(view)}`,
-            alt: new TextBuilding.Builder().push('PDB entry', pdbId, 'coloured', colorClause, ',', modelClause, ',', viewPhrase(view), '.').buildText(),
+            alt: new TextBuilder().push('PDB entry', pdbId, 'coloured', colorClause, ',', modelClause, ',', viewPhrase(view), '.').buildText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
             _entry_id: pdbId,
@@ -66,14 +80,15 @@ export namespace Captions {
         };
     }
 
+    /** Create captions for `bfactor` image type. */
     export function forBFactor(context: { pdbId: string, view: ViewType }): ImageSpec {
         const { pdbId, view } = context;
-        const description = new TextBuilding.Builder();
+        const description = new TextBuilder();
         description.push('The deposited structure of PDB entry', B_, pdbId, _B, 'coloured by B-factor values', ',', viewPhrase(view), '.');
         description.push('The macromolecules are shown in backbone representation. The thickness reflects the B-factor values (thin = low, thick = high). The colour varies from blue to red corresponding to a B-factor range of 0 to 100 square angstroms.');
         return {
             filename: `${pdbId}_bfactor${viewSuffix(view)}`,
-            alt: new TextBuilding.Builder().push('B-factors for PDB entry', pdbId, ',', viewPhrase(view), '.').buildText(),
+            alt: new TextBuilder().push('B-factors for PDB entry', pdbId, ',', viewPhrase(view), '.').buildText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
             _entry_id: pdbId,
@@ -82,14 +97,15 @@ export namespace Captions {
         };
     }
 
+    /** Create captions for `validation` image type. */
     export function forGeometryValidation(context: { pdbId: string, view: ViewType }): ImageSpec {
         const { pdbId, view } = context;
-        const description = new TextBuilding.Builder();
+        const description = new TextBuilder();
         description.push('The deposited structure of PDB entry', B_, pdbId, _B, 'coloured by geometry validation', ',', viewPhrase(view), '.');
         description.push('Residues are coloured by the number of geometry outliers: green – no outliers, yellow – one outlier yellow, orange – two outliers, red – three or more outliers.');
         return {
             filename: `${pdbId}_validation_geometry_deposited${viewSuffix(view)}`,
-            alt: new TextBuilding.Builder().push('Geometry outliers in PDB entry', pdbId, ',', viewPhrase(view), '.').buildText(),
+            alt: new TextBuilder().push('Geometry outliers in PDB entry', pdbId, ',', viewPhrase(view), '.').buildText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
             _entry_id: pdbId,
@@ -98,14 +114,15 @@ export namespace Captions {
         };
     }
 
+    /** Create captions for `plddt` image type. */
     export function forPlddt(context: { afdbId: string, view: ViewType }): ImageSpec {
         const { afdbId, view } = context;
-        const description = new TextBuilding.Builder();
+        const description = new TextBuilder();
         description.push('The predicted structure of', B_, afdbId, _B, 'coloured by pLDDT confidence score', ',', viewPhrase(view), '.');
         description.push('Residues are coloured by pLDDT values: dark blue – very high (90–100), light blue – confident (70–90), yellow – low (50–70), orange – very low (0–50).');
         return {
             filename: `${afdbId}_plddt${viewSuffix(view)}`,
-            alt: new TextBuilding.Builder().push('Predicted structure of', afdbId, ',', viewPhrase(view), '.').buildText(),
+            alt: new TextBuilder().push('Predicted structure of', afdbId, ',', viewPhrase(view), '.').buildText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
             _entry_id: afdbId,
@@ -114,17 +131,18 @@ export namespace Captions {
         };
     }
 
+    /** Create captions for `entity` image type. */
     export function forHighlightedEntity(context: StructureContext & { entityId: string, view: ViewType }): ImageSpec {
         const { pdbId, assemblyId, entityInfo, entityId, view } = context;
         const nCopies = entityInfo[entityId].chains.length;
         const name = entityName(context, entityId);
-        const description = new TextBuilding.Builder();
+        const description = new TextBuilder();
         description.push(structurePhrase(context), 'of PDB entry', B_, pdbId, _B,
             'contains', countNoun(nCopies, 'cop|y|ies'), 'of', B_, name, _B, '.',
             capital(viewPhrase(view)), '.');
         return {
             filename: `${pdbId}_entity_${entityId}${viewSuffix(view)}`,
-            alt: new TextBuilding.Builder().push(name, 'in PDB entry', pdbId, ',',
+            alt: new TextBuilder().push(name, 'in PDB entry', pdbId, ',',
                 (assemblyId ? `assembly ${assemblyId}` : ''), ',', viewPhrase(view), '.').buildText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
@@ -134,6 +152,7 @@ export namespace Captions {
         };
     }
 
+    /** Create captions for `domain` image type. */
     export function forDomain(context: StructureContext & {
         source: string,
         familyId: string,
@@ -151,7 +170,7 @@ export namespace Captions {
     }): ImageSpec {
         const { pdbId, source, familyId, familyName, entityId, chainId, authChainId, totalCopies, shownCopies, outOfRangeCopies, view } = context;
         const name = entityName(context, entityId);
-        const description = new TextBuilding.Builder();
+        const description = new TextBuilder();
         description.push('The deposited structure of PDB entry', B_, pdbId, _B,
             'contains', countNoun(totalCopies, 'cop|y|ies'), 'of', source, 'domain', B_, familyId, `(${familyName})`, _B, 'in', B_, name, _B, '.',
             'Showing', countNoun(shownCopies, 'cop|y|ies'), 'in chain', B_, chainLabel(chainId, authChainId), _B,
@@ -169,11 +188,12 @@ export namespace Captions {
         };
     }
 
+    /** Create captions for `ligand` image type. */
     export function forLigandEnvironment(context: StructureContext & { ligandInfo: LigandInstanceInfo, view: ViewType }): ImageSpec {
         const { pdbId, ligandInfo, view } = context;
         const nCopies = ligandInfo.nInstancesInEntry;
         const name = entityName(context, ligandInfo.entityId);
-        const description = new TextBuilding.Builder();
+        const description = new TextBuilder();
         description.push('The binding environment for', (nCopies === 1 ? '' : 'an instance of'), B_, ligandInfo.compId, `(${name})`, _B,
             'in PDB entry', B_, pdbId, _B, ',',
             'chain', B_, chainLabel(ligandInfo.chainId, ligandInfo.authChainId), _B, '.',
@@ -181,7 +201,7 @@ export namespace Captions {
             'There', (nCopies === 1 ? 'is' : 'are'), countNoun(nCopies, 'cop|y|ies'), 'of', B_, ligandInfo.compId, _B, 'in the deposited model', '.');
         return {
             filename: `${pdbId}_ligand_${ligandInfo.compId}${viewSuffix(view)}`,
-            alt: new TextBuilding.Builder().push('The binding environment for', (nCopies === 1 ? '' : 'an instance of'), ligandInfo.compId, 'in PDB entry', pdbId, ',',
+            alt: new TextBuilder().push('The binding environment for', (nCopies === 1 ? '' : 'an instance of'), ligandInfo.compId, 'in PDB entry', pdbId, ',',
                 viewPhrase(view), '.').buildText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
@@ -192,17 +212,18 @@ export namespace Captions {
         };
     }
 
+    /** Create captions for `modres` image type. */
     export function forModifiedResidue(context: StructureContext & { modresInfo: ModifiedResidueInfo, view: ViewType }): ImageSpec {
         const { pdbId, assemblyId, modresInfo, view } = context;
         const assemblyPrefix = assemblyId ? `assembly-${assemblyId}` : 'entry';
         const nCopies = modresInfo.nInstances;
-        const description = new TextBuilding.Builder();
+        const description = new TextBuilder();
         description.push(structurePhrase(context), 'of PDB entry', B_, pdbId, _B,
             'contains', countNoun(nCopies, 'instance|s'), 'of modified residue', B_, modresInfo.compId, `(${modresInfo.compName})`, _B, '.',
             capital(viewPhrase(view)), '.');
         return {
             filename: `${pdbId}_modres_${modresInfo.compId}${viewSuffix(view)}`,
-            alt: new TextBuilding.Builder().push('Modified residue', modresInfo.compId, 'in PDB entry', pdbId, ',',
+            alt: new TextBuilder().push('Modified residue', modresInfo.compId, 'in PDB entry', pdbId, ',',
                 (assemblyId ? `assembly ${assemblyId}` : ''), ',', viewPhrase(view), '.').buildText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
@@ -217,18 +238,20 @@ export namespace Captions {
         if (context.assemblyId) return `${capital(homoHeteroHowManyMer(context.entityInfo))}ic assembly ${context.assemblyId}`;
         else return 'The deposited structure';
     }
+
     /** Return a phrase like 'front view' or '' */
     function viewPhrase(view: ViewType) {
         if (view) return `${view} view`;
         else return '';
     }
+    
     /** Return a filename suffix '-front' or '' */
     function viewSuffix(view: ViewType) {
         if (view) return `_${view}`;
         else return '';
     }
 
-    /** Return a word like 'homo-tetramer' or 'hetero-20-mer', based on the number of polymeric chains. */
+    /** Return a word like 'homo-tetramer' or 'hetero-20-mer', based on the number of polymeric chains in a structure. */
     function homoHeteroHowManyMer(entityInfo: EntityInfo): string {
         let nTypes = 0;
         for (const info of Object.values(entityInfo)) {
@@ -246,7 +269,7 @@ export namespace Captions {
         }
     }
 
-    /** Return a word like 'tetramer' or '20-mer', based on the number of polymeric chains. */
+    /** Return a word like 'tetramer' or '20-mer', based on the number of polymeric chains in a structure. */
     function howManyMer(entityInfo: EntityInfo): string {
         let polymerCount = 0;
         for (const info of Object.values(entityInfo)) {
@@ -272,6 +295,7 @@ export namespace Captions {
         }
     }
 
+    /** Retrieve an entity name from StructureContext. */
     function entityName(context: StructureContext, entityId: string) {
         const { entityNames, entityInfo } = context;
         return entityNames?.[entityId as any]?.[0] ?? entityInfo[entityId].description;
@@ -301,95 +325,8 @@ function countNoun(count: number, nounForms: string): string {
     return `${count} ${noun}`;
 }
 
-/** Capitalize first letter of the text */
-function capital(text: string) {
+/** Capitalize the first letter of `text` */
+function capital(text: string): string {
     return text.replace(/^\w/, char => char.toUpperCase());
 }
 
-
-namespace TextBuilding {
-    /** Helper class for building text. Automatically deals with puctuation (e.g. remove comma after last list item if a period follows), spaces, and HTML tags */
-    export class Builder {
-        private readonly chunks: string[] = [];
-        /** Add more text to the builder. Each chunk can be: word, more words, single punctuation character (,;-:.), or single HTML tag */
-        push(...chunks: string[]) {
-            this.chunks.push(...chunks);
-            return this;
-        }
-        /** Return the built text, including HTML tags. */
-        buildText() {
-            return buildText(this.chunks, true);
-        }
-        /** Return the built text, without HTML tags. */
-        buildPlainText() {
-            return buildText(this.chunks, false);
-        }
-    }
-
-    function buildText(chunks: string[], keepHTML: boolean): string {
-        if (!keepHTML) {
-            chunks = chunks.filter(s => !isTag(s));
-        }
-        let result: string[] = [];
-        let previous = undefined;
-        for (const next of solvePunctuation(chunks)) {
-            if (needsSpace(previous, next)) {
-                result.push(' ');
-                result.push(next);
-                previous = !isTag(next) ? next : undefined;
-            } else {
-                result.push(next);
-                previous = !isTag(next) ? next : previous;
-            }
-        }
-        result = result.map(s => s === '-' ? '–' : s);
-        return result.join('');
-    }
-    function solvePunctuation(chunks: string[]): string[] {
-        const result: string[] = [];
-        let lastPunctIndex: number | undefined = undefined;
-        for (const next of chunks) {
-            if (next === '') {
-                continue;
-            } else if (isTag(next)) {
-                result.push(next);
-            } else if (isPunctuation(next)) {
-                if (lastPunctIndex !== undefined) {
-                    if (getPunctuationPriority(next)! >= getPunctuationPriority(result[lastPunctIndex])!) {
-                        result[lastPunctIndex] = next;
-                    }
-                } else {
-                    result.push(next);
-                    lastPunctIndex = result.length - 1;
-                }
-            } else {
-                result.push(next);
-                lastPunctIndex = undefined;
-            }
-        }
-        return result;
-    }
-    function isTag(chunk: string) {
-        return chunk.startsWith('<') && chunk.endsWith('>');
-    }
-    function isTagStart(chunk: string) {
-        return isTag(chunk) && !chunk.startsWith('</');
-    }
-    function isTagEnd(chunk: string) {
-        return isTag(chunk) && chunk.startsWith('</');
-    }
-    const PUNCTUATION_PRIORITY = { ',': 1, ';': 2, '-': 3, ':': 4, '.': 5, '?': 5, '!': 5 };
-    function getPunctuationPriority(chunk: string): number | undefined {
-        return PUNCTUATION_PRIORITY[chunk as keyof typeof PUNCTUATION_PRIORITY];
-    }
-    function isPunctuation(chunk: string) {
-        return getPunctuationPriority(chunk) !== undefined;
-    }
-    function needsSpace(first?: string, second?: string) {
-        if (first === undefined || second === undefined) return false;
-        if (isTag(first) && isTag(second)) return false;
-        if (isTagStart(first) || isTagEnd(second)) return false;
-        if (isPunctuation(second) && second !== '-') return false;
-        return true;
-    }
-}

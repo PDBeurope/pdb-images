@@ -11,8 +11,8 @@ import { HeadlessPluginContext } from 'molstar/lib/commonjs/mol-plugin/headless-
 import { DefaultPluginSpec, PluginSpec } from 'molstar/lib/commonjs/mol-plugin/spec';
 
 import { PDBeAPI } from './api';
-import { ImageSpec } from './captions';
-import { collectCaptions } from './captions-collect';
+import { ImageSpec } from './captions/captions';
+import { collectCaptions } from './captions/collect';
 import { NaughtyStateSaver, parseIntStrict } from './helpers/helpers';
 import { ImageGenerator } from './image-generator';
 import { addAxisIndicators } from './image/draw';

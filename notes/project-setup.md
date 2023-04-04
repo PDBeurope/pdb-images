@@ -9,5 +9,6 @@ npm run build  # Build
 node build/index.js  # Run
 npm init @eslint/config
 # Copy .eslintrc.json from the MolStar project
+# Setup jest in package.json
 ```
 

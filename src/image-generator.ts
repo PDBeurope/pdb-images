@@ -5,7 +5,7 @@ import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context';
 import { Color } from 'molstar/lib/commonjs/mol-util/color';
 
 import { DomainRecord, ModifiedResidueRecord, PDBeAPI, SiftsSource } from './api';
-import { Captions, ImageSpec } from './captions';
+import { Captions, ImageSpec } from './captions/captions';
 import { adjustCamera, cameraSetRotation, combineRotations, zoomAll } from './helpers/camera';
 import { ANNOTATION_COLORS, assignEntityAndUnitColors, cycleIterator, ENTITY_COLORS, MODRES_COLORS } from './helpers/colors';
 import { getModifiedResidueInfo } from './helpers/helpers';
@@ -19,6 +19,7 @@ import { RootNode, StructureNode, using, VisualNode } from './tree-manipulation'
 
 const ALLOW_GHOST_NODES = true; // just for debugging, should be `true` in production
 const ALLOW_COLLAPSED_NODES = true; // just for debugging, should be `true` in production
+
 
 export class ImageGenerator {
     private rotation: Mat3 = Mat3.identity();
@@ -48,7 +49,7 @@ export class ImageGenerator {
         console.log('url:', url);
         const promises = {
             entityNames: this.api.getEntityNames(pdbId),
-            prefferedAssembly: this.api.getPrefferedAssembly(pdbId),
+            preferredAssembly: this.api.getPreferredAssembly(pdbId),
             siftsMappings: this.api.getSiftsMappings(pdbId),
             modifiedResidues: this.api.getModifiedResidue(pdbId),
         }; // allow async fetching in the meantime
@@ -68,7 +69,7 @@ export class ImageGenerator {
                         const components = await group.makeStandardComponents();
                         const visuals = await components.makeStandardVisuals();
                         this.orientAndZoom(structure);
-                        const context = { pdbId, assemblyId: null, isPreferredAssembly: false, nModels, entityNames: await promises.entityNames, entityInfo: getEntityInfo(structure.data!) };
+                        const context = { pdbId, assemblyId: undefined, isPreferredAssembly: false, nModels, entityNames: await promises.entityNames, entityInfo: getEntityInfo(structure.data!) };
                         const colors = assignEntityAndUnitColors(structure.data!);
 
                         if (mode === 'pdb') {
@@ -128,6 +129,7 @@ export class ImageGenerator {
                                 await this.processDomains(structure, await promises.siftsMappings, context);
                             }
                         }
+
                         if (mode === 'alphafold' && this.shouldRender('plddt')) {
                             await visuals.applyToAll(vis => vis.setColorByPlddt());
                             await this.saveViews('all', view => Captions.forPlddt({ afdbId: pdbId, view }));
@@ -137,9 +139,9 @@ export class ImageGenerator {
 
                 if (mode === 'pdb' && this.shouldRender('assembly', 'entity', 'modres')) {
                     const assemblies = ModelSymmetry.Provider.get(model.data!)?.assemblies ?? [];
-                    const prefferedAssembly = await promises.prefferedAssembly;
+                    const preferredAssembly = await promises.preferredAssembly;
                     for (const ass of assemblies) {
-                        const isPreferredAssembly = ass.id === prefferedAssembly?.assembly_id;
+                        const isPreferredAssembly = ass.id === preferredAssembly?.assembly_id;
                         await using(model.makeStructure({ type: { name: 'assembly', params: { id: ass.id } } }), async structure => {
                             const context = { pdbId, assemblyId: ass.id, isPreferredAssembly, nModels: 1, entityNames: await promises.entityNames, entityInfo: getEntityInfo(structure.data!) };
                             const colors = assignEntityAndUnitColors(structure.data!);

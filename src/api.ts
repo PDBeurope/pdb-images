@@ -32,7 +32,8 @@ export class PDBeAPI {
         }
         return assemblies;
     }
-    async getPrefferedAssembly(pdbId: string): Promise<AssemblyRecord | undefined> {
+    async getPreferredAssembly(pdbId: string): Promise<AssemblyRecord | undefined> {
+        // The preferred assembly is not always 1 (e.g. in 1l7c the pref. ass. is 4)
         if (this.noApi) return { assembly_id: '1', form: '?', preferred: true, name: '?' };
         const assemblies = await this.getAssemblies(pdbId);
         if (assemblies.length === 0) {
