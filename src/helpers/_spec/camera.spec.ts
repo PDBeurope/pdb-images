@@ -1,8 +1,8 @@
-import { Mat3, Vec3 } from 'molstar/lib/commonjs/mol-math/linear-algebra';
-import { adjustCamera, changeCameraRotation, changeCameraZoom, combineRotations, zoomAll } from '../camera';
 import { Camera } from 'molstar/lib/commonjs/mol-canvas3d/camera';
-import { ROTATION_MATRICES } from 'molstar/lib/commonjs/mol-plugin-state/manager/focus-camera/orient-axes'
+import { Mat3, Vec3 } from 'molstar/lib/commonjs/mol-math/linear-algebra';
+import { ROTATION_MATRICES } from 'molstar/lib/commonjs/mol-plugin-state/manager/focus-camera/orient-axes';
 import { getTestingPlugin } from '../../_spec/_utils';
+import { adjustCamera, changeCameraRotation, changeCameraZoom, combineRotations, zoomAll } from '../camera';
 
 
 describe('camera', () => {

@@ -13,7 +13,6 @@ import { defaultCanvas3DParams, defaultImagePassParams } from 'molstar/lib/commo
 import { Task } from 'molstar/lib/commonjs/mol-task';
 import { setFSModule } from 'molstar/lib/commonjs/mol-util/data-source';
 
-
 export const TESTING_PDBS = ['1hda', '1tqn'] as const;
 export type TestingPdb = typeof TESTING_PDBS[number]
 
@@ -21,7 +20,7 @@ export type TestingPdb = typeof TESTING_PDBS[number]
 
 export async function getTestingHeadlessPlugin(): Promise<HeadlessPluginContext> {
     setFSModule(fs);
-    const pluginSpec = DefaultPluginSpec()
+    const pluginSpec = DefaultPluginSpec();
     pluginSpec.behaviors.push(PluginSpec.Behavior(PDBeStructureQualityReport));
     pluginSpec.behaviors.push(PluginSpec.Behavior(MAQualityAssessment));
     const plugin = new HeadlessPluginContext({ gl }, pluginSpec, { width: 800, height: 800 }, { canvas: defaultCanvas3DParams(), imagePass: defaultImagePassParams() });

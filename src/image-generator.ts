@@ -1,20 +1,20 @@
 import { Mat3 } from 'molstar/lib/commonjs/mol-math/linear-algebra';
 import { ModelSymmetry } from 'molstar/lib/commonjs/mol-model-formats/structure/property/symmetry';
 import { Model } from 'molstar/lib/commonjs/mol-model/structure';
+import { ROTATION_MATRICES, structureLayingTransform } from 'molstar/lib/commonjs/mol-plugin-state/manager/focus-camera/orient-axes';
 import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context';
 import { Color } from 'molstar/lib/commonjs/mol-util/color';
 
 import { DomainRecord, ModifiedResidueRecord, PDBeAPI, SiftsSource } from './api';
 import { Captions, ImageSpec } from './captions/captions';
 import { adjustCamera, changeCameraRotation, combineRotations, zoomAll } from './helpers/camera';
-import { ANNOTATION_COLORS, assignEntityAndUnitColors, cycleIterator, ENTITY_COLORS, MODRES_COLORS } from './helpers/colors';
+import { ANNOTATION_COLORS, ENTITY_COLORS, MODRES_COLORS, assignEntityAndUnitColors, cycleIterator } from './helpers/colors';
 import { getModifiedResidueInfo } from './helpers/helpers';
 import { countDomains, selectBestChainForDomains, sortDomainsByChain, sortDomainsByEntity } from './helpers/sifts';
 import { countChainResidues, getChainInfo, getEntityInfo, getLigandInfo } from './helpers/structure-info';
 import { SubstructureDef } from './helpers/substructure-def';
 import { ImageType, ImageTypes } from './main';
-import { structureLayingTransform, ROTATION_MATRICES } from 'molstar/lib/commonjs/mol-plugin-state/manager/focus-camera/orient-axes'
-import { RootNode, StructureNode, using, VisualNode } from './tree-manipulation';
+import { RootNode, StructureNode, VisualNode, using } from './tree-manipulation';
 
 
 const ALLOW_GHOST_NODES = true; // just for debugging, should be `true` in production
