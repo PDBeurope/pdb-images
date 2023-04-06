@@ -6,14 +6,14 @@ import { Color } from 'molstar/lib/commonjs/mol-util/color';
 
 import { DomainRecord, ModifiedResidueRecord, PDBeAPI, SiftsSource } from './api';
 import { Captions, ImageSpec } from './captions/captions';
-import { adjustCamera, cameraSetRotation, combineRotations, zoomAll } from './helpers/camera';
+import { adjustCamera, changeCameraRotation, combineRotations, zoomAll } from './helpers/camera';
 import { ANNOTATION_COLORS, assignEntityAndUnitColors, cycleIterator, ENTITY_COLORS, MODRES_COLORS } from './helpers/colors';
 import { getModifiedResidueInfo } from './helpers/helpers';
 import { countDomains, selectBestChainForDomains, sortDomainsByChain, sortDomainsByEntity } from './helpers/sifts';
 import { countChainResidues, getChainInfo, getEntityInfo, getLigandInfo } from './helpers/structure-info';
 import { SubstructureDef } from './helpers/substructure-def';
 import { ImageType, ImageTypes } from './main';
-import { ROTATION_MATRICES, structureLayingRotation } from './orient';
+import { structureLayingTransform, ROTATION_MATRICES } from 'molstar/lib/commonjs/mol-plugin-state/manager/focus-camera/orient-axes'
 import { RootNode, StructureNode, using, VisualNode } from './tree-manipulation';
 
 
@@ -280,24 +280,24 @@ export class ImageGenerator {
     }
 
     private orientAndZoom(structure: StructureNode, referenceRotation?: Mat3) {
-        this.rotation = structureLayingRotation(structure.data!, referenceRotation);
+        this.rotation = structureLayingTransform([structure.data!], referenceRotation).rotation;
         zoomAll(this.plugin);
     }
 
     private async saveViews(views: 'front' | 'all', spec: (view: 'front' | 'side' | 'top' | undefined) => ImageSpec) {
         if (this.views === 'all' || (this.views === 'auto' && views === 'all')) {
-            adjustCamera(this.plugin, s => cameraSetRotation(s, this.rotation));
+            adjustCamera(this.plugin, s => changeCameraRotation(s, this.rotation));
             await this.saveFunction(spec('front'));
 
             const rotationSide = combineRotations(this.rotation, ROTATION_MATRICES.rotY270);
-            adjustCamera(this.plugin, s => cameraSetRotation(s, rotationSide));
+            adjustCamera(this.plugin, s => changeCameraRotation(s, rotationSide));
             await this.saveFunction(spec('side'));
 
             const rotationTop = combineRotations(this.rotation, ROTATION_MATRICES.rotX90);
-            adjustCamera(this.plugin, s => cameraSetRotation(s, rotationTop));
+            adjustCamera(this.plugin, s => changeCameraRotation(s, rotationTop));
             await this.saveFunction(spec('top'));
         } else {
-            adjustCamera(this.plugin, s => cameraSetRotation(s, this.rotation));
+            adjustCamera(this.plugin, s => changeCameraRotation(s, this.rotation));
             await this.saveFunction(spec(undefined));
         }
     }

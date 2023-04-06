@@ -46,22 +46,5 @@
     "molstar": "^3.33.0",
     "pngjs": "^6.0.0",
     "tslib": "^2.5.0"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "ts",
-      "js"
-    ],
-    "transform": {
-      "\\.ts$": "ts-jest"
-    },
-    "moduleDirectories": [
-      "node_modules",
-      "lib"
-    ],
-    "testEnvironmentOptions": {
-      "url": "http://localhost/"
-    },
-    "testRegex": "\\.spec\\.ts$"
   }
 }

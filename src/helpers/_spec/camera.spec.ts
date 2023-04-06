@@ -1,8 +1,8 @@
 import { Mat3, Vec3 } from 'molstar/lib/commonjs/mol-math/linear-algebra';
-import { adjustCamera, cameraSetRotation, cameraZoom, combineRotations, zoomAll } from '../camera';
+import { adjustCamera, changeCameraRotation, changeCameraZoom, combineRotations, zoomAll } from '../camera';
 import { Camera } from 'molstar/lib/commonjs/mol-canvas3d/camera';
-import { ROTATION_MATRICES } from '../../orient';
-import { getTestingPlugin } from './_utils';
+import { ROTATION_MATRICES } from 'molstar/lib/commonjs/mol-plugin-state/manager/focus-camera/orient-axes'
+import { getTestingPlugin } from '../../_spec/_utils';
 
 
 describe('camera', () => {
@@ -43,7 +43,7 @@ describe('camera', () => {
         expect(matrixSqDiff(combineRotations(m2, m2, m2, m2), result2222)).toBeCloseTo(0);
     });
 
-    it('cameraZoom', () => {
+    it('changeCameraZoom', () => {
         const oldSnapshot: Camera.Snapshot = {
             ...Camera.createDefaultSnapshot(),
             target: Vec3.create(1, 1, 1),
@@ -51,12 +51,12 @@ describe('camera', () => {
         };
         const zoomedIn: Camera.Snapshot = { ...oldSnapshot, position: Vec3.create(6, 3, 0) };
         const zoomedOut: Camera.Snapshot = { ...oldSnapshot, position: Vec3.create(31, 13, -5) };
-        expect(cameraZoom(oldSnapshot, 1)).toEqual(oldSnapshot);
-        expect(cameraZoom(oldSnapshot, 0.5)).toEqual(zoomedIn);
-        expect(cameraZoom(oldSnapshot, 3)).toEqual(zoomedOut);
+        expect(changeCameraZoom(oldSnapshot, 1)).toEqual(oldSnapshot);
+        expect(changeCameraZoom(oldSnapshot, 0.5)).toEqual(zoomedIn);
+        expect(changeCameraZoom(oldSnapshot, 3)).toEqual(zoomedOut);
     });
 
-    it('cameraSetRotation', () => {
+    it('changeCameraRotation', () => {
         const oldSnapshot: Camera.Snapshot = {
             ...Camera.createDefaultSnapshot(),
             target: Vec3.create(1, 1, 1),
@@ -71,18 +71,18 @@ describe('camera', () => {
         const rolledLeft: Camera.Snapshot = { ...oldSnapshot, position: Vec3.create(1, 1, 11), up: Vec3.create(-1, 0, 0) };
         const rolledUpsideDown: Camera.Snapshot = { ...oldSnapshot, position: Vec3.create(1, 1, 11), up: Vec3.create(0, -1, 0) };
 
-        expect(cameraSetRotation(oldSnapshot, Mat3.identity())).toEqual(oldSnapshot);
-        expect(cameraSetRotation(oldSnapshot, ROTATION_MATRICES.rotY90)).toEqual(fromLeft);
-        expect(cameraSetRotation(oldSnapshot, ROTATION_MATRICES.rotY270)).toEqual(fromRight);
-        expect(cameraSetRotation(oldSnapshot, ROTATION_MATRICES.rotX90)).toEqual(fromTop);
-        expect(cameraSetRotation(oldSnapshot, ROTATION_MATRICES.rotX270)).toEqual(fromBottom);
-        expect(cameraSetRotation(oldSnapshot, ROTATION_MATRICES.rotZ90)).toEqual(rolledRight);
-        expect(cameraSetRotation(oldSnapshot, ROTATION_MATRICES.rotZ270)).toEqual(rolledLeft);
-        expect(cameraSetRotation(oldSnapshot, ROTATION_MATRICES.rotZ180)).toEqual(rolledUpsideDown);
+        expect(changeCameraRotation(oldSnapshot, Mat3.identity())).toEqual(oldSnapshot);
+        expect(changeCameraRotation(oldSnapshot, ROTATION_MATRICES.rotY90)).toEqual(fromLeft);
+        expect(changeCameraRotation(oldSnapshot, ROTATION_MATRICES.rotY270)).toEqual(fromRight);
+        expect(changeCameraRotation(oldSnapshot, ROTATION_MATRICES.rotX90)).toEqual(fromTop);
+        expect(changeCameraRotation(oldSnapshot, ROTATION_MATRICES.rotX270)).toEqual(fromBottom);
+        expect(changeCameraRotation(oldSnapshot, ROTATION_MATRICES.rotZ90)).toEqual(rolledRight);
+        expect(changeCameraRotation(oldSnapshot, ROTATION_MATRICES.rotZ270)).toEqual(rolledLeft);
+        expect(changeCameraRotation(oldSnapshot, ROTATION_MATRICES.rotZ180)).toEqual(rolledUpsideDown);
     });
 
-    it('adjustCamera', () => {
-        const plugin = getTestingPlugin();
+    it('adjustCamera', async () => {
+        const plugin = await getTestingPlugin();
         try {
             const oldSnapshot = plugin.canvas3d?.camera.getSnapshot();
             adjustCamera(plugin, s => ({ ...Camera.createDefaultSnapshot(), position: Vec3.create(11, 1, 1) }));
@@ -93,8 +93,8 @@ describe('camera', () => {
         }
     });
 
-    it('zoomAll', () => {
-        const plugin = getTestingPlugin();
+    it('zoomAll', async () => {
+        const plugin = await getTestingPlugin();
         try {
             const oldSnapshot = plugin.canvas3d?.camera.getSnapshot();
             zoomAll(plugin, 1.5);

@@ -1,5 +1,5 @@
 import { EntityInfo } from '../../helpers/structure-info';
-import { ImageSpec, Captions } from '../captions';
+import { Captions } from '../captions';
 
 
 const COMMON_CONTEXT = {
@@ -127,7 +127,7 @@ describe('captions', () => {
     });
 
     it('modres', () => {
-        expect(Captions.forModifiedResidue({ ...COMMON_CONTEXT, assemblyId: '4', modresInfo: {compId: 'MSE', compName: 'SELENOMETHIONINE', nInstances: 10, instances: undefined as any}, view: 'top' })).toEqual({
+        expect(Captions.forModifiedResidue({ ...COMMON_CONTEXT, assemblyId: '4', modresInfo: { compId: 'MSE', compName: 'SELENOMETHIONINE', nInstances: 10, instances: undefined as any }, view: 'top' })).toEqual({
             _entry_id: '1hda',
             _extras: undefined,
             _section: ['entry', 'mod_res', 'MSE'],

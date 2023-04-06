@@ -18,7 +18,7 @@ export function combineRotations(...matrices: Mat3[]) {
 /** Return a new camera snapshot with the same target and orientation as `old`
  * but with the camera position relatively nearer (if `zoomout < 1`)
  * or farther (if `zoomout > 1`) from the camera target. */
-export function cameraZoom(old: Camera.Snapshot, zoomout: number): Camera.Snapshot {
+export function changeCameraZoom(old: Camera.Snapshot, zoomout: number): Camera.Snapshot {
     let relPosition = Vec3.sub(Vec3(), old.position, old.target);
     relPosition = Vec3.scale(relPosition, relPosition, zoomout);
     const newPosition = Vec3.add(Vec3(), old.target, relPosition);
@@ -26,11 +26,11 @@ export function cameraZoom(old: Camera.Snapshot, zoomout: number): Camera.Snapsh
 }
 
 /** Return a new camera snapshot with the same target and camera distance from the target as `old`
- * but with diferent orientation. 
- * The actual rotation applied to the camera is the invert of `rotation`, 
+ * but with diferent orientation.
+ * The actual rotation applied to the camera is the invert of `rotation`,
  * which creates the same effect as if `rotation` were applied to the whole scene without moving the camera.
  * The rotation is relative to the default camera orientation (not to the current orientation). */
-export function cameraSetRotation(old: Camera.Snapshot, rotation: Mat3): Camera.Snapshot {
+export function changeCameraRotation(old: Camera.Snapshot, rotation: Mat3): Camera.Snapshot {
     const cameraRotation = Mat3.invert(Mat3(), rotation);
     const dist = Vec3.distance(old.position, old.target);
     const relPosition = Vec3.transformMat3(Vec3(), Vec3.create(0, 0, dist), cameraRotation);
@@ -58,11 +58,11 @@ export function adjustCamera(plugin: PluginContext, change: (old: Camera.Snapsho
     }
 }
 
-/** Zoom the camera to the whole visible scene, without changing orientation. 
+/** Zoom the camera to the whole visible scene, without changing orientation.
  * Then move the camera slightly nearer to (if `zoomout < 1`) or away from (if `zoomout > 1`) the target.
- * The default value of `zoomout` was selected so that the scene still fits to the viewport, 
+ * The default value of `zoomout` was selected so that the scene still fits to the viewport,
  * but is not too small in the middle. */
 export function zoomAll(plugin: PluginContext, zoomout: number = ZOOMOUT) {
     plugin.managers.camera.reset(); // needed when camera.manualReset=true in canvas3D props
-    adjustCamera(plugin, s => cameraZoom(s, zoomout));
+    adjustCamera(plugin, s => changeCameraZoom(s, zoomout));
 }

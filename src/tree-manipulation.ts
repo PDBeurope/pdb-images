@@ -11,16 +11,15 @@ import { setSubtreeVisibility } from 'molstar/lib/commonjs/mol-plugin/behavior/s
 import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context';
 import { getStructureQuality } from 'molstar/lib/commonjs/mol-repr/util';
 import { MolScriptBuilder } from 'molstar/lib/commonjs/mol-script/language/builder';
-import { StateObject, StateObjectSelector, StateTransform } from 'molstar/lib/commonjs/mol-state';
+import { State, StateObject, StateObjectSelector, StateTransform } from 'molstar/lib/commonjs/mol-state';
 import { Color } from 'molstar/lib/commonjs/mol-util/color';
 import { ColorLists } from 'molstar/lib/commonjs/mol-util/color/lists';
 import { ParamDefinition } from 'molstar/lib/commonjs/mol-util/param-definition';
 
 import { PDBeAPI } from './api';
 import { DEFAULT_COLORS, ENTITY_COLORS } from './helpers/colors';
-import { chainLabel, deepMerge, PPartial, toKebabCase } from './helpers/helpers';
-import { baseRef, childRef, uniqueRef } from './helpers/references';
-import { EntityInfo, getEntityInfo, LigandInstanceInfo } from './helpers/structure-info';
+import { PPartial, chainLabel, deepMerge, toKebabCase } from './helpers/helpers';
+import { EntityInfo, LigandInstanceInfo, getEntityInfo } from './helpers/structure-info';
 import { SubstructureDef } from './helpers/substructure-def';
 
 
@@ -92,11 +91,11 @@ abstract class Node<S extends StateObject = StateObject> {
     }
     /** Create a ref string for a new node. */
     protected baseRef(idForRef?: string): string | undefined {
-        return uniqueRef(this.state, baseRef(idForRef));
+        return References.unique(this.state, References.base(idForRef));
     }
     /** Create a ref string for a new node which will be a child of this node. */
     protected childRef(suffix: string, replaceOldSuffix?: boolean): string | undefined {
-        return uniqueRef(this.state, childRef(this.node.ref, suffix, replaceOldSuffix));
+        return References.unique(this.state, References.child(this.node.ref, suffix, replaceOldSuffix));
     }
     /** Remove this node from the state tree. */
     async dispose(): Promise<void> {
@@ -536,5 +535,44 @@ export async function using<T extends Node | NodeCollection<any, any> | undefine
         return await func(awNode);
     } finally {
         await awNode?.dispose();
+    }
+}
+
+
+/** Helper functions for managing state tree node references in a deterministic and human-friendly way,
+ * e.g. '!1hda', '!1hda/model-0/props/struct-model/whole-entry'. */
+namespace References {
+    /** Symbol to start all managed refs */
+    const REF_INIT = '!';
+    /** Symbol to separate tokens in managed refs */
+    const REF_SEP = '/';
+
+    /** Check if desiredRef is already in the state tree and provide an alternative if so (e.g. 'blabla' -> 'blabla(1)') */
+    export function unique(state: State, desiredRef: string | undefined): string | undefined {
+        if (!desiredRef) return desiredRef;
+        let ref = desiredRef;
+        let counter = 0;
+        while (state.cells.has(ref)) {
+            ref = `${desiredRef}(${++counter})`;
+        }
+        return ref;
+    }
+
+    /** Get a human-friendly reference for a subtree "root". */
+    export function base(name?: string): string | undefined {
+        if (!name) return undefined; // use automatic ref assignment
+        return REF_INIT + name;
+    }
+
+    /** Get a human-friendly reference for a child of another node. */
+    export function child(parentRef: string | undefined, suffix: string, replaceOldSuffix?: boolean): string | undefined {
+        if (!parentRef || !parentRef.startsWith(REF_INIT)) return undefined; // use automatic ref assignment
+        if (replaceOldSuffix) {
+            const oldSuffixPosition = parentRef.lastIndexOf(REF_SEP);
+            if (oldSuffixPosition > 0) { // if oldSuffixPosition===0, it is not REF_SEP but REF_INIT
+                parentRef = parentRef.substring(0, oldSuffixPosition);
+            }
+        }
+        return parentRef + REF_SEP + suffix;
     }
 }

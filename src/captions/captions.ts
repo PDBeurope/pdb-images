@@ -244,7 +244,7 @@ export namespace Captions {
         if (view) return `${view} view`;
         else return '';
     }
-    
+
     /** Return a filename suffix '-front' or '' */
     function viewSuffix(view: ViewType) {
         if (view) return `_${view}`;

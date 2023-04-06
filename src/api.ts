@@ -1,6 +1,3 @@
-import { warn } from './helpers/helpers';
-
-
 export class PDBeAPI {
     constructor(public readonly baseUrl: string, public readonly noApi: boolean = false) { }
 
@@ -41,11 +38,11 @@ export class PDBeAPI {
         }
         const preferred = assemblies.filter(ass => ass.preferred);
         if (preferred.length === 0) {
-            warn(`PDB entry ${pdbId} has no preferred assembly`);
+            console.warn(`PDB entry ${pdbId} has no preferred assembly`);
             return assemblies[0];
         }
         if (preferred.length > 1) {
-            warn(`PDB entry ${pdbId} has more than one preferred assembly`);
+            console.warn(`PDB entry ${pdbId} has more than one preferred assembly`);
         }
         return preferred[0];
     }

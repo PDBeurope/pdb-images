@@ -13,7 +13,7 @@ import { DefaultPluginSpec, PluginSpec } from 'molstar/lib/commonjs/mol-plugin/s
 import { PDBeAPI } from './api';
 import { ImageSpec } from './captions/captions';
 import { collectCaptions } from './captions/collect';
-import { NaughtyStateSaver, parseIntStrict } from './helpers/helpers';
+import { MoljStateSaver, parseIntStrict } from './helpers/helpers';
 import { ImageGenerator } from './image-generator';
 import { addAxisIndicators } from './image/draw';
 import { resizeRawImage, saveRawToPng } from './image/resize';
@@ -110,7 +110,7 @@ export async function main(args: Args) {
 
     if (!fs.existsSync(localPath)) throw new Error(`Input file not found: ${localPath}`);
 
-    const stateSaver = new NaughtyStateSaver(plugin, { downloadUrl: wwwUrl, pdbeStructureQualityReportServerUrl: null });
+    const stateSaver = new MoljStateSaver(plugin, { downloadUrl: wwwUrl, downloadBinary: wwwUrl.endsWith('.bcif'), pdbeStructureQualityReportServerUrl: null });
     const postprocessing = undefined;
     const saveFunction = async (spec: ImageSpec) => {
         fs.writeFileSync(path.join(outDir, `${spec.filename}.caption.json`), JSON.stringify(spec, undefined, 2), { encoding: 'utf8' });
