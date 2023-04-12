@@ -13,7 +13,7 @@ export function sortDomainsByEntity(domains: { [source: string]: { [family: stri
     for (const [source, sourceDomains] of Object.entries(domains)) {
         for (const [family, familyDomains] of Object.entries(sourceDomains)) {
             for (const domain of familyDomains) {
-                const entityId = domain.chunks[0].entity_id;
+                const entityId = domain.chunks[0].entityId;
                 (((result[source] ??= {})[family] ??= {})[entityId] ??= []).push(domain);
             }
         }
@@ -28,7 +28,7 @@ export function selectBestChainForDomains(domains: { [source: string]: { [family
     for (const [source, sourceDomains] of Object.entries(domains)) {
         for (const [family, familyDomains] of Object.entries(sourceDomains)) {
             for (const [entityId, entityDomains] of Object.entries(familyDomains)) {
-                const chainIds = entityDomains.map(dom => dom.chunks[0].asymID);
+                const chainIds = entityDomains.map(dom => dom.chunks[0].chainId);
                 const uniqueChainIds = Array.from(new Set(chainIds));
                 let selectedChain = uniqueChainIds[0];
                 if (chainCoverages) {
@@ -36,7 +36,7 @@ export function selectBestChainForDomains(domains: { [source: string]: { [family
                         if (chainCoverages[other] > chainCoverages[selectedChain]) selectedChain = other;
                     }
                 }
-                const selectedDomains = entityDomains.filter(dom => dom.chunks[0].asymID === selectedChain);
+                const selectedDomains = entityDomains.filter(dom => dom.chunks[0].chainId === selectedChain);
                 ((result[source] ??= {})[family] ??= {})[entityId] = selectedDomains;
             }
         }
@@ -52,7 +52,7 @@ export function sortDomainsByChain(domains: { [source: string]: { [family: strin
         for (const [family, familyDomains] of Object.entries(sourceDomains)) {
             for (const entityDomains of Object.values(familyDomains)) {
                 for (const dom of entityDomains) {
-                    const chainId = dom.chunks[0].asymID;
+                    const chainId = dom.chunks[0].chainId;
                     (((result[chainId] ??= {})[source] ??= {})[family] ??= []).push(dom);
                 }
             }

@@ -38,10 +38,15 @@ export class PDBeAPI {
     async getAssemblies(pdbId: string): Promise<AssemblyRecord[]> {
         const url = `${this.baseUrl}/pdb/entry/summary/${pdbId}`;
         const json = await this.get(url);
-        const assemblies = [];
+        const assemblies: AssemblyRecord[] = [];
         for (const record of json[pdbId] ?? []) {
             for (const assembly of record.assemblies) {
-                assemblies.push(assembly);
+                assemblies.push({
+                    assemblyId: assembly.assembly_id,
+                    form: assembly.form,
+                    preferred: assembly.preferred,
+                    name: assembly.name,
+                });
             }
         }
         return assemblies;
@@ -51,7 +56,7 @@ export class PDBeAPI {
      * If initialized with `offline`, return assembly with ID '1' and all fields filled with '?'. */
     async getPreferredAssembly(pdbId: string): Promise<AssemblyRecord | undefined> {
         // The preferred assembly is not always 1 (e.g. in 1l7c the pref. ass. is 4)
-        if (this.offline) return { assembly_id: '1', form: '?', preferred: true, name: '?' };
+        if (this.offline) return { assemblyId: '1', form: '?', preferred: true, name: '?' };
         const assemblies = await this.getAssemblies(pdbId);
         if (assemblies.length === 0) {
             return undefined;
@@ -118,14 +123,14 @@ export class PDBeAPI {
             const domainId = mapping.domain ?? mapping.scop_id ?? `${family}_${++domainCounter}`;
             const existingDomain = result[domainId];
             const chunk: DomainChunkRecord = {
-                entity_id: String(mapping.entity_id),
-                asymID: mapping.struct_asym_id,
-                chain: mapping.chain_id,
-                CIFstart: mapping.start.residue_number,
-                CIFend: mapping.end.residue_number,
+                entityId: String(mapping.entity_id),
+                chainId: mapping.struct_asym_id,
+                authChainId: mapping.chain_id,
+                startResidue: mapping.start.residue_number,
+                endResidue: mapping.end.residue_number,
                 segment: existingDomain ? existingDomain.chunks.length + 1 : 1,
             };
-            if (chunk.CIFstart > chunk.CIFend) [chunk.CIFstart, chunk.CIFend] = [chunk.CIFend, chunk.CIFstart]; // you never know with the PDBe API
+            if (chunk.startResidue > chunk.endResidue) [chunk.startResidue, chunk.endResidue] = [chunk.endResidue, chunk.startResidue]; // you never know with the PDBe API
             if (existingDomain) {
                 existingDomain.chunks.push(chunk);
             } else {
@@ -164,7 +169,7 @@ export interface ModifiedResidueRecord {
 /** Represents one assembly of a PDB entry. */
 interface AssemblyRecord {
     /** Assembly ID, usually '1', '2' etc. */
-    assembly_id: string,
+    assemblyId: string,
     /** Usually 'homo' or 'hetero' */
     form: string,
     /** Flags if this is the preferred assembly (should be only one for each PDB entry) */
@@ -190,15 +195,15 @@ export interface DomainRecord {
 
 /** Attribute names same as in the original process, therefore no consistency */
 interface DomainChunkRecord {
-    entity_id: string,
+    entityId: string,
     /** label_asym_id */
-    asymID: string,
+    chainId: string,
     /** auth_asym_id */
-    chain: string,
+    authChainId: string,
     /** label_seq_id of the first residue */
-    CIFstart: number,
+    startResidue: number,
     /** label_seq_id of the last residue */
-    CIFend: number,
+    endResidue: number,
     /** No idea what this was supposed to mean in the original process(probably segment number
      * from the API before cutting into smaller segments by removing missing residues) */
     segment: number

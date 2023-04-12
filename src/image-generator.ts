@@ -141,7 +141,7 @@ export class ImageGenerator {
                     const assemblies = ModelSymmetry.Provider.get(model.data!)?.assemblies ?? [];
                     const preferredAssembly = await promises.preferredAssembly;
                     for (const ass of assemblies) {
-                        const isPreferredAssembly = ass.id === preferredAssembly?.assembly_id;
+                        const isPreferredAssembly = ass.id === preferredAssembly?.assemblyId;
                         await using(model.makeStructure({ type: { name: 'assembly', params: { id: ass.id } } }), async structure => {
                             const context = { pdbId, assemblyId: ass.id, isPreferredAssembly, nModels: 1, entityNames: await promises.entityNames, entityInfo: getEntityInfo(structure.data!) };
                             const colors = assignEntityAndUnitColors(structure.data!);
@@ -233,7 +233,7 @@ export class ImageGenerator {
                         const domDefs: { [id: string]: SubstructureDef } = {};
                         for (const dom of familyDomains) {
                             const label = `Domain ${dom.id} (${source} ${familyId})`;
-                            const ranges = dom.chunks.map(c => [c.CIFstart, c.CIFend] as [number, number]);
+                            const ranges = dom.chunks.map(c => [c.startResidue, c.endResidue] as [number, number]);
                             domDefs[dom.id] = SubstructureDef.Domain.create(chainId, ranges, label);
                         }
                         const familyName = familyDomains[0].familyName;
