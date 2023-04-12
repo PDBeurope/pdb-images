@@ -14,5 +14,5 @@
         "url": "http://localhost/"
     },
     "testRegex": "\\.spec\\.ts$",
-    "collectCoverage": true
+    "collectCoverage": false
 }

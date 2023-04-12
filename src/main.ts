@@ -110,7 +110,11 @@ export async function main(args: Args) {
 
     if (!fs.existsSync(localPath)) throw new Error(`Input file not found: ${localPath}`);
 
-    const stateSaver = new MoljStateSaver(plugin, { downloadUrl: wwwUrl, downloadBinary: wwwUrl.endsWith('.bcif'), pdbeStructureQualityReportServerUrl: null });
+    const stateSaver = new MoljStateSaver(plugin, {
+        downloadUrl: wwwUrl,
+        downloadBinary: wwwUrl.endsWith('.bcif'),
+        pdbeStructureQualityReportServerUrl: null, // will use Mol* default https://www.ebi.ac.uk/pdbe/api/validation/residuewise_outlier_summary/entry/
+    });
     const postprocessing = undefined;
     const saveFunction = async (spec: ImageSpec) => {
         fs.writeFileSync(path.join(outDir, `${spec.filename}.caption.json`), JSON.stringify(spec, undefined, 2), { encoding: 'utf8' });

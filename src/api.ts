@@ -1,15 +1,30 @@
-export class PDBeAPI {
-    constructor(public readonly baseUrl: string, public readonly noApi: boolean = false) { }
+import fs from 'fs';
 
-    private async get(url: string) {
-        if (this.noApi) return {};
-        const response = await fetch(url);
-        if (response.status === 404) return {}; // PDBe API returns 404 in some cases (e.g. when there are no modified residues)
-        if (!response.ok) throw new Error(`API call failed with code ${response.status} (${url})`);
-        const text = await response.text();
-        return JSON.parse(text);
+
+/** Client for access to PDBe REST API */
+export class PDBeAPI {
+    /** Create a client accessing API at `baseUrl` (like 'https://www.ebi.ac.uk/pdbe/api').
+     * If `offline`, create a mock client which returns correct types but without any specific data. */
+    constructor(public readonly baseUrl: string, public readonly offline: boolean = false) { }
+
+    /** Fetch contents of `url` ('http://...', 'https://...', 'file://...')
+     * and return as parsed JSON. */
+    private async get(url: string): Promise<any> {
+        if (this.offline) return {};
+        if (url.startsWith('file://')) {
+            const text = fs.readFileSync(url.substring('file://'.length), { encoding: 'utf8' });
+            return JSON.parse(text);
+        } else {
+            const response = await fetch(url);
+            if (response.status === 404) return {}; // PDBe API returns 404 in some cases (e.g. when there are no modified residues)
+            if (!response.ok) throw new Error(`API call failed with code ${response.status} (${url})`);
+            const text = await response.text();
+            return JSON.parse(text);
+        }
     }
-    async getEntityNames(pdbId: string) {
+
+    /** Get names of entities within a PDB entry. */
+    async getEntityNames(pdbId: string): Promise<{ [entityId: number]: string[] }> {
         const url = `${this.baseUrl}/pdb/entry/molecules/${pdbId}`;
         const json = await this.get(url);
         const names: { [entityId: number]: string[] } = {};
@@ -18,6 +33,8 @@ export class PDBeAPI {
         }
         return names;
     }
+
+    /** Get list of assemblies for a PDB entry. */
     async getAssemblies(pdbId: string): Promise<AssemblyRecord[]> {
         const url = `${this.baseUrl}/pdb/entry/summary/${pdbId}`;
         const json = await this.get(url);
@@ -29,9 +46,12 @@ export class PDBeAPI {
         }
         return assemblies;
     }
+
+    /** Get the preferred assembly for a PDB entry.
+     * If initialized with `offline`, return assembly with ID '1' and all fields filled with '?'. */
     async getPreferredAssembly(pdbId: string): Promise<AssemblyRecord | undefined> {
         // The preferred assembly is not always 1 (e.g. in 1l7c the pref. ass. is 4)
-        if (this.noApi) return { assembly_id: '1', form: '?', preferred: true, name: '?' };
+        if (this.offline) return { assembly_id: '1', form: '?', preferred: true, name: '?' };
         const assemblies = await this.getAssemblies(pdbId);
         if (assemblies.length === 0) {
             return undefined;
@@ -46,7 +66,9 @@ export class PDBeAPI {
         }
         return preferred[0];
     }
-    async getModifiedResidue(pdbId: string) {
+
+    /** Get list of instances of modified residues within a PDB entry. */
+    async getModifiedResidue(pdbId: string): Promise<ModifiedResidueRecord[]> {
         const url = `${this.baseUrl}/pdb/entry/modified_AA_or_NA/${pdbId}`;
         const json = await this.get(url);
         const result: ModifiedResidueRecord[] = [];
@@ -62,6 +84,9 @@ export class PDBeAPI {
         }
         return result;
     }
+
+    /** Get list of instances of SIFTS domains within a PDB entry,
+     * sorted by source (CATH, Pfam, Rfam, SCOP) and family (e.g. 1.10.630.10, PF00067). */
     async getSiftsMappings(pdbId: string): Promise<{ [source in SiftsSource]: { [family: string]: DomainRecord[] } }> {
         const promiseProtein = this.get(`${this.baseUrl}/mappings/${pdbId}`);
         const promiseNucleic = this.get(`${this.baseUrl}/nucleic_mappings/${pdbId}`);
@@ -83,14 +108,17 @@ export class PDBeAPI {
         }
         return result;
     }
-    private static extractDomainMappings(mappings: any[], source: SiftsSource, family: string, familyName: string) {
+
+    /** Helper function to convert a domain mapping (describes one domain)
+     * from PDBeAPI format to a `DomainRecord`. */
+    private static extractDomainMappings(mappings: any[], source: SiftsSource, family: string, familyName: string): DomainRecord[] {
         const result: { [domainId: string]: DomainRecord } = {};
         let domainCounter = 0;
         for (const mapping of mappings) {
             const domainId = mapping.domain ?? mapping.scop_id ?? `${family}_${++domainCounter}`;
             const existingDomain = result[domainId];
             const chunk: DomainChunkRecord = {
-                entity_id: mapping.entity_id,
+                entity_id: String(mapping.entity_id),
                 asymID: mapping.struct_asym_id,
                 chain: mapping.chain_id,
                 CIFstart: mapping.start.residue_number,
@@ -112,35 +140,46 @@ export class PDBeAPI {
         }
         return Object.values(result).sort((a, b) => a.id < b.id ? -1 : 1);
     }
-    pdbeStructureQualityReportPrefix() {
-        const url = `${this.baseUrl}/validation/residuewise_outlier_summary/entry/`;
-        return url;
+
+    /** Get a URL prefix (without the PDBID argument) for PDBe structure quality report,
+     * or `undefined` if initialized with `offline`. */
+    pdbeStructureQualityReportPrefix(): string | undefined {
+        if (this.offline) return undefined;
+        else return `${this.baseUrl}/validation/residuewise_outlier_summary/entry/`;
     }
 }
 
-/** Represents one instance of a modified residue */
+/** Represents one instance of a modified residue. */
 export interface ModifiedResidueRecord {
     entityId: number,
     labelChainId: string,
     authChainId: string,
     residueNumber: number,
+    /** Compound code, e.g. 'MSE' */
     compoundId: string,
+    /** Full compound code, e.g. 'Selenomethionine' */
     compoundName: string,
 }
 
+/** Represents one assembly of a PDB entry. */
 interface AssemblyRecord {
-    /** Usually '1', '2' etc. */
+    /** Assembly ID, usually '1', '2' etc. */
     assembly_id: string,
     /** Usually 'homo' or 'hetero' */
     form: string,
+    /** Flags if this is the preferred assembly (should be only one for each PDB entry) */
     preferred: boolean,
-    /** Usually 'monomer', 'tetramer' etc. */
+    /** Assembly description like 'monomer', 'tetramer' etc. */
     name: string,
 }
 
+/** List of supported SIFTS source databases */
 const SIFTS_SOURCES = ['CATH', 'Pfam', 'Rfam', 'SCOP'] as const;
+
+/** SIFTS source database */
 export type SiftsSource = typeof SIFTS_SOURCES[number];
 
+/**  */
 export interface DomainRecord {
     id: string,
     source: string
@@ -160,6 +199,7 @@ interface DomainChunkRecord {
     CIFstart: number,
     /** label_seq_id of the last residue */
     CIFend: number,
-    /** No idea what this was supposed to mean in the original process (probably segment no. from the API before cutting into smaller segments by removing missing residues) */
+    /** No idea what this was supposed to mean in the original process(probably segment number
+     * from the API before cutting into smaller segments by removing missing residues) */
     segment: number
 }

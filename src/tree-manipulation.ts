@@ -144,7 +144,7 @@ export class ModelNode extends Node<PluginStateObject.Molecule.Model> {
         const customPropsNode = await this.state.build().to(this.node).apply(CustomModelProperties, {
             properties: {
                 pdbe_structure_quality_report: {
-                    serverUrl: (api && !api.noApi) ? api?.pdbeStructureQualityReportPrefix() : undefined
+                    serverUrl: api?.pdbeStructureQualityReportPrefix()
                 }
             }
         }, { ref }).commit();

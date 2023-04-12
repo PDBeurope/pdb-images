@@ -1,7 +1,7 @@
 import { getTestingModel, getTestingStructure } from '../../_spec/_utils';
 import { countChainResidues, getChainInfo, getEntityInfo, getLigandInfo } from '../structure-info';
 
-describe('todo', () => {
+describe('structure-info', () => {
     it('getEntityInfo', async () => {
         const struct = await getTestingStructure('1hda');
         expect(getEntityInfo(struct)).toEqual({
@@ -72,6 +72,4 @@ describe('todo', () => {
             L: { authChainId: 'D', entityId: '4' },
         });
     });
-
-    // TODO continue here
 });
