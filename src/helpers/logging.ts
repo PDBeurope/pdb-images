@@ -24,7 +24,8 @@ export function configureLogging(level: LogLevel, stream: 'stdout' | 'stderr') {
  * Always call like this: `const logger = getLogger(module)` */
 export function getLogger(module: NodeModule) {
     const modulePathParts = module.filename.split(path.sep);
-    const name = modulePathParts.slice(modulePathParts.lastIndexOf('build') + 1).join('/');
+    const rootPathLength = Math.max(modulePathParts.lastIndexOf('build'), modulePathParts.lastIndexOf('src')) + 1;
+    const name = modulePathParts.slice(rootPathLength).join('/');
     const logger = log4js.getLogger(name);
     return logger;
 }

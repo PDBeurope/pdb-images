@@ -1,25 +1,24 @@
 import { ArgumentParser } from 'argparse';
 import fs from 'fs';
-import path from 'path';
 import gl from 'gl';
+import path from 'path';
 import pngjs from 'pngjs';
 
 import { MAQualityAssessment } from 'molstar/lib/commonjs/extensions/model-archive/quality-assessment/behavior';
 import { PDBeStructureQualityReport } from 'molstar/lib/commonjs/extensions/pdbe';
-import { defaultCanvas3DParams, defaultImagePassParams, HeadlessScreenshotHelperOptions, RawImageData, STYLIZED_POSTPROCESSING } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 import { HeadlessPluginContext } from 'molstar/lib/commonjs/mol-plugin/headless-plugin-context';
 import { DefaultPluginSpec, PluginSpec } from 'molstar/lib/commonjs/mol-plugin/spec';
+import { defaultCanvas3DParams, defaultImagePassParams, HeadlessScreenshotHelperOptions, RawImageData, STYLIZED_POSTPROCESSING } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
+import { setFSModule } from 'molstar/lib/commonjs/mol-util/data-source';
 
 import { PDBeAPI } from './api';
 import { ImageSpec } from './captions/captions';
 import { collectCaptions } from './captions/collect';
 import { MoljStateSaver, parseIntStrict } from './helpers/helpers';
+import { configureLogging, getLogger, LogLevel, LogLevels, oneLine } from './helpers/logging';
 import { ImageGenerator } from './image-generator';
 import { addAxisIndicators } from './image/draw';
 import { resizeRawImage, saveRawToPng } from './image/resize';
-import { setFSModule } from 'molstar/lib/commonjs/mol-util/data-source';
-import { configureLogging, getLogger, LogLevel, LogLevels, oneLine } from './helpers/logging';
-import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context';
 
 
 const logger = getLogger(module);

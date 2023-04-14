@@ -1,9 +1,8 @@
 import fs from 'fs';
-import { PluginStateSnapshotManager } from 'molstar/lib/commonjs/mol-plugin-state/manager/snapshots';
-import { assignEntityAndUnitColors, cycleIterator } from '../colors';
+
 import { MoljStateSaver, chainLabel, deepMerge, getModifiedResidueInfo, parseIntStrict, toKebabCase } from '../helpers';
-import { getTestingHeadlessPlugin, getTestingPlugin, getTestingStructure } from '../../_spec/_utils';
-import { setFSModule } from 'molstar/lib/commonjs/mol-util/data-source';
+import { getTestingHeadlessPlugin } from '../../_spec/_utils';
+
 
 describe('colors', () => {
     it('deepMerge - replace value simple', () => {
@@ -136,4 +135,3 @@ describe('colors', () => {
         }
     });
 });
-

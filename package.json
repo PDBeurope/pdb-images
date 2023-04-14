@@ -46,7 +46,6 @@
     "log4js": "^6.9.1",
     "molstar": "^3.33.0",
     "pngjs": "^6.0.0",
-    "supports-color": "^9.3.1",
     "tslib": "^2.5.0"
   }
 }
