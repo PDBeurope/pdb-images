@@ -10,11 +10,11 @@ function captureStream(stream: 'stdout' | 'stderr') {
     });
     process[stream].write = mockWrite;
     return {
-        output: () => { 
+        output: () => {
             process[stream].write = oldWrite;
             return outputs.join();
         },
-    }
+    };
 }
 
 
