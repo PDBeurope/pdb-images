@@ -74,16 +74,19 @@ abstract class Node<S extends StateObject = StateObject> {
         const groupNode = await this.state.build().to(this.node).apply(CreateGroup, params, { ref, ...stateOptions }).commit();
         return Object.getPrototypeOf(this).constructor(this.origin, groupNode);
     }
+    /** Make a node visible, i.e. visuals within its subtree will be visible in 3D */
     setVisible(visible: boolean): void {
         if (this.node.cell) {
             setSubtreeVisibility(this.state, this.node.cell.transform.ref, !visible); // true means hide, ¯\_(ツ)_/¯
         }
     }
+    /** Make a node collapsed, i.e. its subtree will be hidden in state tree view */
     setCollapsed(collapsed: boolean): void {
         if (this.node.cell) {
             this.state.updateCellState(this.node.ref, { isCollapsed: collapsed });
         }
     }
+    /** Make a node "ghost", i.e. it will not be shown in state tree view */
     setGhost(ghost: boolean): void {
         if (this.node.cell) {
             this.state.updateCellState(this.node.ref, { isGhost: ghost });
@@ -132,12 +135,13 @@ export class CifNode extends Node<PluginStateObject.Format.Cif> {
 }
 
 export class TrajectoryNode extends Node<PluginStateObject.Molecule.Trajectory> {
-    async makeModel(modelIndex: number = 0): Promise<ModelNode> {
+    async makeModel(modelIndex: number): Promise<ModelNode> {
         const ref = this.childRef(`model-${modelIndex}`, true);
         const modelNode = await this.state.build().to(this.node).apply(ModelFromTrajectory, { modelIndex }, { ref }).commit();
         return new ModelNode(modelNode);
     }
 }
+
 export class ModelNode extends Node<PluginStateObject.Molecule.Model> {
     async makeCustomModelProperties(api?: PDBeAPI): Promise<ModelNode> {
         const ref = this.childRef('props');
@@ -449,6 +453,8 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
     }
 
 }
+
+
 abstract class NodeCollection<KeyType extends string, NodeType extends Node> {
     constructor(public readonly nodes: { [key in KeyType]: NodeType | undefined }) { }
 
@@ -483,6 +489,7 @@ export class StandardComponents extends NodeCollection<StandardComponentType, St
         });
     }
 }
+
 export class LigandEnvironmentComponents extends NodeCollection<LigEnvComponentType, StructureNode> {
     /** Create visuals like polymer cartoon, ligand balls-and-sticks etc., for a structure or its part */
     async makeLigEnvVisuals(entityColors?: Color[]): Promise<LigandEnvironmentVisuals> {

@@ -16,7 +16,6 @@ import { countChainResidues, getChainInfo, getEntityInfo, getLigandInfo } from '
 import { SubstructureDef } from './helpers/substructure-def';
 import { ImageType, ImageTypes } from './main';
 import { RootNode, StructureNode, VisualNode, using } from './tree-manipulation';
-import { now } from 'molstar/lib/commonjs/mol-util/now';
 
 
 const logger = getLogger(module);
