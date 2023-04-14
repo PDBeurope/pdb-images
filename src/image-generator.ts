@@ -10,12 +10,16 @@ import { Captions, ImageSpec } from './captions/captions';
 import { adjustCamera, changeCameraRotation, combineRotations, zoomAll } from './helpers/camera';
 import { ANNOTATION_COLORS, ENTITY_COLORS, MODRES_COLORS, assignEntityAndUnitColors, cycleIterator } from './helpers/colors';
 import { getModifiedResidueInfo } from './helpers/helpers';
+import { getLogger } from './helpers/logging';
 import { countDomains, selectBestChainForDomains, sortDomainsByChain, sortDomainsByEntity } from './helpers/sifts';
 import { countChainResidues, getChainInfo, getEntityInfo, getLigandInfo } from './helpers/structure-info';
 import { SubstructureDef } from './helpers/substructure-def';
 import { ImageType, ImageTypes } from './main';
 import { RootNode, StructureNode, VisualNode, using } from './tree-manipulation';
+import { now } from 'molstar/lib/commonjs/mol-util/now';
 
+
+const logger = getLogger(module);
 
 const ALLOW_GHOST_NODES = true; // just for debugging, should be `true` in production
 const ALLOW_COLLAPSED_NODES = true; // just for debugging, should be `true` in production
@@ -45,132 +49,140 @@ export class ImageGenerator {
         return imageTypes.some(t => this.imageTypes.has(t));
     }
 
-    async processUrl(url: string, pdbId: string, format: 'cif' | 'bcif', mode: 'pdb' | 'alphafold') {
-        console.log('url:', url);
-        const promises = {
-            entityNames: this.api.getEntityNames(pdbId),
-            preferredAssembly: this.api.getPreferredAssembly(pdbId),
-            siftsMappings: this.api.getSiftsMappings(pdbId),
-            modifiedResidues: this.api.getModifiedResidue(pdbId),
-        }; // allow async fetching in the meantime
+    async processAll(url: string, pdbId: string, format: 'cif' | 'bcif', mode: 'pdb' | 'alphafold') {
+        logger.info('Processing', pdbId, 'from', url);
+        const startTime = Date.now();
+        let success = false;
+        try {
+            const promises = {
+                entityNames: this.api.getEntityNames(pdbId),
+                preferredAssembly: this.api.getPreferredAssembly(pdbId),
+                siftsMappings: this.api.getSiftsMappings(pdbId),
+                modifiedResidues: this.api.getModifiedResidue(pdbId),
+            }; // allow async fetching in the meantime
 
-        const root = RootNode.create(this.plugin);
-        await using(root.makeDownload({ url, isBinary: format === 'bcif' }, pdbId), async download => {
-            const cif = await download.makeCif();
-            const traj = await cif.makeTrajectory();
-            const nModels = traj.data?.frameCount ?? 1;
-            console.log('nModels:', nModels);
-            await using(traj.makeModel(0), async rawModel => {
-                const model = await rawModel.makeCustomModelProperties(this.api);
+            const root = RootNode.create(this.plugin);
+            await using(root.makeDownload({ url, isBinary: format === 'bcif' }, pdbId), async download => {
+                const cif = await download.makeCif();
+                const traj = await cif.makeTrajectory();
+                const nModels = traj.data?.frameCount ?? 1;
+                logger.info('Number of models:', nModels);
+                await using(traj.makeModel(0), async rawModel => {
+                    const model = await rawModel.makeCustomModelProperties(this.api);
 
-                if (this.shouldRender('entry', 'validation', 'bfactor', 'ligand', 'domain', 'plddt')) {
-                    await using(model.makeStructure({ type: { name: 'model', params: {} } }), async structure => {
-                        const group = await structure.makeGroup({ label: 'Whole Entry' }, { state: { isGhost: ALLOW_GHOST_NODES } });
-                        const components = await group.makeStandardComponents();
-                        const visuals = await components.makeStandardVisuals();
-                        this.orientAndZoom(structure);
-                        const context = { pdbId, assemblyId: undefined, isPreferredAssembly: false, nModels, entityNames: await promises.entityNames, entityInfo: getEntityInfo(structure.data!) };
-                        const colors = assignEntityAndUnitColors(structure.data!);
+                    if (this.shouldRender('entry', 'validation', 'bfactor', 'ligand', 'domain', 'plddt')) {
+                        await using(model.makeStructure({ type: { name: 'model', params: {} } }), async structure => {
+                            const group = await structure.makeGroup({ label: 'Whole Entry' }, { state: { isGhost: ALLOW_GHOST_NODES } });
+                            const components = await group.makeStandardComponents();
+                            const visuals = await components.makeStandardVisuals();
+                            this.orientAndZoom(structure);
+                            const context = { pdbId, assemblyId: undefined, isPreferredAssembly: false, nModels, entityNames: await promises.entityNames, entityInfo: getEntityInfo(structure.data!) };
+                            const colors = assignEntityAndUnitColors(structure.data!);
 
-                        if (mode === 'pdb') {
-                            if (this.shouldRender('entry')) {
-                                if (nModels === 1) {
+                            if (mode === 'pdb') {
+                                if (this.shouldRender('entry')) {
+                                    if (nModels === 1) {
+                                        await visuals.applyToAll(vis => vis.setColorByChainInstance({ colorList: colors.units, entityColorList: colors.entities }));
+                                        await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'chains', view }));
+
+                                        await visuals.applyToAll(vis => vis.setColorByEntity({ colorList: colors.entities }));
+                                        await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'entities', view }));
+                                    } else {
+                                        model.setCollapsed(ALLOW_COLLAPSED_NODES);
+                                        await using(traj.makeGroup({ label: 'Other models' }, { state: { isGhost: ALLOW_GHOST_NODES } }), async group => {
+                                            const allVisuals: (VisualNode | undefined)[] = Object.values(visuals.nodes);
+                                            for (let iModel = 1; iModel < nModels; iModel++) {
+                                                const otherModel = await group.makeModel(iModel);
+                                                const otherStructure = await otherModel.makeStructure({ type: { name: 'model', params: {} } });
+                                                const otherComponents = await otherStructure.makeStandardComponents();
+                                                const otherVisuals = await otherComponents.makeStandardVisuals();
+                                                otherModel.setCollapsed(ALLOW_COLLAPSED_NODES);
+                                                allVisuals.push(...Object.values(otherVisuals.nodes));
+                                            }
+                                            for (const vis of allVisuals) await vis?.setColorByChainInstance();
+                                            await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'chains', view }));
+
+                                            for (const vis of allVisuals) await vis?.setColorByEntity();
+                                            await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'entities', view }));
+                                        });
+                                        model.setCollapsed(false);
+                                    }
+                                }
+
+                                if (this.shouldRender('validation')) {
+                                    await visuals.applyToAll(vis => vis.setColorByGeometryValidation());
+                                    await this.saveViews('front', view => Captions.forGeometryValidation({ pdbId, view }));
+                                }
+
+                                if (this.shouldRender('bfactor')) {
+                                    if (model.data && Model.isFromXray(model.data)) {
+                                        await visuals.nodes.polymerCartoon?.setPutty();
+                                        await visuals.applyToAll(vis => vis.setColorByBfactor('rainbow'));
+                                        await this.saveViews('front', view => Captions.forBFactor({ pdbId, view }));
+                                        await visuals.nodes.polymerCartoon?.setCartoon();
+                                    } else {
+                                        logger.info('Skipping B-factor images because the structure is not from diffraction.');
+                                    }
+                                }
+
+                                await visuals.applyToAll(vis => vis.setFaded());
+                                await visuals.applyToAll(vis => vis.setGhost(false));
+                                await visuals.applyToAll(vis => vis.setCollapsed(ALLOW_COLLAPSED_NODES));
+                                await visuals.applyToAll(vis => vis.setVisible(false));
+                                if (this.shouldRender('ligand')) {
+                                    await this.processLigands(structure, context, colors.entities);
+                                }
+                                if (this.shouldRender('domain')) {
+                                    await this.processDomains(structure, await promises.siftsMappings, context);
+                                }
+                            }
+
+                            if (mode === 'alphafold' && this.shouldRender('plddt')) {
+                                await visuals.applyToAll(vis => vis.setColorByPlddt());
+                                await this.saveViews('all', view => Captions.forPlddt({ afdbId: pdbId, view }));
+                            }
+                        });
+                    }
+
+                    if (mode === 'pdb' && this.shouldRender('assembly', 'entity', 'modres')) {
+                        const assemblies = ModelSymmetry.Provider.get(model.data!)?.assemblies ?? [];
+                        const preferredAssembly = await promises.preferredAssembly;
+                        for (const ass of assemblies) {
+                            const isPreferredAssembly = ass.id === preferredAssembly?.assemblyId;
+                            await using(model.makeStructure({ type: { name: 'assembly', params: { id: ass.id } } }), async structure => {
+                                const context = { pdbId, assemblyId: ass.id, isPreferredAssembly, nModels: 1, entityNames: await promises.entityNames, entityInfo: getEntityInfo(structure.data!) };
+                                const colors = assignEntityAndUnitColors(structure.data!);
+                                const group = await structure.makeGroup({ label: 'Whole Assembly' }, { state: { isGhost: ALLOW_GHOST_NODES } });
+                                const components = await group.makeStandardComponents();
+                                const visuals = await components.makeStandardVisuals();
+                                this.orientAndZoom(structure);
+                                if (this.shouldRender('assembly')) {
                                     await visuals.applyToAll(vis => vis.setColorByChainInstance({ colorList: colors.units, entityColorList: colors.entities }));
                                     await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'chains', view }));
 
                                     await visuals.applyToAll(vis => vis.setColorByEntity({ colorList: colors.entities }));
                                     await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'entities', view }));
-                                } else {
-                                    model.setCollapsed(ALLOW_COLLAPSED_NODES);
-                                    await using(traj.makeGroup({ label: 'Other models' }, { state: { isGhost: ALLOW_GHOST_NODES } }), async group => {
-                                        const allVisuals: (VisualNode | undefined)[] = Object.values(visuals.nodes);
-                                        for (let iModel = 1; iModel < nModels; iModel++) {
-                                            const otherModel = await group.makeModel(iModel);
-                                            const otherStructure = await otherModel.makeStructure({ type: { name: 'model', params: {} } });
-                                            const otherComponents = await otherStructure.makeStandardComponents();
-                                            const otherVisuals = await otherComponents.makeStandardVisuals();
-                                            otherModel.setCollapsed(ALLOW_COLLAPSED_NODES);
-                                            allVisuals.push(...Object.values(otherVisuals.nodes));
-                                        }
-                                        for (const vis of allVisuals) await vis?.setColorByChainInstance();
-                                        await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'chains', view }));
-
-                                        for (const vis of allVisuals) await vis?.setColorByEntity();
-                                        await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'entities', view }));
-                                    });
-                                    model.setCollapsed(false);
                                 }
-                            }
 
-                            if (this.shouldRender('validation')) {
-                                await visuals.applyToAll(vis => vis.setColorByGeometryValidation());
-                                await this.saveViews('front', view => Captions.forGeometryValidation({ pdbId, view }));
-                            }
-
-                            if (this.shouldRender('bfactor')) {
-                                if (model.data && Model.isFromXray(model.data)) {
-                                    await visuals.nodes.polymerCartoon?.setPutty();
-                                    await visuals.applyToAll(vis => vis.setColorByBfactor('rainbow'));
-                                    await this.saveViews('front', view => Captions.forBFactor({ pdbId, view }));
-                                    await visuals.nodes.polymerCartoon?.setCartoon();
-                                } else {
-                                    console.info('Skipping B-factor images because the structure is not from diffraction');
+                                if (isPreferredAssembly) {
+                                    await visuals.applyToAll(vis => vis.setFaded());
+                                    if (this.shouldRender('entity')) {
+                                        await this.processEntities(structure, context, colors.entities);
+                                    }
+                                    if (this.shouldRender('modres')) {
+                                        await this.processModifiedResidues(structure, await promises.modifiedResidues, context);
+                                    }
                                 }
-                            }
-
-                            await visuals.applyToAll(vis => vis.setFaded());
-                            await visuals.applyToAll(vis => vis.setGhost(false));
-                            await visuals.applyToAll(vis => vis.setCollapsed(ALLOW_COLLAPSED_NODES));
-                            await visuals.applyToAll(vis => vis.setVisible(false));
-                            if (this.shouldRender('ligand')) {
-                                await this.processLigands(structure, context, colors.entities);
-                            }
-                            if (this.shouldRender('domain')) {
-                                await this.processDomains(structure, await promises.siftsMappings, context);
-                            }
+                            });
                         }
-
-                        if (mode === 'alphafold' && this.shouldRender('plddt')) {
-                            await visuals.applyToAll(vis => vis.setColorByPlddt());
-                            await this.saveViews('all', view => Captions.forPlddt({ afdbId: pdbId, view }));
-                        }
-                    });
-                }
-
-                if (mode === 'pdb' && this.shouldRender('assembly', 'entity', 'modres')) {
-                    const assemblies = ModelSymmetry.Provider.get(model.data!)?.assemblies ?? [];
-                    const preferredAssembly = await promises.preferredAssembly;
-                    for (const ass of assemblies) {
-                        const isPreferredAssembly = ass.id === preferredAssembly?.assemblyId;
-                        await using(model.makeStructure({ type: { name: 'assembly', params: { id: ass.id } } }), async structure => {
-                            const context = { pdbId, assemblyId: ass.id, isPreferredAssembly, nModels: 1, entityNames: await promises.entityNames, entityInfo: getEntityInfo(structure.data!) };
-                            const colors = assignEntityAndUnitColors(structure.data!);
-                            const group = await structure.makeGroup({ label: 'Whole Assembly' }, { state: { isGhost: ALLOW_GHOST_NODES } });
-                            const components = await group.makeStandardComponents();
-                            const visuals = await components.makeStandardVisuals();
-                            this.orientAndZoom(structure);
-                            if (this.shouldRender('assembly')) {
-                                await visuals.applyToAll(vis => vis.setColorByChainInstance({ colorList: colors.units, entityColorList: colors.entities }));
-                                await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'chains', view }));
-
-                                await visuals.applyToAll(vis => vis.setColorByEntity({ colorList: colors.entities }));
-                                await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'entities', view }));
-                            }
-
-                            if (isPreferredAssembly) {
-                                await visuals.applyToAll(vis => vis.setFaded());
-                                if (this.shouldRender('entity')) {
-                                    await this.processEntities(structure, context, colors.entities);
-                                }
-                                if (this.shouldRender('modres')) {
-                                    await this.processModifiedResidues(structure, await promises.modifiedResidues, context);
-                                }
-                            }
-                        });
                     }
-                }
+                });
             });
-        });
+            success = true;
+        } finally {
+            const seconds = (Date.now() - startTime) / 1000;
+            logger.info('Processed', pdbId, 'in', seconds, 'seconds', success ? '' : '(failed)');
+        }
     }
 
     private async processEntities(structure: StructureNode, context: Captions.StructureContext, colors: Color[] = ENTITY_COLORS) {

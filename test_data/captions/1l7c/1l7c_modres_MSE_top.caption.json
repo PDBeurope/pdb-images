@@ -1,0 +1,13 @@
+{
+  "filename": "1l7c_modres_MSE_top",
+  "alt": "Modified residue MSE in PDB entry 1l7c, assembly 4, top view.",
+  "description": "Homo-dimeric assembly 4 of PDB entry <span class='highlight'>1l7c</span> contains 10 instances of modified residue <span class='highlight'>MSE (SELENOMETHIONINE)</span>. Top view.",
+  "clean_description": "Homo-dimeric assembly 4 of PDB entry 1l7c contains 10 instances of modified residue MSE (SELENOMETHIONINE). Top view.",
+  "_entry_id": "1l7c",
+  "_view": "top",
+  "_section": [
+    "entry",
+    "mod_res",
+    "MSE"
+  ]
+}

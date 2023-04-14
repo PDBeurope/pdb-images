@@ -30,7 +30,6 @@
 
 // function layingTransform(coords: number[], referenceRotation?: Mat3): { rotation: Mat3, origin: Vec3 } {
 //     if (coords.length === 0) {
-//         console.warn('Skipping PCA, no atoms');
 //         return { rotation: Mat3.identity(), origin: Vec3.zero() };
 //     }
 //     const axes = PrincipalAxes.calculateMomentsAxes(coords);

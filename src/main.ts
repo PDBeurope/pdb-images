@@ -18,7 +18,11 @@ import { ImageGenerator } from './image-generator';
 import { addAxisIndicators } from './image/draw';
 import { resizeRawImage, saveRawToPng } from './image/resize';
 import { setFSModule } from 'molstar/lib/commonjs/mol-util/data-source';
+import { configureLogging, getLogger, LogLevel, LogLevels, oneLine } from './helpers/logging';
+import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context';
 
+
+const logger = getLogger(module);
 
 setFSModule(fs);
 
@@ -41,6 +45,7 @@ export interface Args {
     no_axes: boolean,
     date: string | undefined,
     clear: boolean,
+    log: LogLevel,
 }
 
 export function parseArguments(): Args {
@@ -56,6 +61,7 @@ export function parseArguments(): Args {
     parser.add_argument('--no_axes', { action: 'store_true', help: 'Do not render axis indicators aka PCA arrows (default: render axes when rendering the same scene from multiple view angles (front, side, top))' });
     parser.add_argument('--date', { help: `Date to use as "last_modification" in the caption JSON (default: today's date formatted as YYYY-MM-DD)` });
     parser.add_argument('--clear', { action: 'store_true', help: 'Remove all contents of the output directory before running' });
+    parser.add_argument('--log', { choices: [...LogLevels], default: 'info', help: 'Set logging level. Default: info.' });
     const args = parser.parse_args();
     args.size = args.size.map((s: string) => {
         try {
@@ -70,16 +76,14 @@ export function parseArguments(): Args {
 }
 
 export async function main(args: Args) {
-    console.log('args:', args);
+    configureLogging(args.log, 'stderr');
+    logger.info('Arguments:', oneLine(args));
 
-    const rootPath = '/Users/midlik/Workspace/PDBeImages/data';
+    const rootPath = '/Users/midlik/Workspace/PDBeImages/data'; // TODO add --in --out --public_in?
     const outDir = path.join(rootPath, 'out', args.pdbid);
-    if (args.clear) {
-        fs.rmSync(outDir, { recursive: true, force: true });
-    }
+    if (args.clear) fs.rmSync(outDir, { recursive: true, force: true });
     fs.mkdirSync(outDir, { recursive: true });
 
-    console.time(`generate ${args.pdbid}`);
     const options: HeadlessScreenshotHelperOptions = { canvas: defaultCanvas3DParams(), imagePass: defaultImagePassParams() };
     options.canvas!.camera!.manualReset = true;
     if (options.canvas?.cameraFog?.name === 'on') {
@@ -97,7 +101,7 @@ export async function main(args: Args) {
     await plugin.init();
 
     const isAlphaFold = args.pdbid.startsWith('AF-'); // for now, TODO pass through args
-    if (isAlphaFold) console.log('RUNNING IN ALPHAFOLD MODE');
+    logger.info('Running in', isAlphaFold ? 'AlphaFold' : 'PDB', 'mode');
     const localPath = isAlphaFold
         ? path.join(rootPath, 'in', `${args.pdbid}.cif`)
         : path.join(rootPath, 'in', `${args.pdbid}.bcif`);
@@ -110,13 +114,25 @@ export async function main(args: Args) {
 
     if (!fs.existsSync(localPath)) throw new Error(`Input file not found: ${localPath}`);
 
+    const saveFunction = makeSaveFunction(args, plugin, outDir, wwwUrl);
+    const api = new PDBeAPI(args.api_url, args.no_api);
+
+    const imageGenerator = new ImageGenerator(plugin, saveFunction, api, args.type, args.view);
+    await imageGenerator.processAll(localUrl, args.pdbid, format, isAlphaFold ? 'alphafold' : 'pdb');
+    collectCaptions(outDir, args.pdbid, args.date);
+
+    plugin.dispose();
+}
+
+function makeSaveFunction(args: Args, plugin: HeadlessPluginContext, outDir: string, wwwUrl: string) {
     const stateSaver = new MoljStateSaver(plugin, {
         downloadUrl: wwwUrl,
         downloadBinary: wwwUrl.endsWith('.bcif'),
         pdbeStructureQualityReportServerUrl: null, // will use Mol* default https://www.ebi.ac.uk/pdbe/api/validation/residuewise_outlier_summary/entry/
     });
     const postprocessing = undefined;
-    const saveFunction = async (spec: ImageSpec) => {
+    return async (spec: ImageSpec) => {
+        logger.info('Saving', spec.filename);
         fs.writeFileSync(path.join(outDir, `${spec.filename}.caption.json`), JSON.stringify(spec, undefined, 2), { encoding: 'utf8' });
         await stateSaver.save(path.join(outDir, `${spec.filename}.molj`));
 
@@ -138,13 +154,4 @@ export async function main(args: Args) {
             await saveRawToPng(image, path.join(outDir, `${spec.filename}_image-${size.width}x${size.height}.png`));
         }
     };
-    const api = new PDBeAPI(args.api_url, args.no_api);
-
-    const imageGenerator = new ImageGenerator(plugin, saveFunction, api, args.type, args.view);
-    await imageGenerator.processUrl(localUrl, args.pdbid, format, isAlphaFold ? 'alphafold' : 'pdb');
-    collectCaptions(outDir, args.pdbid, args.date);
-
-    plugin.dispose();
-
-    console.timeEnd(`generate ${args.pdbid}`);
 }

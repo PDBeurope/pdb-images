@@ -1,0 +1,12 @@
+{
+  "filename": "1l7c_entity_1_side",
+  "alt": "Catenin alpha-1 in PDB entry 1l7c, assembly 4, side view.",
+  "description": "Homo-dimeric assembly 4 of PDB entry <span class='highlight'>1l7c</span> contains 2 copies of <span class='highlight'>Catenin alpha-1</span>. Side view.",
+  "clean_description": "Homo-dimeric assembly 4 of PDB entry 1l7c contains 2 copies of Catenin alpha-1. Side view.",
+  "_entry_id": "1l7c",
+  "_view": "side",
+  "_section": [
+    "entity",
+    "1"
+  ]
+}

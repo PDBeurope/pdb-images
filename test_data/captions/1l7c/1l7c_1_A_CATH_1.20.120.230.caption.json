@@ -1,0 +1,14 @@
+{
+  "filename": "1l7c_1_A_CATH_1.20.120.230",
+  "alt": "The deposited structure of PDB entry 1l7c contains 6 copies of CATH domain 1.20.120.230 (Four Helix Bundle (Hemerythrin (Met), subunit A)) in Catenin alpha-1. Showing 2 copies in chain A.",
+  "description": "The deposited structure of PDB entry <span class='highlight'>1l7c</span> contains 6 copies of CATH domain <span class='highlight'>1.20.120.230 (Four Helix Bundle (Hemerythrin (Met), subunit A))</span> in <span class='highlight'>Catenin alpha-1</span>. Showing 2 copies in chain <span class='highlight'>A</span>.",
+  "clean_description": "The deposited structure of PDB entry 1l7c contains 6 copies of CATH domain 1.20.120.230 (Four Helix Bundle (Hemerythrin (Met), subunit A)) in Catenin alpha-1. Showing 2 copies in chain A.",
+  "_entry_id": "1l7c",
+  "_section": [
+    "entity",
+    "1",
+    "database",
+    "CATH",
+    "1.20.120.230"
+  ]
+}

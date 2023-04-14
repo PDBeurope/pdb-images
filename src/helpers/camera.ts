@@ -2,6 +2,11 @@ import { Camera } from 'molstar/lib/commonjs/mol-canvas3d/camera';
 import { Mat3, Vec3 } from 'molstar/lib/commonjs/mol-math/linear-algebra';
 import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context';
 
+import { getLogger, oneLine } from './logging';
+
+
+const logger = getLogger(module);
+
 const ZOOMOUT = 0.75;
 
 
@@ -49,11 +54,9 @@ export function adjustCamera(plugin: PluginContext, change: (old: Camera.Snapsho
     plugin.canvas3d.camera.setState(newSnapshot);
     const checkSnapshot = plugin.canvas3d.camera.getSnapshot();
     if (oldSnapshot.radius > 0 && !Camera.areSnapshotsEqual(newSnapshot, checkSnapshot)) {
-        console.error('Error: The camera has not been adjusted correctly.');
-        console.error('Required:');
-        console.error(newSnapshot);
-        console.error('Real:');
-        console.error(checkSnapshot);
+        logger.error('The camera has not been adjusted correctly.');
+        logger.error('Required:', oneLine(newSnapshot));
+        logger.error('Real:', oneLine(checkSnapshot));
         throw new Error(`AssertionError: The camera has not been adjusted correctly.`);
     }
 }

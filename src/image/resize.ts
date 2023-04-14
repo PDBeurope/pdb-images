@@ -3,6 +3,7 @@ import { PNG } from 'pngjs';
 import { RawImageData } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 
 
+/** Up- or down-sample image to a new size. */
 export function resizeRawImage(img: RawImageData, newSize: { width: number, height: number }): RawImageData {
     const w0 = img.width;
     const h0 = img.height;
@@ -23,6 +24,11 @@ export function resizeRawImage(img: RawImageData, newSize: { width: number, heig
     return { width: w1, height: h1, data: new Uint8ClampedArray(out) };
 }
 
+/** Calculate the weights of how much each pixel in the old image contributes to pixels in the new image, for 1D images
+ * (pixel `from[i]` contributes to pixel `to[i]` with weight `weight[i]`).
+ * Typically one old pixel will contribute to more new pixels and vice versa.
+ * Sum of weights contributed to each new pixel must be equal to 1.
+ * To use for 2D images, calculate row-wise and column-wise weights and multiply them. */
 function resamplingCoefficients(nOld: number, nNew: number) {
     const scale = nNew / nOld;
     let i = 0;
@@ -51,9 +57,21 @@ function resamplingCoefficients(nOld: number, nNew: number) {
             j += 1;
         }
     }
-    return { from, to, weight };
+    return {
+        /** Index of a pixel in the old image */
+        from,
+        /** Index of a pixel in the new image */
+        to,
+        /** How much the `from` pixel's value contributes to the `to` pixel */
+        weight,
+    };
 }
 
+/** Save an image as a PNG file.
+ * `imageData.data` is an array of length `imageData.width * imageData.height * 4`,
+ * where each 4 numbers represent R, G, B, and alpha value of one pixels,
+ * and pixels are ordered in C-style (i.e. by rows).
+ */
 export async function saveRawToPng(imageData: RawImageData, outPath: string) {
     const png = new PNG({ width: imageData.width, height: imageData.height });
     png.data = Buffer.from(imageData.data.buffer);

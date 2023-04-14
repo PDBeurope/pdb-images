@@ -1,6 +1,7 @@
 import { assignEntityAndUnitColors, cycleIterator } from '../colors';
 import { getTestingStructure } from '../../_spec/_utils';
 
+
 describe('colors', () => {
     it('cycleIterator', () => {
         const iterator = cycleIterator([1, 10, 42]);
@@ -40,4 +41,3 @@ describe('colors', () => {
         return;
     });
 });
-

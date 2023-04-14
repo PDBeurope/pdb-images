@@ -1,5 +1,8 @@
 import fs from 'fs';
+import { getLogger } from './helpers/logging';
 
+
+const logger = getLogger(module);
 
 /** Client for access to PDBe REST API */
 export class PDBeAPI {
@@ -63,11 +66,11 @@ export class PDBeAPI {
         }
         const preferred = assemblies.filter(ass => ass.preferred);
         if (preferred.length === 0) {
-            console.warn(`PDB entry ${pdbId} has no preferred assembly`);
+            logger.warn(`PDB entry ${pdbId} has no preferred assembly.`);
             return assemblies[0];
         }
         if (preferred.length > 1) {
-            console.warn(`PDB entry ${pdbId} has more than one preferred assembly`);
+            logger.warn(`PDB entry ${pdbId} has more than one preferred assembly. Only the first one will be used.`);
         }
         return preferred[0];
     }

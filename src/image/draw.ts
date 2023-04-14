@@ -1,3 +1,9 @@
+/** Functions for drawing simple geometrical shapes in 2D.
+ * I am sure there are smarter libraries out there to achieve this,
+ * but for what we need (rectangles, triangles, arrows) it was just easier to implement it.
+ * Does not implement any kind of ant-aliasing (each pixel is either completely recolored or left as is).
+*/
+
 import { RawImageData } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 import { Color } from 'molstar/lib/commonjs/mol-util/color';
 
@@ -23,7 +29,11 @@ const ARROW = {
 /** Colors for axis indicators (arrows) for PCA1, PCA2, PCA3 */
 const PCA_COLORS = [Color.fromHexString('0xDD3333'), Color.fromHexString('0x338833'), Color.fromHexString('0x3333EE')];
 
-/** Draw axis indicators in the image (in-place) */
+/** Draw axis indicators in the image (in-place).
+ * In 'front' view, X goes right, Y up.
+ * In 'side' view, Z goes left, Y up.
+ * In 'top' view, X goes right, Z down.
+ * If `view` is undefined, do not draw anything. */
 export function addAxisIndicators(img: RawImageData, view: ViewType): void {
     const length = ARROW.length * img.width; // total arrow length
     const wHead = 0.5 * ARROW.headThicknessRatio * length; // head half-thickness
@@ -47,6 +57,7 @@ export function addAxisIndicators(img: RawImageData, view: ViewType): void {
         addRectangle(img, { x1: x - wTail, x2: x + wTail, y1: y - wTail, y2: y + wTail }, PCA_COLORS[1]);
     }
 }
+
 /** Draw a right arrow starting at `origin` with length `length` (use negative `length` for a left arrow) */
 function addArrowHorizontal(img: RawImageData, origin: Point, length: number, color: Color) {
     const lHead = ARROW.headLengthRatio * length; // tail length

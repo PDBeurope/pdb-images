@@ -1,0 +1,326 @@
+{
+  "1l7c": {
+    "entity": {
+      "1": {
+        "database": {
+          "CATH": {
+            "1.20.120.230": {
+              "image": [
+                {
+                  "filename": "1l7c_1_A_CATH_1.20.120.230",
+                  "alt": "The deposited structure of PDB entry 1l7c contains 6 copies of CATH domain 1.20.120.230 (Four Helix Bundle (Hemerythrin (Met), subunit A)) in Catenin alpha-1. Showing 2 copies in chain A.",
+                  "description": "The deposited structure of PDB entry <span class='highlight'>1l7c</span> contains 6 copies of CATH domain <span class='highlight'>1.20.120.230 (Four Helix Bundle (Hemerythrin (Met), subunit A))</span> in <span class='highlight'>Catenin alpha-1</span>. Showing 2 copies in chain <span class='highlight'>A</span>.",
+                  "clean_description": "The deposited structure of PDB entry 1l7c contains 6 copies of CATH domain 1.20.120.230 (Four Helix Bundle (Hemerythrin (Met), subunit A)) in Catenin alpha-1. Showing 2 copies in chain A."
+                }
+              ]
+            }
+          },
+          "Pfam": {
+            "PF01044": {
+              "image": [
+                {
+                  "filename": "1l7c_1_A_Pfam_PF01044",
+                  "alt": "The deposited structure of PDB entry 1l7c contains 3 copies of Pfam domain PF01044 (Vinculin family) in Catenin alpha-1. Showing 1 copy in chain A.",
+                  "description": "The deposited structure of PDB entry <span class='highlight'>1l7c</span> contains 3 copies of Pfam domain <span class='highlight'>PF01044 (Vinculin family)</span> in <span class='highlight'>Catenin alpha-1</span>. Showing 1 copy in chain <span class='highlight'>A</span>.",
+                  "clean_description": "The deposited structure of PDB entry 1l7c contains 3 copies of Pfam domain PF01044 (Vinculin family) in Catenin alpha-1. Showing 1 copy in chain A."
+                }
+              ]
+            }
+          },
+          "SCOP": {
+            "47221": {
+              "image": [
+                {
+                  "filename": "1l7c_1_A_SCOP_47221",
+                  "alt": "The deposited structure of PDB entry 1l7c contains 6 copies of SCOP domain 47221 (alpha-catenin/vinculin) in Catenin alpha-1. Showing 2 copies in chain A.",
+                  "description": "The deposited structure of PDB entry <span class='highlight'>1l7c</span> contains 6 copies of SCOP domain <span class='highlight'>47221 (alpha-catenin/vinculin)</span> in <span class='highlight'>Catenin alpha-1</span>. Showing 2 copies in chain <span class='highlight'>A</span>.",
+                  "clean_description": "The deposited structure of PDB entry 1l7c contains 6 copies of SCOP domain 47221 (alpha-catenin/vinculin) in Catenin alpha-1. Showing 2 copies in chain A."
+                }
+              ]
+            }
+          }
+        },
+        "image": [
+          {
+            "filename": "1l7c_entity_1_front",
+            "alt": "Catenin alpha-1 in PDB entry 1l7c, assembly 4, front view.",
+            "description": "Homo-dimeric assembly 4 of PDB entry <span class='highlight'>1l7c</span> contains 2 copies of <span class='highlight'>Catenin alpha-1</span>. Front view.",
+            "clean_description": "Homo-dimeric assembly 4 of PDB entry 1l7c contains 2 copies of Catenin alpha-1. Front view."
+          },
+          {
+            "filename": "1l7c_entity_1_side",
+            "alt": "Catenin alpha-1 in PDB entry 1l7c, assembly 4, side view.",
+            "description": "Homo-dimeric assembly 4 of PDB entry <span class='highlight'>1l7c</span> contains 2 copies of <span class='highlight'>Catenin alpha-1</span>. Side view.",
+            "clean_description": "Homo-dimeric assembly 4 of PDB entry 1l7c contains 2 copies of Catenin alpha-1. Side view."
+          },
+          {
+            "filename": "1l7c_entity_1_top",
+            "alt": "Catenin alpha-1 in PDB entry 1l7c, assembly 4, top view.",
+            "description": "Homo-dimeric assembly 4 of PDB entry <span class='highlight'>1l7c</span> contains 2 copies of <span class='highlight'>Catenin alpha-1</span>. Top view.",
+            "clean_description": "Homo-dimeric assembly 4 of PDB entry 1l7c contains 2 copies of Catenin alpha-1. Top view."
+          }
+        ]
+      }
+    },
+    "assembly": {
+      "1": {
+        "image": [
+          {
+            "filename": "1l7c_assembly_1_chain_front",
+            "alt": "PDB entry 1l7c coloured by chain, front view.",
+            "description": "Monomeric assembly 1 of PDB entry <span class='highlight'>1l7c</span> coloured by chain, front view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>1 copy of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Monomeric assembly 1 of PDB entry 1l7c coloured by chain, front view. This structure contains: 1 copy of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_assembly_1_chain_side",
+            "alt": "PDB entry 1l7c coloured by chain, side view.",
+            "description": "Monomeric assembly 1 of PDB entry <span class='highlight'>1l7c</span> coloured by chain, side view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>1 copy of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Monomeric assembly 1 of PDB entry 1l7c coloured by chain, side view. This structure contains: 1 copy of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_assembly_1_chain_top",
+            "alt": "PDB entry 1l7c coloured by chain, top view.",
+            "description": "Monomeric assembly 1 of PDB entry <span class='highlight'>1l7c</span> coloured by chain, top view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>1 copy of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Monomeric assembly 1 of PDB entry 1l7c coloured by chain, top view. This structure contains: 1 copy of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_assembly_1_chemically_distinct_molecules_front",
+            "alt": "PDB entry 1l7c coloured by chemically distinct molecules, front view.",
+            "description": "Monomeric assembly 1 of PDB entry <span class='highlight'>1l7c</span> coloured by chemically distinct molecules, front view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>1 copy of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Monomeric assembly 1 of PDB entry 1l7c coloured by chemically distinct molecules, front view. This structure contains: 1 copy of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_assembly_1_chemically_distinct_molecules_side",
+            "alt": "PDB entry 1l7c coloured by chemically distinct molecules, side view.",
+            "description": "Monomeric assembly 1 of PDB entry <span class='highlight'>1l7c</span> coloured by chemically distinct molecules, side view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>1 copy of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Monomeric assembly 1 of PDB entry 1l7c coloured by chemically distinct molecules, side view. This structure contains: 1 copy of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_assembly_1_chemically_distinct_molecules_top",
+            "alt": "PDB entry 1l7c coloured by chemically distinct molecules, top view.",
+            "description": "Monomeric assembly 1 of PDB entry <span class='highlight'>1l7c</span> coloured by chemically distinct molecules, top view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>1 copy of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Monomeric assembly 1 of PDB entry 1l7c coloured by chemically distinct molecules, top view. This structure contains: 1 copy of Catenin alpha-1; 1 copy of water."
+          }
+        ],
+        "preferred": false
+      },
+      "2": {
+        "image": [
+          {
+            "filename": "1l7c_assembly_2_chain_front",
+            "alt": "PDB entry 1l7c coloured by chain, front view.",
+            "description": "Monomeric assembly 2 of PDB entry <span class='highlight'>1l7c</span> coloured by chain, front view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>1 copy of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Monomeric assembly 2 of PDB entry 1l7c coloured by chain, front view. This structure contains: 1 copy of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_assembly_2_chain_side",
+            "alt": "PDB entry 1l7c coloured by chain, side view.",
+            "description": "Monomeric assembly 2 of PDB entry <span class='highlight'>1l7c</span> coloured by chain, side view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>1 copy of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Monomeric assembly 2 of PDB entry 1l7c coloured by chain, side view. This structure contains: 1 copy of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_assembly_2_chain_top",
+            "alt": "PDB entry 1l7c coloured by chain, top view.",
+            "description": "Monomeric assembly 2 of PDB entry <span class='highlight'>1l7c</span> coloured by chain, top view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>1 copy of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Monomeric assembly 2 of PDB entry 1l7c coloured by chain, top view. This structure contains: 1 copy of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_assembly_2_chemically_distinct_molecules_front",
+            "alt": "PDB entry 1l7c coloured by chemically distinct molecules, front view.",
+            "description": "Monomeric assembly 2 of PDB entry <span class='highlight'>1l7c</span> coloured by chemically distinct molecules, front view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>1 copy of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Monomeric assembly 2 of PDB entry 1l7c coloured by chemically distinct molecules, front view. This structure contains: 1 copy of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_assembly_2_chemically_distinct_molecules_side",
+            "alt": "PDB entry 1l7c coloured by chemically distinct molecules, side view.",
+            "description": "Monomeric assembly 2 of PDB entry <span class='highlight'>1l7c</span> coloured by chemically distinct molecules, side view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>1 copy of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Monomeric assembly 2 of PDB entry 1l7c coloured by chemically distinct molecules, side view. This structure contains: 1 copy of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_assembly_2_chemically_distinct_molecules_top",
+            "alt": "PDB entry 1l7c coloured by chemically distinct molecules, top view.",
+            "description": "Monomeric assembly 2 of PDB entry <span class='highlight'>1l7c</span> coloured by chemically distinct molecules, top view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>1 copy of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Monomeric assembly 2 of PDB entry 1l7c coloured by chemically distinct molecules, top view. This structure contains: 1 copy of Catenin alpha-1; 1 copy of water."
+          }
+        ],
+        "preferred": false
+      },
+      "3": {
+        "image": [
+          {
+            "filename": "1l7c_assembly_3_chain_front",
+            "alt": "PDB entry 1l7c coloured by chain, front view.",
+            "description": "Monomeric assembly 3 of PDB entry <span class='highlight'>1l7c</span> coloured by chain, front view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>1 copy of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Monomeric assembly 3 of PDB entry 1l7c coloured by chain, front view. This structure contains: 1 copy of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_assembly_3_chain_side",
+            "alt": "PDB entry 1l7c coloured by chain, side view.",
+            "description": "Monomeric assembly 3 of PDB entry <span class='highlight'>1l7c</span> coloured by chain, side view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>1 copy of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Monomeric assembly 3 of PDB entry 1l7c coloured by chain, side view. This structure contains: 1 copy of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_assembly_3_chain_top",
+            "alt": "PDB entry 1l7c coloured by chain, top view.",
+            "description": "Monomeric assembly 3 of PDB entry <span class='highlight'>1l7c</span> coloured by chain, top view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>1 copy of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Monomeric assembly 3 of PDB entry 1l7c coloured by chain, top view. This structure contains: 1 copy of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_assembly_3_chemically_distinct_molecules_front",
+            "alt": "PDB entry 1l7c coloured by chemically distinct molecules, front view.",
+            "description": "Monomeric assembly 3 of PDB entry <span class='highlight'>1l7c</span> coloured by chemically distinct molecules, front view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>1 copy of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Monomeric assembly 3 of PDB entry 1l7c coloured by chemically distinct molecules, front view. This structure contains: 1 copy of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_assembly_3_chemically_distinct_molecules_side",
+            "alt": "PDB entry 1l7c coloured by chemically distinct molecules, side view.",
+            "description": "Monomeric assembly 3 of PDB entry <span class='highlight'>1l7c</span> coloured by chemically distinct molecules, side view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>1 copy of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Monomeric assembly 3 of PDB entry 1l7c coloured by chemically distinct molecules, side view. This structure contains: 1 copy of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_assembly_3_chemically_distinct_molecules_top",
+            "alt": "PDB entry 1l7c coloured by chemically distinct molecules, top view.",
+            "description": "Monomeric assembly 3 of PDB entry <span class='highlight'>1l7c</span> coloured by chemically distinct molecules, top view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>1 copy of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Monomeric assembly 3 of PDB entry 1l7c coloured by chemically distinct molecules, top view. This structure contains: 1 copy of Catenin alpha-1; 1 copy of water."
+          }
+        ],
+        "preferred": false
+      },
+      "4": {
+        "image": [
+          {
+            "filename": "1l7c_assembly_4_chain_front",
+            "alt": "PDB entry 1l7c coloured by chain, front view.",
+            "description": "Homo-dimeric assembly 4 of PDB entry <span class='highlight'>1l7c</span> coloured by chain, front view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>2 copies of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Homo-dimeric assembly 4 of PDB entry 1l7c coloured by chain, front view. This structure contains: 2 copies of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_assembly_4_chain_side",
+            "alt": "PDB entry 1l7c coloured by chain, side view.",
+            "description": "Homo-dimeric assembly 4 of PDB entry <span class='highlight'>1l7c</span> coloured by chain, side view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>2 copies of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Homo-dimeric assembly 4 of PDB entry 1l7c coloured by chain, side view. This structure contains: 2 copies of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_assembly_4_chain_top",
+            "alt": "PDB entry 1l7c coloured by chain, top view.",
+            "description": "Homo-dimeric assembly 4 of PDB entry <span class='highlight'>1l7c</span> coloured by chain, top view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>2 copies of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Homo-dimeric assembly 4 of PDB entry 1l7c coloured by chain, top view. This structure contains: 2 copies of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_assembly_4_chemically_distinct_molecules_front",
+            "alt": "PDB entry 1l7c coloured by chemically distinct molecules, front view.",
+            "description": "Homo-dimeric assembly 4 of PDB entry <span class='highlight'>1l7c</span> coloured by chemically distinct molecules, front view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>2 copies of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Homo-dimeric assembly 4 of PDB entry 1l7c coloured by chemically distinct molecules, front view. This structure contains: 2 copies of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_assembly_4_chemically_distinct_molecules_side",
+            "alt": "PDB entry 1l7c coloured by chemically distinct molecules, side view.",
+            "description": "Homo-dimeric assembly 4 of PDB entry <span class='highlight'>1l7c</span> coloured by chemically distinct molecules, side view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>2 copies of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Homo-dimeric assembly 4 of PDB entry 1l7c coloured by chemically distinct molecules, side view. This structure contains: 2 copies of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_assembly_4_chemically_distinct_molecules_top",
+            "alt": "PDB entry 1l7c coloured by chemically distinct molecules, top view.",
+            "description": "Homo-dimeric assembly 4 of PDB entry <span class='highlight'>1l7c</span> coloured by chemically distinct molecules, top view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>2 copies of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "Homo-dimeric assembly 4 of PDB entry 1l7c coloured by chemically distinct molecules, top view. This structure contains: 2 copies of Catenin alpha-1; 1 copy of water."
+          }
+        ],
+        "preferred": true
+      }
+    },
+    "entry": {
+      "bfactor": {
+        "image": [
+          {
+            "filename": "1l7c_bfactor",
+            "alt": "B-factors for PDB entry 1l7c.",
+            "description": "The deposited structure of PDB entry <span class='highlight'>1l7c</span> coloured by B-factor values. The macromolecules are shown in backbone representation. The thickness reflects the B-factor values (thin = low, thick = high). The colour varies from blue to red corresponding to a B-factor range of 0 to 100 square angstroms.",
+            "clean_description": "The deposited structure of PDB entry 1l7c coloured by B-factor values. The macromolecules are shown in backbone representation. The thickness reflects the B-factor values (thin = low, thick = high). The colour varies from blue to red corresponding to a B-factor range of 0 to 100 square angstroms."
+          }
+        ]
+      },
+      "all": {
+        "image": [
+          {
+            "filename": "1l7c_deposited_chain_front",
+            "alt": "PDB entry 1l7c coloured by chain, front view.",
+            "description": "The deposited structure of PDB entry <span class='highlight'>1l7c</span> coloured by chain, front view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>3 copies of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "The deposited structure of PDB entry 1l7c coloured by chain, front view. This structure contains: 3 copies of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_deposited_chain_side",
+            "alt": "PDB entry 1l7c coloured by chain, side view.",
+            "description": "The deposited structure of PDB entry <span class='highlight'>1l7c</span> coloured by chain, side view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>3 copies of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "The deposited structure of PDB entry 1l7c coloured by chain, side view. This structure contains: 3 copies of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_deposited_chain_top",
+            "alt": "PDB entry 1l7c coloured by chain, top view.",
+            "description": "The deposited structure of PDB entry <span class='highlight'>1l7c</span> coloured by chain, top view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>3 copies of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "The deposited structure of PDB entry 1l7c coloured by chain, top view. This structure contains: 3 copies of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_deposited_chemically_distinct_molecules_front",
+            "alt": "PDB entry 1l7c coloured by chemically distinct molecules, front view.",
+            "description": "The deposited structure of PDB entry <span class='highlight'>1l7c</span> coloured by chemically distinct molecules, front view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>3 copies of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "The deposited structure of PDB entry 1l7c coloured by chemically distinct molecules, front view. This structure contains: 3 copies of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_deposited_chemically_distinct_molecules_side",
+            "alt": "PDB entry 1l7c coloured by chemically distinct molecules, side view.",
+            "description": "The deposited structure of PDB entry <span class='highlight'>1l7c</span> coloured by chemically distinct molecules, side view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>3 copies of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "The deposited structure of PDB entry 1l7c coloured by chemically distinct molecules, side view. This structure contains: 3 copies of Catenin alpha-1; 1 copy of water."
+          },
+          {
+            "filename": "1l7c_deposited_chemically_distinct_molecules_top",
+            "alt": "PDB entry 1l7c coloured by chemically distinct molecules, top view.",
+            "description": "The deposited structure of PDB entry <span class='highlight'>1l7c</span> coloured by chemically distinct molecules, top view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>3 copies of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+            "clean_description": "The deposited structure of PDB entry 1l7c coloured by chemically distinct molecules, top view. This structure contains: 3 copies of Catenin alpha-1; 1 copy of water."
+          }
+        ]
+      },
+      "mod_res": {
+        "MSE": {
+          "image": [
+            {
+              "filename": "1l7c_modres_MSE_front",
+              "alt": "Modified residue MSE in PDB entry 1l7c, assembly 4, front view.",
+              "description": "Homo-dimeric assembly 4 of PDB entry <span class='highlight'>1l7c</span> contains 10 instances of modified residue <span class='highlight'>MSE (SELENOMETHIONINE)</span>. Front view.",
+              "clean_description": "Homo-dimeric assembly 4 of PDB entry 1l7c contains 10 instances of modified residue MSE (SELENOMETHIONINE). Front view."
+            },
+            {
+              "filename": "1l7c_modres_MSE_side",
+              "alt": "Modified residue MSE in PDB entry 1l7c, assembly 4, side view.",
+              "description": "Homo-dimeric assembly 4 of PDB entry <span class='highlight'>1l7c</span> contains 10 instances of modified residue <span class='highlight'>MSE (SELENOMETHIONINE)</span>. Side view.",
+              "clean_description": "Homo-dimeric assembly 4 of PDB entry 1l7c contains 10 instances of modified residue MSE (SELENOMETHIONINE). Side view."
+            },
+            {
+              "filename": "1l7c_modres_MSE_top",
+              "alt": "Modified residue MSE in PDB entry 1l7c, assembly 4, top view.",
+              "description": "Homo-dimeric assembly 4 of PDB entry <span class='highlight'>1l7c</span> contains 10 instances of modified residue <span class='highlight'>MSE (SELENOMETHIONINE)</span>. Top view.",
+              "clean_description": "Homo-dimeric assembly 4 of PDB entry 1l7c contains 10 instances of modified residue MSE (SELENOMETHIONINE). Top view."
+            }
+          ]
+        }
+      }
+    },
+    "validation": {
+      "geometry": {
+        "deposited": {
+          "image": [
+            {
+              "filename": "1l7c_validation_geometry_deposited",
+              "alt": "Geometry outliers in PDB entry 1l7c.",
+              "description": "The deposited structure of PDB entry <span class='highlight'>1l7c</span> coloured by geometry validation. Residues are coloured by the number of geometry outliers: green – no outliers, yellow – one outlier yellow, orange – two outliers, red – three or more outliers.",
+              "clean_description": "The deposited structure of PDB entry 1l7c coloured by geometry validation. Residues are coloured by the number of geometry outliers: green – no outliers, yellow – one outlier yellow, orange – two outliers, red – three or more outliers."
+            }
+          ]
+        }
+      }
+    },
+    "image_suffix": [
+      ".caption.json"
+    ],
+    "last_modification": "2023-04-04"
+  }
+}

@@ -1,6 +1,7 @@
 import { Camera } from 'molstar/lib/commonjs/mol-canvas3d/camera';
 import { Mat3, Vec3 } from 'molstar/lib/commonjs/mol-math/linear-algebra';
 import { ROTATION_MATRICES } from 'molstar/lib/commonjs/mol-plugin-state/manager/focus-camera/orient-axes';
+
 import { getTestingPlugin } from '../../_spec/_utils';
 import { adjustCamera, changeCameraRotation, changeCameraZoom, combineRotations, zoomAll } from '../camera';
 
@@ -116,7 +117,7 @@ describe('camera', () => {
 function matrixSqDiff(real: Mat3, expected: Mat3): number {
     const sqDiff = Mat3.sub(Mat3(), real, expected).map(x => x ** 2).reduce((a, b) => a + b);
     if (sqDiff > 0.001) {
-        console.log('Matrices do not match!\nExpected:', expected, '\nGot:', real);
+        console.warn('Matrices do not match!\nExpected:', expected, '\nGot:', real);
     }
     return sqDiff;
 }

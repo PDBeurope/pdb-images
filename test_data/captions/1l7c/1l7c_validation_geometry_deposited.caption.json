@@ -1,0 +1,12 @@
+{
+  "filename": "1l7c_validation_geometry_deposited",
+  "alt": "Geometry outliers in PDB entry 1l7c.",
+  "description": "The deposited structure of PDB entry <span class='highlight'>1l7c</span> coloured by geometry validation. Residues are coloured by the number of geometry outliers: green – no outliers, yellow – one outlier yellow, orange – two outliers, red – three or more outliers.",
+  "clean_description": "The deposited structure of PDB entry 1l7c coloured by geometry validation. Residues are coloured by the number of geometry outliers: green – no outliers, yellow – one outlier yellow, orange – two outliers, red – three or more outliers.",
+  "_entry_id": "1l7c",
+  "_section": [
+    "validation",
+    "geometry",
+    "deposited"
+  ]
+}

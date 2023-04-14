@@ -1,0 +1,15 @@
+{
+  "filename": "1l7c_assembly_2_chain_front",
+  "alt": "PDB entry 1l7c coloured by chain, front view.",
+  "description": "Monomeric assembly 2 of PDB entry <span class='highlight'>1l7c</span> coloured by chain, front view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>1 copy of <span class='highlight'>Catenin alpha-1</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
+  "clean_description": "Monomeric assembly 2 of PDB entry 1l7c coloured by chain, front view. This structure contains: 1 copy of Catenin alpha-1; 1 copy of water.",
+  "_entry_id": "1l7c",
+  "_view": "front",
+  "_section": [
+    "assembly",
+    "2"
+  ],
+  "_extras": {
+    "preferred": false
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "filename": "1l7c_bfactor",
+  "alt": "B-factors for PDB entry 1l7c.",
+  "description": "The deposited structure of PDB entry <span class='highlight'>1l7c</span> coloured by B-factor values. The macromolecules are shown in backbone representation. The thickness reflects the B-factor values (thin = low, thick = high). The colour varies from blue to red corresponding to a B-factor range of 0 to 100 square angstroms.",
+  "clean_description": "The deposited structure of PDB entry 1l7c coloured by B-factor values. The macromolecules are shown in backbone representation. The thickness reflects the B-factor values (thin = low, thick = high). The colour varies from blue to red corresponding to a B-factor range of 0 to 100 square angstroms.",
+  "_entry_id": "1l7c",
+  "_section": [
+    "entry",
+    "bfactor"
+  ]
+}

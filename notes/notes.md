@@ -28,8 +28,11 @@ Here: https://gitlab.ebi.ac.uk/midlik/pdb-visualization-benchmark
 - Color highlighted entities/modres in various colors, like with domains (might improve orientation in the data) -> color entities but ensure they have the same colors as in by-entity coloring - DONE
 - Add more colors to the entities palette - DONE
 - Try using HCL instead of ad-hoc color space (meh)
-- Less fog (30 instead of 50) - DONE 
+- Less fog (30 instead of 50) - DONE
+- Move `orient` to Mol* - DONE
 
+- Check entries from Genovieve (weird/failed on April 12): 8agd 7y01 7xyq 8e5t 8bf8 8h1j 8g9o 8g9n 8g9l 8f24
+- Solve pref.ass. in API (e.g. 1tqn, 1l7c, 1ad9?)
 - Short peptides - show cartoon or sticks? Large structures - show cartoon or surface? What is the threshold? -> keep the current behaviour and double-check if it's OK
 - Testing - unit tests (for the pure functions) + check a few entries if all images get generated and are not blank (check image size); use Jest - before packaging
 - Documentation
