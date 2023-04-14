@@ -9,7 +9,7 @@ import { Model, Structure } from 'molstar/lib/commonjs/mol-model/structure';
 import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context';
 import { HeadlessPluginContext } from 'molstar/lib/commonjs/mol-plugin/headless-plugin-context';
 import { DefaultPluginSpec, PluginSpec } from 'molstar/lib/commonjs/mol-plugin/spec';
-import { defaultCanvas3DParams, defaultImagePassParams } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
+import { RawImageData, defaultCanvas3DParams, defaultImagePassParams } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 import { Task } from 'molstar/lib/commonjs/mol-task';
 import { setFSModule } from 'molstar/lib/commonjs/mol-util/data-source';
 

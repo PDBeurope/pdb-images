@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { RawImageData } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
-import { resizeRawImage, saveRawToPng } from '../resize';
+
+import { loadPngToRaw, resizeRawImage, saveRawToPng } from '../resize';
 
 
 // These sample images can be found in test_data/sample_images/ as PNGs
@@ -92,13 +93,21 @@ const IMG_20x16: RawImageData = {
 
 
 describe('resize', () => {
+    it('loadPngToRaw', async () => {
+        const loadedImage = await loadPngToRaw('./test_data/sample_images/sample_image_10x8.png');
+        expect(loadedImage).toEqual(IMG_10x8);
+    });
+
     it('saveRawToPng', async () => {
-        const FILENAME = './test_data/sample_image_10x8.png';
+        const FILENAME = './test_data/image_10x8.png';
         fs.rmSync(FILENAME, { force: true });
         expect(fs.existsSync(FILENAME)).toBeFalsy();
 
         await saveRawToPng(IMG_10x8, FILENAME);
         expect(fs.existsSync(FILENAME)).toBeTruthy();
+
+        const loadedImage = await loadPngToRaw('./test_data/image_10x8.png');
+        expect(loadedImage).toEqual(IMG_10x8);
     });
 
     it('resizeRawImage - keep size', () => {

@@ -67,6 +67,13 @@ function resamplingCoefficients(nOld: number, nNew: number) {
     };
 }
 
+/** Load an image from a PNG file. */
+export async function loadPngToRaw(inPath: string): Promise<RawImageData> {
+    const data = fs.readFileSync(inPath);
+    const png = PNG.sync.read(data);
+    return { width: png.width, height: png.height, data: Uint8ClampedArray.from(png.data) };
+}
+
 /** Save an image as a PNG file.
  * `imageData.data` is an array of length `imageData.width * imageData.height * 4`,
  * where each 4 numbers represent R, G, B, and alpha value of one pixels,

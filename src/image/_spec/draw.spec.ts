@@ -1,17 +1,49 @@
-import fs from 'fs';
 import { RawImageData } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
+
 import { addAxisIndicators } from '../draw';
-import { saveRawToPng } from '../resize';
+import { loadPngToRaw } from '../resize';
+
+
+function getTestingImageWhite() {
+    const width = 300;
+    const height = 200;
+    const img: RawImageData = { width, height, data: new Uint8ClampedArray(width * height * 4) };
+    for (let i = 0; i < img.data.length; i++) img.data[i] = 255; // fill with opaque white
+    return img;
+}
+
 
 describe('draw', () => {
-    it('addAxisIndicators', async () => {
-        const width = 300;
-        const height = 200;
-        const img: RawImageData = { width, height, data: new Uint8ClampedArray(width * height * 4) };
-        for (let i = 0; i < img.data.length; i++) img.data[i] = 255; // fill with opaque white
-        addAxisIndicators(img, 'front');
-        // await saveRawToPng(img, './test_data/sample_images/axes_front.png');
+    it('check image comparison', async () => {
+        const img = getTestingImageWhite();
+        const expected = await loadPngToRaw('./test_data/sample_images/white.png');
+        expect(img).toEqual(expected);
+    });
 
-        // TODO continue here
+    it('addAxisIndicators - no axes', async () => {
+        const img = getTestingImageWhite();
+        const expected = await loadPngToRaw('./test_data/sample_images/white.png');
+        expect(img).toEqual(expected);
+    });
+
+    it('addAxisIndicators - front view', async () => {
+        const img = getTestingImageWhite();
+        addAxisIndicators(img, 'front');
+        const expected = await loadPngToRaw('./test_data/sample_images/axes_front.png');
+        expect(img).toEqual(expected);
+    });
+
+    it('addAxisIndicators - side view', async () => {
+        const img = getTestingImageWhite();
+        addAxisIndicators(img, 'side');
+        const expected = await loadPngToRaw('./test_data/sample_images/axes_side.png');
+        expect(img).toEqual(expected);
+    });
+
+    it('addAxisIndicators - top view', async () => {
+        const img = getTestingImageWhite();
+        addAxisIndicators(img, 'top');
+        const expected = await loadPngToRaw('./test_data/sample_images/axes_top.png');
+        expect(img).toEqual(expected);
     });
 });
