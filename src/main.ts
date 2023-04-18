@@ -111,7 +111,10 @@ export async function main(args: Args) {
     // There is some issue with AlphaFold bcifs, this might be fixed in the future
     const format = localUrl.endsWith('.cif') ? 'cif' : 'bcif';
 
-    if (!fs.existsSync(localPath)) throw new Error(`Input file not found: ${localPath}`);
+    if (!fs.existsSync(localPath)) {
+        logger.fatal(`Input file not found: ${localPath}`);
+        throw new Error(`Input file not found: ${localPath}`);
+    }
 
     const saveFunction = makeSaveFunction(args, plugin, outDir, wwwUrl);
     const api = new PDBeAPI(args.api_url, args.no_api);

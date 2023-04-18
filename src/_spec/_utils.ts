@@ -2,20 +2,19 @@ import fs from 'fs';
 import gl from 'gl';
 import { MAQualityAssessment } from 'molstar/lib/commonjs/extensions/model-archive/quality-assessment/behavior';
 import { PDBeStructureQualityReport } from 'molstar/lib/commonjs/extensions/pdbe';
-
 import { CIF, CifFrame } from 'molstar/lib/commonjs/mol-io/reader/cif';
 import { trajectoryFromMmCIF } from 'molstar/lib/commonjs/mol-model-formats/structure/mmcif';
 import { Model, Structure } from 'molstar/lib/commonjs/mol-model/structure';
 import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context';
 import { HeadlessPluginContext } from 'molstar/lib/commonjs/mol-plugin/headless-plugin-context';
 import { DefaultPluginSpec, PluginSpec } from 'molstar/lib/commonjs/mol-plugin/spec';
-import { RawImageData, defaultCanvas3DParams, defaultImagePassParams } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
+import { defaultCanvas3DParams, defaultImagePassParams } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 import { Task } from 'molstar/lib/commonjs/mol-task';
 import { setFSModule } from 'molstar/lib/commonjs/mol-util/data-source';
 
+
 export const TESTING_PDBS = ['1hda', '1tqn'] as const;
 export type TestingPdb = typeof TESTING_PDBS[number]
-
 
 
 export async function getTestingHeadlessPlugin(): Promise<HeadlessPluginContext> {

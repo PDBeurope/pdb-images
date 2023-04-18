@@ -11,6 +11,8 @@ Here: https://gitlab.ebi.ac.uk/midlik/pdb-visualization-benchmark
 - Structured captions (TODO solve addit. data with Mandar)
 - Customizable image subset (e.g. entity during the week, sifts on the weekend)
 
+- Orient in Mol* 3.34
+
 
 ## TODO
 
@@ -50,7 +52,9 @@ Here: https://gitlab.ebi.ac.uk/midlik/pdb-visualization-benchmark
 
 ## Questions:
 
-- Coarse conformations? - ask David -> some extension to CIF (https://pdb-dev.wwpdb.org/view3d.html?PDBDEV_00000012) -> ask Sameer
+- Changed assemblies in summary API (tetramer 1tqn)
+
+- Coarse conformations? - ask David -> some extension to CIF (https://pdb-dev.wwpdb.org/view3d.html?PDBDEV_00000012) -> ask Sameer -> Nope
 
 - Preeti - why CATH domain identifier is Topology not Homology? -> probably should be Homology, create a ticket, refer to 1n26, 1og0 -> it's OK, do not change
 - Missing modres in API -> will require image rerun when API fixed

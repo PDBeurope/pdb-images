@@ -1,23 +1,20 @@
-import { PDBeAPI } from '../api';
+import { PDBeAPI, PDBeAPIReturn } from '../api';
 
 
 const API = new PDBeAPI('file://./test_data/api');
 const NO_API = new PDBeAPI('', true);
 
-type MethodName = 'pdbeStructureQualityReportPrefix' | 'getEntityNames' | 'getAssemblies' | 'getPreferredAssembly' | 'getModifiedResidue' | 'getSiftsMappings'
-type MethodReturn<key extends MethodName> = Awaited<ReturnType<InstanceType<typeof PDBeAPI>[key]>>
-
 
 describe('api', () => {
     it('noApi', async () => {
         expect(NO_API.pdbeStructureQualityReportPrefix()).toBeUndefined();
-        expect(await NO_API.getEntityNames('1hda')).toEqual({} as MethodReturn<'getEntityNames'>);
-        expect(await NO_API.getAssemblies('1hda')).toEqual([] as MethodReturn<'getAssemblies'>);
+        expect(await NO_API.getEntityNames('1hda')).toEqual({} as PDBeAPIReturn<'getEntityNames'>);
+        expect(await NO_API.getAssemblies('1hda')).toEqual([] as PDBeAPIReturn<'getAssemblies'>);
         expect(await NO_API.getPreferredAssembly('1hda'))
-            .toEqual({ assemblyId: '1', form: '?', preferred: true, name: '?' } as MethodReturn<'getPreferredAssembly'>);
-        expect(await NO_API.getModifiedResidue('1hda')).toEqual([] as MethodReturn<'getModifiedResidue'>);
+            .toEqual({ assemblyId: '1', form: '?', preferred: true, name: '?' } as PDBeAPIReturn<'getPreferredAssembly'>);
+        expect(await NO_API.getModifiedResidue('1hda')).toEqual([] as PDBeAPIReturn<'getModifiedResidue'>);
         expect(await NO_API.getSiftsMappings('1hda'))
-            .toEqual({ CATH: {}, Pfam: {}, Rfam: {}, SCOP: {} } as MethodReturn<'getSiftsMappings'>);
+            .toEqual({ CATH: {}, Pfam: {}, Rfam: {}, SCOP: {} } as PDBeAPIReturn<'getSiftsMappings'>);
     });
 
     it('pdbeStructureQualityReportPrefix', async () => {
@@ -31,17 +28,17 @@ describe('api', () => {
             '2': ['Hemoglobin subunit beta'],
             '3': ['PROTOPORPHYRIN IX CONTAINING FE'],
             '4': ['water'],
-        } as MethodReturn<'getEntityNames'>);
+        } as PDBeAPIReturn<'getEntityNames'>);
     });
 
     it('getAssemblies', async () => {
         expect(await API.getAssemblies('1hda')).toEqual([
             { assemblyId: '1', form: 'hetero', name: 'tetramer', preferred: true },
-        ] as MethodReturn<'getAssemblies'>);
+        ] as PDBeAPIReturn<'getAssemblies'>);
         expect(await API.getAssemblies('1tqn')).toEqual([
             { assemblyId: '1', form: 'homo', name: 'monomer', preferred: false },
             { assemblyId: '2', form: 'homo', name: 'tetramer', preferred: true },
-        ] as MethodReturn<'getAssemblies'>);
+        ] as PDBeAPIReturn<'getAssemblies'>);
     });
     // TODO The API must be broken!!!
     // Preferred assembly for 1tqn shouldn't be tetramer!!!
@@ -50,17 +47,17 @@ describe('api', () => {
     it('getPreferredAssembly', async () => {
         expect(await API.getPreferredAssembly('1hda')).toEqual({
             assemblyId: '1', form: 'hetero', name: 'tetramer', preferred: true
-        } as MethodReturn<'getPreferredAssembly'>);
+        } as PDBeAPIReturn<'getPreferredAssembly'>);
         expect(await API.getPreferredAssembly('1tqn')).toEqual({
             assemblyId: '2', form: 'homo', name: 'tetramer', preferred: true
-        } as MethodReturn<'getPreferredAssembly'>);
+        } as PDBeAPIReturn<'getPreferredAssembly'>);
     });
 
     it('getModifiedResidue', async () => {
-        expect(await API.getModifiedResidue('1hda')).toEqual([] as MethodReturn<'getModifiedResidue'>);
+        expect(await API.getModifiedResidue('1hda')).toEqual([] as PDBeAPIReturn<'getModifiedResidue'>);
         expect(await API.getModifiedResidue('1gkt')).toEqual([
             { authChainId: 'A', compoundId: 'SUI', compoundName: '(3-AMINO-2,5-DIOXO-1-PYRROLIDINYL)ACETIC ACID', entityId: 1, labelChainId: 'A', residueNumber: 54 }
-        ] as MethodReturn<'getModifiedResidue'>);
+        ] as PDBeAPIReturn<'getModifiedResidue'>);
         expect(await API.getModifiedResidue('1l7c')).toEqual([
             { authChainId: 'A', compoundId: 'MSE', compoundName: 'SELENOMETHIONINE', entityId: 1, labelChainId: 'A', residueNumber: 70 },
             { authChainId: 'A', compoundId: 'MSE', compoundName: 'SELENOMETHIONINE', entityId: 1, labelChainId: 'A', residueNumber: 102 },
@@ -80,7 +77,7 @@ describe('api', () => {
             { authChainId: 'C', compoundId: 'MSE', compoundName: 'SELENOMETHIONINE', entityId: 1, labelChainId: 'C', residueNumber: 202 },
             { authChainId: 'C', compoundId: 'MSE', compoundName: 'SELENOMETHIONINE', entityId: 1, labelChainId: 'C', residueNumber: 224 },
             { authChainId: 'C', compoundId: 'MSE', compoundName: 'SELENOMETHIONINE', entityId: 1, labelChainId: 'C', residueNumber: 249 },
-        ] as MethodReturn<'getModifiedResidue'>);
+        ] as PDBeAPIReturn<'getModifiedResidue'>);
         expect(await API.getModifiedResidue('1hcj')).toEqual([
             { authChainId: 'A', compoundId: 'GYS', compoundName: '[(4Z)-2-(1-AMINO-2-HYDROXYETHYL)-4-(4-HYDROXYBENZYLIDENE)-5-OXO-4,5-DIHYDRO-1H-IMIDAZOL-1-YL]ACETIC ACID', entityId: 1, labelChainId: 'A', residueNumber: 65 },
             { authChainId: 'A', compoundId: 'ABA', compoundName: 'ALPHA-AMINOBUTYRIC ACID', entityId: 1, labelChainId: 'A', residueNumber: 220 },
@@ -90,7 +87,7 @@ describe('api', () => {
             { authChainId: 'C', compoundId: 'ABA', compoundName: 'ALPHA-AMINOBUTYRIC ACID', entityId: 1, labelChainId: 'C', residueNumber: 220 },
             { authChainId: 'D', compoundId: 'GYS', compoundName: '[(4Z)-2-(1-AMINO-2-HYDROXYETHYL)-4-(4-HYDROXYBENZYLIDENE)-5-OXO-4,5-DIHYDRO-1H-IMIDAZOL-1-YL]ACETIC ACID', entityId: 1, labelChainId: 'D', residueNumber: 65 },
             { authChainId: 'D', compoundId: 'ABA', compoundName: 'ALPHA-AMINOBUTYRIC ACID', entityId: 1, labelChainId: 'D', residueNumber: 220 },
-        ] as MethodReturn<'getModifiedResidue'>);
+        ] as PDBeAPIReturn<'getModifiedResidue'>);
     });
 
     it('getSiftsMappings protein', async () => {
@@ -120,7 +117,7 @@ describe('api', () => {
                     { chunks: [{ endResidue: 145, startResidue: 1, chainId: 'D', authChainId: 'D', entityId: '2', segment: 1 }], family: '46463', familyName: 'Globins', id: 'd1hdad_', source: 'SCOP' },
                 ],
             },
-        } as MethodReturn<'getSiftsMappings'>);
+        } as PDBeAPIReturn<'getSiftsMappings'>);
     });
 
     it('getSiftsMappings protein multisegment', async () => {
@@ -145,7 +142,7 @@ describe('api', () => {
                     { chunks: [{ authChainId: 'A', chainId: 'A', endResidue: 195, entityId: '1', segment: 1, startResidue: 94 }], family: '49266', familyName: 'Fibronectin type III', id: 'd1n26a2', source: 'SCOP' },
                     { chunks: [{ authChainId: 'A', chainId: 'A', endResidue: 299, entityId: '1', segment: 1, startResidue: 196 }], family: '49266', familyName: 'Fibronectin type III', id: 'd1n26a3', source: 'SCOP' }],
             },
-        } as MethodReturn<'getSiftsMappings'>);
+        } as PDBeAPIReturn<'getSiftsMappings'>);
     });
 
     it('getSiftsMappings nucleic', async () => {
@@ -158,6 +155,6 @@ describe('api', () => {
                 ],
             },
             SCOP: {}
-        } as MethodReturn<'getSiftsMappings'>);
+        } as PDBeAPIReturn<'getSiftsMappings'>);
     });
 });

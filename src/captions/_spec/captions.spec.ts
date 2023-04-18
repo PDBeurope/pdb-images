@@ -3,7 +3,7 @@ import { Captions } from '../captions';
 
 
 const COMMON_CONTEXT = {
-    pdbId: '1hda',
+    entryId: '1hda',
     assemblyId: undefined,
     isPreferredAssembly: false,
     entityInfo: {

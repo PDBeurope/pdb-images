@@ -157,6 +157,10 @@ export class PDBeAPI {
     }
 }
 
+export type PDBeAPIMethod = 'pdbeStructureQualityReportPrefix' | 'getEntityNames' | 'getAssemblies' | 'getPreferredAssembly' | 'getModifiedResidue' | 'getSiftsMappings'
+export type PDBeAPIReturn<key extends PDBeAPIMethod> = Awaited<ReturnType<InstanceType<typeof PDBeAPI>[key]>>
+
+
 /** Represents one instance of a modified residue. */
 export interface ModifiedResidueRecord {
     entityId: number,

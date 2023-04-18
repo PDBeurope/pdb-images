@@ -231,9 +231,9 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
     }
 
     /** Split a stucture into entities, create a component for each entity */
-    async makeEntities(entityInfo?: EntityInfo): Promise<{ [entityId: string]: StructureNode }> {
+    async makeEntities(entityInfo?: EntityInfo): Promise<{ [entityId: string]: StructureNode | undefined }> {
         entityInfo ??= getEntityInfo(this.data!);
-        const selections: { [entityId: string]: StructureNode } = {};
+        const selections: { [entityId: string]: StructureNode | undefined } = {};
 
         for (const entityId in entityInfo) {
             const description = entityInfo[entityId].description;
@@ -244,9 +244,7 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
                 type: { name: 'expression', params: expression },
                 label: `Entity ${entityId} (${description})`
             }, undefined, `entity-${entityId}`);
-            if (entitySelection) {
-                selections[entityId] = entitySelection;
-            }
+            selections[entityId] = entitySelection;
         }
         return selections;
     }

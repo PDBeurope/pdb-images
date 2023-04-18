@@ -44,7 +44,7 @@ export namespace Captions {
     /** Basic info about the stucture being rendered. */
     export interface StructureContext {
         /** PDB or AlphaFoldDB identifier */
-        pdbId: string,
+        entryId: string,
         /** Assembly identifier (e.g. '1', '2'), or `undefined` if this is the deposited model */
         assemblyId: string | undefined,
         /** Optional entity names to override names in `entityInfo` (those come from CIF) */
@@ -54,11 +54,11 @@ export namespace Captions {
 
     /** Create captions for `entity` or `assembly` image type. */
     export function forEntryOrAssembly(context: StructureContext & { isPreferredAssembly: boolean, nModels: number, coloring: 'chains' | 'entities', view: ViewType }): ImageSpec {
-        const { pdbId, assemblyId, isPreferredAssembly, nModels, coloring, entityInfo, view } = context;
+        const { entryId, assemblyId, isPreferredAssembly, nModels, coloring, entityInfo, view } = context;
         const colorClause = coloring === 'chains' ? 'by chain' : 'by chemically distinct molecules';
         const modelClause = nModels > 1 ? `ensemble of ${nModels} models` : '';
         const description = new TextBuilder();
-        description.push(structurePhrase(context), 'of PDB entry', B_, pdbId, _B, 'coloured', colorClause, ',', modelClause, ',', viewPhrase(view), '.');
+        description.push(structurePhrase(context), 'of PDB entry', B_, entryId, _B, 'coloured', colorClause, ',', modelClause, ',', viewPhrase(view), '.');
         description.push('This structure contains', ':', UL_);
         for (const entityId in entityInfo) {
             const name = entityName(context, entityId);
@@ -69,11 +69,11 @@ export namespace Captions {
         const assemblyPrefix = assemblyId ? `assembly_${assemblyId}` : 'deposited';
         const colorSuffix = coloring === 'chains' ? 'chain' : 'chemically_distinct_molecules';
         return {
-            filename: `${pdbId}_${assemblyPrefix}_${colorSuffix}${viewSuffix(view)}`,
-            alt: new TextBuilder().push('PDB entry', pdbId, 'coloured', colorClause, ',', modelClause, ',', viewPhrase(view), '.').buildText(),
+            filename: `${entryId}_${assemblyPrefix}_${colorSuffix}${viewSuffix(view)}`,
+            alt: new TextBuilder().push('PDB entry', entryId, 'coloured', colorClause, ',', modelClause, ',', viewPhrase(view), '.').buildText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
-            _entry_id: pdbId,
+            _entry_id: entryId,
             _view: view,
             _section: assemblyId ? ['assembly', assemblyId] : ['entry', 'all'],
             _extras: assemblyId ? { 'preferred': isPreferredAssembly } : undefined,
@@ -81,34 +81,34 @@ export namespace Captions {
     }
 
     /** Create captions for `bfactor` image type. */
-    export function forBFactor(context: { pdbId: string, view: ViewType }): ImageSpec {
-        const { pdbId, view } = context;
+    export function forBFactor(context: { entryId: string, view: ViewType }): ImageSpec {
+        const { entryId, view } = context;
         const description = new TextBuilder();
-        description.push('The deposited structure of PDB entry', B_, pdbId, _B, 'coloured by B-factor values', ',', viewPhrase(view), '.');
+        description.push('The deposited structure of PDB entry', B_, entryId, _B, 'coloured by B-factor values', ',', viewPhrase(view), '.');
         description.push('The macromolecules are shown in backbone representation. The thickness reflects the B-factor values (thin = low, thick = high). The colour varies from blue to red corresponding to a B-factor range of 0 to 100 square angstroms.');
         return {
-            filename: `${pdbId}_bfactor${viewSuffix(view)}`,
-            alt: new TextBuilder().push('B-factors for PDB entry', pdbId, ',', viewPhrase(view), '.').buildText(),
+            filename: `${entryId}_bfactor${viewSuffix(view)}`,
+            alt: new TextBuilder().push('B-factors for PDB entry', entryId, ',', viewPhrase(view), '.').buildText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
-            _entry_id: pdbId,
+            _entry_id: entryId,
             _view: view,
             _section: ['entry', 'bfactor'],
         };
     }
 
     /** Create captions for `validation` image type. */
-    export function forGeometryValidation(context: { pdbId: string, view: ViewType }): ImageSpec {
-        const { pdbId, view } = context;
+    export function forGeometryValidation(context: { entryId: string, view: ViewType }): ImageSpec {
+        const { entryId, view } = context;
         const description = new TextBuilder();
-        description.push('The deposited structure of PDB entry', B_, pdbId, _B, 'coloured by geometry validation', ',', viewPhrase(view), '.');
+        description.push('The deposited structure of PDB entry', B_, entryId, _B, 'coloured by geometry validation', ',', viewPhrase(view), '.');
         description.push('Residues are coloured by the number of geometry outliers: green – no outliers, yellow – one outlier yellow, orange – two outliers, red – three or more outliers.');
         return {
-            filename: `${pdbId}_validation_geometry_deposited${viewSuffix(view)}`,
-            alt: new TextBuilder().push('Geometry outliers in PDB entry', pdbId, ',', viewPhrase(view), '.').buildText(),
+            filename: `${entryId}_validation_geometry_deposited${viewSuffix(view)}`,
+            alt: new TextBuilder().push('Geometry outliers in PDB entry', entryId, ',', viewPhrase(view), '.').buildText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
-            _entry_id: pdbId,
+            _entry_id: entryId,
             _view: view,
             _section: ['validation', 'geometry', 'deposited'],
         };
@@ -133,20 +133,20 @@ export namespace Captions {
 
     /** Create captions for `entity` image type. */
     export function forHighlightedEntity(context: StructureContext & { entityId: string, view: ViewType }): ImageSpec {
-        const { pdbId, assemblyId, entityInfo, entityId, view } = context;
+        const { entryId, assemblyId, entityInfo, entityId, view } = context;
         const nCopies = entityInfo[entityId].chains.length;
         const name = entityName(context, entityId);
         const description = new TextBuilder();
-        description.push(structurePhrase(context), 'of PDB entry', B_, pdbId, _B,
+        description.push(structurePhrase(context), 'of PDB entry', B_, entryId, _B,
             'contains', countNoun(nCopies, 'cop|y|ies'), 'of', B_, name, _B, '.',
             capital(viewPhrase(view)), '.');
         return {
-            filename: `${pdbId}_entity_${entityId}${viewSuffix(view)}`,
-            alt: new TextBuilder().push(name, 'in PDB entry', pdbId, ',',
+            filename: `${entryId}_entity_${entityId}${viewSuffix(view)}`,
+            alt: new TextBuilder().push(name, 'in PDB entry', entryId, ',',
                 (assemblyId ? `assembly ${assemblyId}` : ''), ',', viewPhrase(view), '.').buildText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
-            _entry_id: pdbId,
+            _entry_id: entryId,
             _view: view,
             _section: ['entity', entityId],
         };
@@ -168,21 +168,21 @@ export namespace Captions {
         outOfRangeCopies: number,
         view: ViewType
     }): ImageSpec {
-        const { pdbId, source, familyId, familyName, entityId, chainId, authChainId, totalCopies, shownCopies, outOfRangeCopies, view } = context;
+        const { entryId, source, familyId, familyName, entityId, chainId, authChainId, totalCopies, shownCopies, outOfRangeCopies, view } = context;
         const name = entityName(context, entityId);
         const description = new TextBuilder();
-        description.push('The deposited structure of PDB entry', B_, pdbId, _B,
+        description.push('The deposited structure of PDB entry', B_, entryId, _B,
             'contains', countNoun(totalCopies, 'cop|y|ies'), 'of', source, 'domain', B_, familyId, `(${familyName})`, _B, 'in', B_, name, _B, '.',
             'Showing', countNoun(shownCopies, 'cop|y|ies'), 'in chain', B_, chainLabel(chainId, authChainId), _B,
             (outOfRangeCopies > 0 ? (shownCopies > 1 ? '(some of the domains are out of the observed residue ranges!)' : '(this domain is out of the observed residue ranges!)') : ''),
             '.',
             capital(viewPhrase(view)), '.');
         return {
-            filename: `${pdbId}_${entityId}_${authChainId}_${source}_${familyId}${viewSuffix(view)}`,
+            filename: `${entryId}_${entityId}_${authChainId}_${source}_${familyId}${viewSuffix(view)}`,
             alt: description.buildPlainText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
-            _entry_id: pdbId,
+            _entry_id: entryId,
             _view: view,
             _section: ['entity', entityId, 'database', source, familyId],
         };
@@ -190,22 +190,22 @@ export namespace Captions {
 
     /** Create captions for `ligand` image type. */
     export function forLigandEnvironment(context: StructureContext & { ligandInfo: LigandInstanceInfo, view: ViewType }): ImageSpec {
-        const { pdbId, ligandInfo, view } = context;
+        const { entryId, ligandInfo, view } = context;
         const nCopies = ligandInfo.nInstancesInEntry;
         const name = entityName(context, ligandInfo.entityId);
         const description = new TextBuilder();
         description.push('The binding environment for', (nCopies === 1 ? '' : 'an instance of'), B_, ligandInfo.compId, `(${name})`, _B,
-            'in PDB entry', B_, pdbId, _B, ',',
+            'in PDB entry', B_, entryId, _B, ',',
             'chain', B_, chainLabel(ligandInfo.chainId, ligandInfo.authChainId), _B, '.',
             capital(viewPhrase(view)), '.',
             'There', (nCopies === 1 ? 'is' : 'are'), countNoun(nCopies, 'cop|y|ies'), 'of', B_, ligandInfo.compId, _B, 'in the deposited model', '.');
         return {
-            filename: `${pdbId}_ligand_${ligandInfo.compId}${viewSuffix(view)}`,
-            alt: new TextBuilder().push('The binding environment for', (nCopies === 1 ? '' : 'an instance of'), ligandInfo.compId, 'in PDB entry', pdbId, ',',
+            filename: `${entryId}_ligand_${ligandInfo.compId}${viewSuffix(view)}`,
+            alt: new TextBuilder().push('The binding environment for', (nCopies === 1 ? '' : 'an instance of'), ligandInfo.compId, 'in PDB entry', entryId, ',',
                 viewPhrase(view), '.').buildText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
-            _entry_id: pdbId,
+            _entry_id: entryId,
             _view: view,
             _section: ['entry', 'ligands', ligandInfo.compId],
             _extras: { 'entity': ligandInfo.entityId, 'number_of_instances': ligandInfo.nInstancesInEntry },
@@ -214,20 +214,20 @@ export namespace Captions {
 
     /** Create captions for `modres` image type. */
     export function forModifiedResidue(context: StructureContext & { modresInfo: ModifiedResidueInfo, view: ViewType }): ImageSpec {
-        const { pdbId, assemblyId, modresInfo, view } = context;
+        const { entryId, assemblyId, modresInfo, view } = context;
         const assemblyPrefix = assemblyId ? `assembly-${assemblyId}` : 'entry';
         const nCopies = modresInfo.nInstances;
         const description = new TextBuilder();
-        description.push(structurePhrase(context), 'of PDB entry', B_, pdbId, _B,
+        description.push(structurePhrase(context), 'of PDB entry', B_, entryId, _B,
             'contains', countNoun(nCopies, 'instance|s'), 'of modified residue', B_, modresInfo.compId, `(${modresInfo.compName})`, _B, '.',
             capital(viewPhrase(view)), '.');
         return {
-            filename: `${pdbId}_modres_${modresInfo.compId}${viewSuffix(view)}`,
-            alt: new TextBuilder().push('Modified residue', modresInfo.compId, 'in PDB entry', pdbId, ',',
+            filename: `${entryId}_modres_${modresInfo.compId}${viewSuffix(view)}`,
+            alt: new TextBuilder().push('Modified residue', modresInfo.compId, 'in PDB entry', entryId, ',',
                 (assemblyId ? `assembly ${assemblyId}` : ''), ',', viewPhrase(view), '.').buildText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
-            _entry_id: pdbId,
+            _entry_id: entryId,
             _view: view,
             _section: ['entry', 'mod_res', modresInfo.compId],
         };
