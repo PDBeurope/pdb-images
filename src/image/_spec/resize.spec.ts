@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import { RawImageData } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 
 import { loadPngToRaw, resizeRawImage, saveRawToPng } from '../resize';
@@ -100,6 +101,7 @@ describe('resize', () => {
 
     it('saveRawToPng', async () => {
         const FILENAME = './test_data/outputs/image_10x8.png';
+        fs.mkdirSync(path.dirname(FILENAME), { recursive: true });
         fs.rmSync(FILENAME, { force: true });
         expect(fs.existsSync(FILENAME)).toBeFalsy();
 
