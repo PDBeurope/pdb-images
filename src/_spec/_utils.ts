@@ -8,12 +8,12 @@ import { Model, Structure } from 'molstar/lib/commonjs/mol-model/structure';
 import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context';
 import { HeadlessPluginContext } from 'molstar/lib/commonjs/mol-plugin/headless-plugin-context';
 import { DefaultPluginSpec, PluginSpec } from 'molstar/lib/commonjs/mol-plugin/spec';
-import { defaultCanvas3DParams, defaultImagePassParams } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
+import { RawImageData, defaultCanvas3DParams, defaultImagePassParams } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 import { Task } from 'molstar/lib/commonjs/mol-task';
 import { setFSModule } from 'molstar/lib/commonjs/mol-util/data-source';
 
 
-export const TESTING_PDBS = ['1hda', '1tqn'] as const;
+export const TESTING_PDBS = ['1hda', '1ad5', 'AF-Q8W3K0-F1-model_v4'] as const;
 export type TestingPdb = typeof TESTING_PDBS[number]
 
 
@@ -22,7 +22,7 @@ export async function getTestingHeadlessPlugin(): Promise<HeadlessPluginContext>
     const pluginSpec = DefaultPluginSpec();
     pluginSpec.behaviors.push(PluginSpec.Behavior(PDBeStructureQualityReport));
     pluginSpec.behaviors.push(PluginSpec.Behavior(MAQualityAssessment));
-    const plugin = new HeadlessPluginContext({ gl }, pluginSpec, { width: 800, height: 800 }, { canvas: defaultCanvas3DParams(), imagePass: defaultImagePassParams() });
+    const plugin = new HeadlessPluginContext({ gl }, pluginSpec, { width: 100, height: 100 }, { canvas: defaultCanvas3DParams(), imagePass: defaultImagePassParams() });
     await plugin.init();
     return plugin;
 }
@@ -47,4 +47,56 @@ export async function getTestingStructure(pdbId: TestingPdb): Promise<Structure>
     const model = await getTestingModel(pdbId);
     const structure = Structure.ofModel(model);
     return structure;
+}
+
+/** Check whether all pixels in the image are the same */
+export function isImageBlank(image: RawImageData): boolean {
+    const { width, height, data } = image;
+    if (width * height === 0) return true;
+    const r0 = data[0];
+    const g0 = data[0];
+    const b0 = data[0];
+    const a0 = data[0];
+    for (let offset = 0; offset < data.length; offset += 4) { // 4 channels
+        if (data[offset] !== r0) return false;
+        if (data[offset + 1] !== g0) return false;
+        if (data[offset + 2] !== b0) return false;
+        if (data[offset + 3] !== a0) return false;
+    }
+    return true;
+}
+
+/** Check whether all pixels in the "border" of the image (i.e. first and last row and column) are the same */
+export function isBorderBlank(image: RawImageData): boolean {
+    const { width, height, data } = image;
+    if (width * height === 0) return true;
+    const r0 = data[0];
+    const g0 = data[0];
+    const b0 = data[0];
+    const a0 = data[0];
+    for (let offset = 0; offset < 4 * width; offset += 4) { // first row
+        if (data[offset] !== r0) return false;
+        if (data[offset + 1] !== g0) return false;
+        if (data[offset + 2] !== b0) return false;
+        if (data[offset + 3] !== a0) return false;
+    }
+    for (let offset = data.length - 4 * width; offset < data.length; offset += 4) { // last row
+        if (data[offset] !== r0) return false;
+        if (data[offset + 1] !== g0) return false;
+        if (data[offset + 2] !== b0) return false;
+        if (data[offset + 3] !== a0) return false;
+    }
+    for (let offset = 0; offset < data.length; offset += 4 * width) { // first column
+        if (data[offset] !== r0) return false;
+        if (data[offset + 1] !== g0) return false;
+        if (data[offset + 2] !== b0) return false;
+        if (data[offset + 3] !== a0) return false;
+    }
+    for (let offset = 4 * width - 4; offset < data.length; offset += 4 * width) { // last column
+        if (data[offset] !== r0) return false;
+        if (data[offset + 1] !== g0) return false;
+        if (data[offset + 2] !== b0) return false;
+        if (data[offset + 3] !== a0) return false;
+    }
+    return true;
 }

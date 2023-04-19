@@ -55,8 +55,8 @@ export class ImageGenerator {
         return imageTypes.some(t => this.imageTypes.has(t));
     }
 
-    async processAll(url: string, entryId: string, format: 'cif' | 'bcif', mode: 'pdb' | 'alphafold') {
-        logger.info('Processing', entryId, 'from', url);
+    async processAll(entryId: string, inputUrl: string, format: 'cif' | 'bcif', mode: 'pdb' | 'alphafold') {
+        logger.info('Processing', entryId, 'from', inputUrl);
         const startTime = Date.now();
         let success = false;
         try {
@@ -68,7 +68,7 @@ export class ImageGenerator {
             } : {}; // allow async fetching in the meantime
 
             const root = RootNode.create(this.plugin);
-            await using(root.makeDownload({ url, isBinary: format === 'bcif' }, entryId), async download => {
+            await using(root.makeDownload({ url: inputUrl, isBinary: format === 'bcif' }, entryId), async download => {
                 const cif = await download.makeCif();
                 const traj = await cif.makeTrajectory();
                 await using(traj.makeModel(0), async rawModel => {

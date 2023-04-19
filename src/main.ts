@@ -116,17 +116,17 @@ export async function main(args: Args) {
         throw new Error(`Input file not found: ${localPath}`);
     }
 
-    const saveFunction = makeSaveFunction(args, plugin, outDir, wwwUrl);
+    const saveFunction = makeSaveFunction(plugin, outDir, args, wwwUrl);
     const api = new PDBeAPI(args.api_url, args.no_api);
 
     const imageGenerator = new ImageGenerator(plugin, saveFunction, api, args.type, args.view);
-    await imageGenerator.processAll(localUrl, args.pdbid, format, isAlphaFold ? 'alphafold' : 'pdb');
+    await imageGenerator.processAll(args.pdbid, localUrl, format, isAlphaFold ? 'alphafold' : 'pdb');
     collectCaptions(outDir, args.pdbid, args.date);
 
     plugin.dispose();
 }
 
-function makeSaveFunction(args: Args, plugin: HeadlessPluginContext, outDir: string, wwwUrl: string) {
+export function makeSaveFunction(plugin: HeadlessPluginContext, outDir: string, args: Pick<Args, 'size' | 'render_each_size' | 'no_axes'>, wwwUrl: string) {
     const stateSaver = new MoljStateSaver(plugin, {
         downloadUrl: wwwUrl,
         downloadBinary: wwwUrl.endsWith('.bcif'),

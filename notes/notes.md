@@ -4,34 +4,15 @@ Here: https://gitlab.ebi.ac.uk/midlik/pdb-visualization-benchmark
 
 ## DONE
 
-- Downsampling, axis indicators, transparent bg
-- Image quality - avoid lowest quality, occlusion on
-- Improved colors, still working on (ligenv colors = entity colors, chain colors based on entity colors, modres TODO)
-- Captions
-- Structured captions (TODO solve addit. data with Mandar)
-- Customizable image subset (e.g. entity during the week, sifts on the weekend)
-
 - Orient in Mol* 3.34
 
 
 ## TODO
 
-- Structured captions - ask Mandar if he needs additional data there:
-  - "preferred": true -> implement DONE
-  - "auth_or_soft": "author_and_software_defined_assembly" -> check with Grisell -> she ain't usin' it -> drop
-  - "entity": "4" (for ligand) -> implement DONE
-  - "number_of_instances": 5 (for ligand) -> implement DONE
-  - "last_modification": "2023-03-08" (the closest Wednesday date (incl. today)) -> implement today + CLI arg to choose specific date DONE -> ask Stephen if sufficient or should implement smth like --date nextwednesday
-  - suffix DONE
-  - Can't we pls rename it like humans?: 1tqn_json -> 1tqn.json (call it .json in my process, make _json copy in orc, switch frontend to .json, prepare users for future deprecation of _json)
-- Match filenames to old process -> just rename it - DONE
-- Generate only one side for: domain, ligand, bfactor, validation - DONE
-
-- Color highlighted entities/modres in various colors, like with domains (might improve orientation in the data) -> color entities but ensure they have the same colors as in by-entity coloring - DONE
-- Add more colors to the entities palette - DONE
-- Try using HCL instead of ad-hoc color space (meh)
-- Less fog (30 instead of 50) - DONE
-- Move `orient` to Mol* - DONE
+- Ask David about Struct_conn extension implementation:
+  - Is it OK to expose function/method directly in app.ts? (it will require that the extension be packed in the bundle); 
+    Alternatively it could be only in an extension and OneDep would instantiate that extension instead of viewer? But that would create duplication of code!
+  - Is it OK to have the extension without having it in GUI? (thus it would not even be an extension, just an exposed function)
 
 - Check entries from Genovieve (weird/failed on April 12): 8agd 7y01 7xyq 8e5t 8bf8 8h1j 8g9o 8g9n 8g9l 8f24
 - Solve pref.ass. in API (e.g. 1tqn, 1l7c, 1ad9?)
@@ -41,8 +22,10 @@ Here: https://gitlab.ebi.ac.uk/midlik/pdb-visualization-benchmark
 - Packaging (1. move to a new repo on GitHub/EBIGitLab (ask Sreenath/Stephen), 2. make npm-installable)
 - PDBE-4487 Add carb image to image gallery on branched page??? -> this was requested by Mandar but makes no sense, discuss with Mandar+Misi
 - Collapsing nodes in tree (low prio)
+- Allow config file for rendering settings (fog, occlusion...)?
 
 - Aesthetic test?:
+  - Aren't colors with occlusion too dark??
   - Cartoon helix profile: elliptical vs rounded
   - Cartoon - sizeFactor and aspectRatio (compare to PyMOL)
   - Cartoon - bumps to show something?? (maybe distiquish domains?)
@@ -53,18 +36,14 @@ Here: https://gitlab.ebi.ac.uk/midlik/pdb-visualization-benchmark
 ## Questions:
 
 - Changed assemblies in summary API (tetramer 1tqn)
-
-- Coarse conformations? - ask David -> some extension to CIF (https://pdb-dev.wwpdb.org/view3d.html?PDBDEV_00000012) -> ask Sameer -> Nope
-
-- Preeti - why CATH domain identifier is Topology not Homology? -> probably should be Homology, create a ticket, refer to 1n26, 1og0 -> it's OK, do not change
-- Missing modres in API -> will require image rerun when API fixed
+- struct_conn plan
 
 - Mandar - why images in collapsed gallery are all 200x200, and thumbnails in open gallery all 800x800
+- Misi - remove ticket?: PDBE-4487 Add carb image to image gallery on branched page
 
 
 ## Suggestions:
 
-- Render at 1600x1600 (consider modern display sizes: Mac builtin Retina 14-inch (3024 × 1964), Dell external 27-inch (1920 × 1080); 800x800 looks blurry when ~2/3 of display height) (rendering time vs 800x800: ~2x, filesize: ~3-4x) -> 1600+200
 
 
 ## Resolved:
@@ -88,6 +67,10 @@ Here: https://gitlab.ebi.ac.uk/midlik/pdb-visualization-benchmark
 - Testing - is it enough to check it creates all images on a few entries? -> no, unit testing
 - Alternative locations -> OK to show both? (sugar in 5elb) -> keep
 - Color highlighted entities/modres in various colors, like with domains (might improve orientation in the data) -> color entities but ensure they have the same colors as in by-entity coloring
+- Coarse conformations? - ask David -> some extension to CIF (https://pdb-dev.wwpdb.org/view3d.html?PDBDEV_00000012) -> ask Sameer -> Nope
+- Preeti - why CATH domain identifier is Topology not Homology? -> probably should be Homology, create a ticket, refer to 1n26, 1og0 -> it's OK, do not change
+- Missing modres in API -> will require image rerun when API fixed
+- Render at 1600x1600 (consider modern display sizes: Mac builtin Retina 14-inch (3024 × 1964), Dell external 27-inch (1920 × 1080); 800x800 looks blurry when ~2/3 of display height) (rendering time vs 800x800: ~2x, filesize: ~3-4x) -> render 1600 and 200
 
 
 ## Old process WTFs
@@ -177,6 +160,7 @@ view-state prototype -> cowork with Sebastian
 - Mol* - axes don't get rendered when I save image in GUI (with Axes: On)
 - Mol* - Color theme > Generate distinct > set any param to a zero-width interval (e.g. Hue: 360-360) > Page unresponsive (probably infinite loop with zero increment in src/mol-util/color/distinct.ts:getSamples)
   - The color generation is not perfect anyway (if Chroma and Lum are narrow, but Hue is wide, generates very similar colors)
+- `import { ModelSymmetry } from 'molstar/lib/commonjs/mol-model-formats/structure/property/symmetry';` fails to be imported unless e.g. `import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context';` is imported first (using CommonJS)
 
 
 ## Notes from Google meeting
