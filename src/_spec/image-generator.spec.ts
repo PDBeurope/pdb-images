@@ -179,6 +179,11 @@ describe('ImageGenerator creates correct states', () => {
         expect(outputs).toEqual(expectedOutput);
     }, TEST_TIMEOUT);
 
+    it('entry states, multi-model', async () => {
+        const outputs = Object.keys(await generateStates('176d', ['entry'], 'front', 'bcif')).sort();
+        expect(outputs).toEqual(['176d_deposited_chain', '176d_deposited_chemically_distinct_molecules']);
+    }, TEST_TIMEOUT);
+
     it('all states for AlphaFold', async () => { // AlphaFold does not work with BCIF, not our fault
         const outputs = Object.keys(await generateStates('AF-Q8W3K0-F1-model_v4', ['all'], 'auto', 'cif', 'alphafold')).sort();
         expect(outputs).toEqual([
