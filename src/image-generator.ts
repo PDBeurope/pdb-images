@@ -14,7 +14,6 @@ import { getLogger } from './helpers/logging';
 import { countDomains, selectBestChainForDomains, sortDomainsByChain, sortDomainsByEntity } from './helpers/sifts';
 import { countChainResidues, getChainInfo, getEntityInfo, getLigandInfo } from './helpers/structure-info';
 import { SubstructureDef } from './helpers/substructure-def';
-import { ImageType, ImageTypes } from './main';
 import { ModelNode, RootNode, StructureNode, TrajectoryNode, VisualNode, using } from './tree-manipulation';
 
 
@@ -23,13 +22,18 @@ const logger = getLogger(module);
 const ALLOW_GHOST_NODES = true; // just for debugging, should be `true` in production
 const ALLOW_COLLAPSED_NODES = true; // just for debugging, should be `true` in production
 
+export const Modes = ['pdb', 'alphafold'] as const;
+export type Mode = typeof Modes[number]
+
+export const ImageTypes = ['entry', 'assembly', 'entity', 'domain', 'ligand', 'modres', 'bfactor', 'validation', 'plddt', 'all'] as const;
+export type ImageType = typeof ImageTypes[number]
+
 interface DataPromises {
     entityNames?: Promise<PDBeAPIReturn<'getEntityNames'>>;
     preferredAssembly?: Promise<PDBeAPIReturn<'getPreferredAssembly'>>;
     siftsMappings?: Promise<PDBeAPIReturn<'getSiftsMappings'>>;
     modifiedResidues?: Promise<PDBeAPIReturn<'getModifiedResidue'>>;
 }
-
 
 export class ImageGenerator {
     private rotation: Mat3 = Mat3.identity();
@@ -55,8 +59,11 @@ export class ImageGenerator {
         return imageTypes.some(t => this.imageTypes.has(t));
     }
 
-    async processAll(entryId: string, inputUrl: string, format: 'cif' | 'bcif', mode: 'pdb' | 'alphafold') {
+    async processAll(entryId: string, inputUrl: string, mode: 'pdb' | 'alphafold') {
         logger.info('Processing', entryId, 'from', inputUrl);
+        const isBinary = inputUrl.endsWith('.bcif');
+        logger.debug('Assuming input is', isBinary ? 'binary CIF' : 'mmCIF');
+
         const startTime = Date.now();
         let success = false;
         try {
@@ -68,7 +75,7 @@ export class ImageGenerator {
             } : {}; // allow async fetching in the meantime
 
             const root = RootNode.create(this.plugin);
-            await using(root.makeDownload({ url: inputUrl, isBinary: format === 'bcif' }, entryId), async download => {
+            await using(root.makeDownload({ url: inputUrl, isBinary }, entryId), async download => {
                 const cif = await download.makeCif();
                 const traj = await cif.makeTrajectory();
                 await using(traj.makeModel(0), async rawModel => {

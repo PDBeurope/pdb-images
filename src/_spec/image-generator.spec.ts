@@ -4,7 +4,7 @@ import { PluginStateSnapshotManager } from 'molstar/lib/commonjs/mol-plugin-stat
 import { PDBeAPI } from '../api';
 import { ImageSpec } from '../captions/captions';
 import { ImageGenerator } from '../image-generator';
-import { ImageType } from '../main';
+import { ImageType } from '../image-generator';
 import { TestingPdb, getTestingHeadlessPlugin, isImageBlank, isBorderBlank } from './_utils';
 import { RawImageData } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 import { loadPngToRaw } from '../image/resize';
@@ -22,7 +22,7 @@ async function generateStates(pdbId: TestingPdb, imageTypes: ImageType[], views:
         const states: { [filename: string]: PluginStateSnapshotManager.StateSnapshot } = {};
         const saveFunction = async (spec: ImageSpec) => { states[spec.filename] = await plugin.getStateSnapshot(); };
         const generator = new ImageGenerator(plugin, saveFunction, api, imageTypes, views);
-        await generator.processAll(pdbId, `file://./test_data/structures/${pdbId}.${format}`, format, mode);
+        await generator.processAll(pdbId, `file://./test_data/structures/${pdbId}.${format}`, mode);
         return states;
     } finally {
         plugin.dispose();
@@ -36,7 +36,7 @@ async function generateImages(pdbId: TestingPdb, imageTypes: ImageType[], views:
         const states: { [filename: string]: RawImageData } = {};
         const saveFunction = async (spec: ImageSpec) => { states[spec.filename] = await plugin.getImageRaw(); };
         const generator = new ImageGenerator(plugin, saveFunction, api, imageTypes, views);
-        await generator.processAll(pdbId, `file://./test_data/structures/${pdbId}.${format}`, format, mode);
+        await generator.processAll(pdbId, `file://./test_data/structures/${pdbId}.${format}`, mode);
         return states;
     } finally {
         plugin.dispose();

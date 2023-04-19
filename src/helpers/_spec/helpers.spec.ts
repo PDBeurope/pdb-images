@@ -105,15 +105,15 @@ describe('colors', () => {
     });
 
     it('MoljStateSaver', async () => {
-        fs.rmSync('./test_data/output_1hda_changed.molj', { force: true });
+        fs.rmSync('./test_data/outputs/1hda_changed.molj', { force: true });
         const snapshot = JSON.parse(fs.readFileSync(`./test_data/states/1hda.molj`, { encoding: 'utf8' }));
         const plugin = await getTestingHeadlessPlugin();
         try {
             const saver = new MoljStateSaver(plugin, { downloadUrl: 'https://structure.bcif', downloadBinary: true, pdbeStructureQualityReportServerUrl: 'https://quality.json' });
             await plugin.managers.snapshot.setStateSnapshot(snapshot);
-            await saver.save('./test_data/output_1hda_changed.molj');
+            await saver.save('./test_data/outputs/1hda_changed.molj');
 
-            const changed = JSON.parse(fs.readFileSync(`./test_data/output_1hda_changed.molj`, { encoding: 'utf8' }));
+            const changed = JSON.parse(fs.readFileSync(`./test_data/outputs/1hda_changed.molj`, { encoding: 'utf8' }));
             const changedTransforms = changed.entries[0].snapshot.data.tree.transforms;
             const changedDownloadTransforms = changedTransforms.filter((t: any) => t.transformer === 'ms-plugin.download');
             const changedQualityTransforms = changedTransforms.filter((t: any) => t.transformer === 'ms-plugin.custom-model-properties');
@@ -129,7 +129,6 @@ describe('colors', () => {
             for (const transform of changedQualityTransforms) {
                 expect(transform.params.properties.pdbe_structure_quality_report.serverUrl).toEqual('https://quality.json');
             }
-            fs.rmSync('./test_data/output_1hda_changed.molj', { force: true });
         } finally {
             plugin.dispose();
         }

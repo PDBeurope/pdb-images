@@ -8,32 +8,38 @@ import { MAQualityAssessment } from 'molstar/lib/commonjs/extensions/model-archi
 import { PDBeStructureQualityReport } from 'molstar/lib/commonjs/extensions/pdbe';
 import { HeadlessPluginContext } from 'molstar/lib/commonjs/mol-plugin/headless-plugin-context';
 import { DefaultPluginSpec, PluginSpec } from 'molstar/lib/commonjs/mol-plugin/spec';
-import { defaultCanvas3DParams, defaultImagePassParams, HeadlessScreenshotHelperOptions, RawImageData, STYLIZED_POSTPROCESSING } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
+import { HeadlessScreenshotHelperOptions, RawImageData, STYLIZED_POSTPROCESSING, defaultCanvas3DParams, defaultImagePassParams } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 import { setFSModule } from 'molstar/lib/commonjs/mol-util/data-source';
 
 import { PDBeAPI } from './api';
 import { ImageSpec } from './captions/captions';
 import { collectCaptions } from './captions/collect';
 import { MoljStateSaver, parseIntStrict } from './helpers/helpers';
-import { configureLogging, getLogger, LogLevel, LogLevels, oneLine } from './helpers/logging';
-import { ImageGenerator } from './image-generator';
+import { LogLevel, LogLevels, configureLogging, getLogger, oneLine } from './helpers/logging';
+import { ImageGenerator, ImageType, ImageTypes, Mode, Modes } from './image-generator';
 import { addAxisIndicators } from './image/draw';
 import { resizeRawImage, saveRawToPng } from './image/resize';
 
 
 const logger = getLogger(module);
-
 setFSModule(fs);
 
+
 const DEFAULT_PDBE_API_URL = 'https://www.ebi.ac.uk/pdbe/api';
+
+/** ${id} will be replaced by actual identifier (PDB ID or AlphaFoldDB ID) */
+const DEFAULT_INPUT_URL_TEMPLATES: { [mode in Mode]: string } = {
+    pdb: 'https://www.ebi.ac.uk/pdbe/entry-files/download/${id}.bcif',
+    alphafold: 'https://alphafold.ebi.ac.uk/files/${id}.cif', // There is some issue with AlphaFold bcifs, this might be fixed in the future
+};
 const DEFAULT_IMAGE_SIZE = '800x800';
 
 
-export const ImageTypes = ['entry', 'assembly', 'entity', 'domain', 'ligand', 'modres', 'bfactor', 'validation', 'plddt', 'all'] as const;
-export type ImageType = typeof ImageTypes[number]
-
 export interface Args {
-    pdbid: string,
+    entry_id: string,
+    output_dir: string,
+    input: string | undefined,
+    mode: Mode,
     api_url: string,
     no_api: boolean,
     size: { width: number, height: number }[],
@@ -49,7 +55,10 @@ export interface Args {
 
 export function parseArguments(): Args {
     const parser = new ArgumentParser({ description: 'CLI tool for generating PDBe images of macromolecular models.' });
-    parser.add_argument('pdbid', { help: 'PDB identifier.' }); // TODO replace by infile + outdir
+    parser.add_argument('entry_id', { help: 'Entry identifier (PDB ID, AlphaFoldDB ID).' });
+    parser.add_argument('output_dir', { help: 'Output directory.' });
+    parser.add_argument('--input', { help: 'Input file or URL (cif or bcif format).' });
+    parser.add_argument('--mode', { choices: [...Modes], default: 'pdb', help: 'Mode.' });
     parser.add_argument('--api_url', { default: DEFAULT_PDBE_API_URL, help: `PDBe API URL. Default: ${DEFAULT_PDBE_API_URL}.` });
     parser.add_argument('--no_api', { action: 'store_true', help: 'Do not use PDBe API at all (some images will be skipped, some entity names will be different in captions, etc.).' });
     parser.add_argument('--size', { nargs: '*', default: [DEFAULT_IMAGE_SIZE], help: `One or more output image sizes, e.g. 800x800 200x200. Default: ${DEFAULT_IMAGE_SIZE}. Oonly the first size is rendered, others are obtained by resizing unless --render_each_size is used.` });
@@ -78,52 +87,32 @@ export async function main(args: Args) {
     configureLogging(args.log, 'stderr');
     logger.info('Arguments:', oneLine(args));
 
-    const rootPath = '/Users/midlik/Workspace/PDBeImages/data'; // TODO add --in --out --public_in?
-    const outDir = path.join(rootPath, 'out', args.pdbid);
-    if (args.clear) fs.rmSync(outDir, { recursive: true, force: true });
-    fs.mkdirSync(outDir, { recursive: true });
+    const publicUrl = DEFAULT_INPUT_URL_TEMPLATES[args.mode].replace(/\$\{id\}/g, args.entry_id); // replace ${id} by actual ID
+    const runtimeUrl = resolveUrl(args.input) ?? publicUrl;
 
-    const options: HeadlessScreenshotHelperOptions = { canvas: defaultCanvas3DParams(), imagePass: defaultImagePassParams() };
-    options.canvas!.camera!.manualReset = true;
-    if (options.canvas?.cameraFog?.name === 'on') {
-        options.canvas.cameraFog.params.intensity = 30;
+    if (args.clear) {
+        fs.rmSync(args.output_dir, { recursive: true, force: true });
     }
-    options.canvas!.postprocessing!.occlusion = STYLIZED_POSTPROCESSING.occlusion!;
-    options.imagePass!.transparentBackground = !args.opaque_background; // applies only to rendered image (MOLJ always has opaque background)
+    fs.mkdirSync(args.output_dir, { recursive: true });
 
-    const pluginSpec = DefaultPluginSpec();
-    pluginSpec.behaviors.push(PluginSpec.Behavior(PDBeStructureQualityReport));
-    pluginSpec.behaviors.push(PluginSpec.Behavior(MAQualityAssessment));
-
-    const canvasSize = args.size[0] ?? { width: 800, height: 800 };
-    const plugin = new HeadlessPluginContext({ gl, pngjs }, pluginSpec, canvasSize, options);
-    await plugin.init();
-
-    const isAlphaFold = args.pdbid.startsWith('AF-'); // for now, TODO pass through args
-    logger.info('Running in', isAlphaFold ? 'AlphaFold' : 'PDB', 'mode');
-    const localPath = isAlphaFold
-        ? path.join(rootPath, 'in', `${args.pdbid}.cif`)
-        : path.join(rootPath, 'in', `${args.pdbid}.bcif`);
-    const localUrl = 'file://' + localPath;
-    const wwwUrl = isAlphaFold
-        ? `https://alphafold.ebi.ac.uk/files/${args.pdbid}.cif` // e.g. https://alphafold.ebi.ac.uk/files/AF-Q8W3K0-F1-model_v4.bcif
-        : `https://www.ebi.ac.uk/pdbe/entry-files/download/${args.pdbid}.bcif`;
-    // There is some issue with AlphaFold bcifs, this might be fixed in the future
-    const format = localUrl.endsWith('.cif') ? 'cif' : 'bcif';
-
-    if (!fs.existsSync(localPath)) {
-        logger.fatal(`Input file not found: ${localPath}`);
-        throw new Error(`Input file not found: ${localPath}`);
+    if (runtimeUrl.startsWith('file://')) {
+        const inputFile = runtimeUrl.substring('file://'.length);
+        if (!fs.existsSync(inputFile)) {
+            logger.fatal(`Input file not found: ${inputFile}`);
+            throw new Error(`Input file not found: ${inputFile}`);
+        }
     }
 
-    const saveFunction = makeSaveFunction(plugin, outDir, args, wwwUrl);
     const api = new PDBeAPI(args.api_url, args.no_api);
-
-    const imageGenerator = new ImageGenerator(plugin, saveFunction, api, args.type, args.view);
-    await imageGenerator.processAll(args.pdbid, localUrl, format, isAlphaFold ? 'alphafold' : 'pdb');
-    collectCaptions(outDir, args.pdbid, args.date);
-
-    plugin.dispose();
+    const plugin = await createHeadlessPlugin(args);
+    try {
+        const saveFunction = makeSaveFunction(plugin, args.output_dir, args, publicUrl);
+        const imageGenerator = new ImageGenerator(plugin, saveFunction, api, args.type, args.view);
+        await imageGenerator.processAll(args.entry_id, runtimeUrl, args.mode);
+        collectCaptions(args.output_dir, args.entry_id, args.date);
+    } finally {
+        plugin.dispose();
+    }
 }
 
 export function makeSaveFunction(plugin: HeadlessPluginContext, outDir: string, args: Pick<Args, 'size' | 'render_each_size' | 'no_axes'>, wwwUrl: string) {
@@ -156,4 +145,39 @@ export function makeSaveFunction(plugin: HeadlessPluginContext, outDir: string, 
             await saveRawToPng(image, path.join(outDir, `${spec.filename}_image-${size.width}x${size.height}.png`));
         }
     };
+}
+
+
+async function createHeadlessPlugin(args: Pick<Args, 'size' | 'opaque_background'>) {
+    const options: HeadlessScreenshotHelperOptions = { canvas: defaultCanvas3DParams(), imagePass: defaultImagePassParams() };
+
+    options.canvas!.camera!.manualReset = true;
+    if (options.canvas?.cameraFog?.name === 'on') {
+        options.canvas.cameraFog.params.intensity = 30;
+    }
+    options.canvas!.postprocessing!.occlusion = STYLIZED_POSTPROCESSING.occlusion!;
+    options.imagePass!.transparentBackground = !args.opaque_background; // applies only to rendered image (MOLJ always has opaque background)
+
+    const pluginSpec = DefaultPluginSpec();
+    pluginSpec.behaviors.push(PluginSpec.Behavior(PDBeStructureQualityReport));
+    pluginSpec.behaviors.push(PluginSpec.Behavior(MAQualityAssessment));
+
+    const canvasSize = args.size[0] ?? { width: 800, height: 800 };
+    const plugin = new HeadlessPluginContext({ gl, pngjs }, pluginSpec, canvasSize, options);
+
+    try {
+        await plugin.init();
+    } catch (error) {
+        plugin.dispose();
+        throw error;
+    }
+    return plugin;
+}
+
+/** If `urlOrPath` is URL, return it.
+ * Otherwise assume it is a path and prepend 'file://' */
+function resolveUrl(urlOrPath: string | undefined) {
+    if (!urlOrPath) return urlOrPath;
+    if (urlOrPath.match(/^\w+:\/\//)) return urlOrPath; // is URL
+    else return 'file://' + urlOrPath; // is path
 }

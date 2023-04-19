@@ -99,14 +99,14 @@ describe('resize', () => {
     });
 
     it('saveRawToPng', async () => {
-        const FILENAME = './test_data/image_10x8.png';
+        const FILENAME = './test_data/outputs/image_10x8.png';
         fs.rmSync(FILENAME, { force: true });
         expect(fs.existsSync(FILENAME)).toBeFalsy();
 
         await saveRawToPng(IMG_10x8, FILENAME);
         expect(fs.existsSync(FILENAME)).toBeTruthy();
 
-        const loadedImage = await loadPngToRaw('./test_data/image_10x8.png');
+        const loadedImage = await loadPngToRaw(FILENAME);
         expect(loadedImage).toEqual(IMG_10x8);
     });
 

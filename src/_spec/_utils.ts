@@ -23,7 +23,12 @@ export async function getTestingHeadlessPlugin(): Promise<HeadlessPluginContext>
     pluginSpec.behaviors.push(PluginSpec.Behavior(PDBeStructureQualityReport));
     pluginSpec.behaviors.push(PluginSpec.Behavior(MAQualityAssessment));
     const plugin = new HeadlessPluginContext({ gl }, pluginSpec, { width: 100, height: 100 }, { canvas: defaultCanvas3DParams(), imagePass: defaultImagePassParams() });
-    await plugin.init();
+    try {
+        await plugin.init();
+    } catch (error) {
+        plugin.dispose();
+        throw error;
+    }
     return plugin;
 }
 

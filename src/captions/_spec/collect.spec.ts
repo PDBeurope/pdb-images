@@ -23,8 +23,8 @@ describe('captions collect', () => {
         collectCaptions('./test_data/captions/1l7c', '1l7c', '2023-04-04');
         expect(fs.existsSync('./test_data/captions/1l7c/1l7c_filelist')).toBeTruthy();
 
-        const expectedOutput = fs.readFileSync('./test_data/captions/1l7c-expected_filelist', { encoding: 'utf8' });
-        const realOutput = fs.readFileSync('./test_data/captions/1l7c/1l7c_filelist', { encoding: 'utf8' });
+        const expectedOutput = fs.readFileSync('./test_data/captions/1l7c-expected_filelist', { encoding: 'utf8' }).trim();
+        const realOutput = fs.readFileSync('./test_data/captions/1l7c/1l7c_filelist', { encoding: 'utf8' }).trim();
         expect(realOutput).toEqual(expectedOutput);
     });
 });
