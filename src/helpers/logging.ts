@@ -38,5 +38,5 @@ export function getLogger(module: NodeModule) {
 
 /** Format object as a one-line string. */
 export function oneLine(obj: object): string {
-    return util.inspect(obj, { breakLength: Infinity });
+    return util.inspect(obj, { breakLength: Infinity, depth: Infinity, compact: true });
 }

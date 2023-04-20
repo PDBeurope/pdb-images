@@ -72,7 +72,7 @@ export class PDBeAPI {
         }
         const preferred = assemblies.filter(ass => ass.preferred);
         if (preferred.length === 0) {
-            logger.warn(`PDB entry ${pdbId} has no preferred assembly.`);
+            logger.warn(`PDB entry ${pdbId} has no preferred assembly. Using the first assembly instead.`);
             return assemblies[0];
         }
         if (preferred.length > 1) {

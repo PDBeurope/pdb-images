@@ -4,12 +4,13 @@
  * @author Adam Midlik <midlik@gmail.com>
  */
 
+import { ArgumentParser } from 'argparse';
 import fs from 'fs';
 import path from 'path';
 
-import { Args, main, makeSaveFunction } from '../main';
-import { getTestingHeadlessPlugin, isBorderBlank, isImageBlank } from './_utils';
 import { loadPngToRaw } from '../image/resize';
+import { Args, main, makeSaveFunction, parseArguments } from '../main';
+import { getTestingHeadlessPlugin, isBorderBlank, isImageBlank } from './_utils';
 
 
 const TEST_TIMEOUT = 600_000; // ms
@@ -88,6 +89,85 @@ describe('makeSaveFunction', () => {
         const imageDownscaled = await loadPngToRaw(path.join(OUTPUT_DIR, 'example_empty_image-100x100.png'));
         expect(isImageBlank(imageDownscaled)).toBeFalsy();
         expect(isBorderBlank(imageDownscaled)).toBeTruthy();
+    });
+});
+
+
+describe('args', () => {
+    it('fail without args', () => {
+        const oldExit = ArgumentParser.prototype.exit;
+        const oldArgv = process.argv;
+        try {
+            ArgumentParser.prototype.exit = () => { console.error('ArgumentParser exiting'); throw Error('Exit'); };
+            process.argv = 'node index.js'.split(' ');
+            expect(() => parseArguments()).toThrow();
+        } finally {
+            ArgumentParser.prototype.exit = oldExit;
+            process.argv = oldArgv;
+        }
+    });
+
+    it('parse args, use defaults', () => {
+        const oldExit = ArgumentParser.prototype.exit;
+        const oldArgv = process.argv;
+        try {
+            ArgumentParser.prototype.exit = () => { console.error('ArgumentParser exiting'); throw Error('Exit'); };
+            process.argv = 'node index.js 1ad5 /data/1ad5'.split(' ');
+            const expectedArgs: Args = {
+                entry_id: '1ad5',
+                output_dir: '/data/1ad5',
+                input: undefined,
+                mode: 'pdb',
+                api_url: 'https://www.ebi.ac.uk/pdbe/api',
+                no_api: false,
+                size: [{ width: 800, height: 800 }],
+                view: 'auto',
+                render_each_size: false,
+                type: ['all'],
+                opaque_background: false,
+                no_axes: false,
+                date: undefined,
+                clear: false,
+                log: 'info',
+            };
+            expect(parseArguments()).toEqual(expectedArgs);
+        } finally {
+            ArgumentParser.prototype.exit = oldExit;
+            process.argv = oldArgv;
+        }
+    });
+
+    it('parse args, all given', () => {
+        const oldExit = ArgumentParser.prototype.exit;
+        const oldArgv = process.argv;
+        try {
+            ArgumentParser.prototype.exit = () => { console.error('ArgumentParser exiting'); throw Error('Exit'); };
+            let cmd = 'node index.js 1ad5 /data/1ad5 --input http://smelly_cat.cif --mode alphafold';
+            cmd += ' --api_url https://smelly_api.com --no_api --size 500x500 300x200 --view front --render_each_size';
+            cmd += ' --type entry assembly plddt --opaque_background --no_axes --date 2023/04/20 --clear --log debug';
+            process.argv = cmd.split(/\s+/);
+            const expectedArgs: Args = {
+                entry_id: '1ad5',
+                output_dir: '/data/1ad5',
+                input: 'http://smelly_cat.cif',
+                mode: 'alphafold',
+                api_url: 'https://smelly_api.com',
+                no_api: true,
+                size: [{ width: 500, height: 500 }, { width: 300, height: 200 }],
+                view: 'front',
+                render_each_size: true,
+                type: ['entry', 'assembly', 'plddt'],
+                opaque_background: true,
+                no_axes: true,
+                date: '2023/04/20',
+                clear: true,
+                log: 'debug',
+            };
+            expect(parseArguments()).toEqual(expectedArgs);
+        } finally {
+            ArgumentParser.prototype.exit = oldExit;
+            process.argv = oldArgv;
+        }
     });
 });
 

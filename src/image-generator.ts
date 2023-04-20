@@ -16,7 +16,7 @@ import { Captions, ImageSpec } from './captions/captions';
 import { adjustCamera, changeCameraRotation, combineRotations, zoomAll } from './helpers/camera';
 import { ANNOTATION_COLORS, ENTITY_COLORS, MODRES_COLORS, assignEntityAndUnitColors, cycleIterator } from './helpers/colors';
 import { getModifiedResidueInfo } from './helpers/helpers';
-import { getLogger } from './helpers/logging';
+import { getLogger, oneLine } from './helpers/logging';
 import { countDomains, selectBestChainForDomains, sortDomainsByChain, sortDomainsByEntity } from './helpers/sifts';
 import { countChainResidues, getChainInfo, getEntityInfo, getLigandInfo } from './helpers/structure-info';
 import { SubstructureDef } from './helpers/substructure-def';
@@ -94,6 +94,9 @@ export class ImageGenerator {
                     if (mode === 'pdb' && this.shouldRender('assembly', 'entity', 'modres')) {
                         const assemblies = ModelSymmetry.Provider.get(model.data!)?.assemblies ?? [];
                         const preferredAssembly = await promises.preferredAssembly;
+                        logger.debug(`Assemblies (${assemblies.length}):`);
+                        for (const ass of assemblies) logger.debug('   ', oneLine(ass));
+                        logger.debug('Preferred assembly:', preferredAssembly?.assemblyId);
                         for (const assembly of assemblies) {
                             const isPreferredAssembly = assembly.id === preferredAssembly?.assemblyId;
                             await this.processAssemblyStructure(entryId, model, assembly.id, isPreferredAssembly, promises);
@@ -224,6 +227,8 @@ export class ImageGenerator {
 
     private async processEntities(structure: StructureNode, context: Captions.StructureContext, colors: Color[] = ENTITY_COLORS) {
         const { entityInfo, assemblyId } = context;
+        logger.debug(`Entities (${Object.keys(entityInfo).length}):`);
+        for (const entityId in entityInfo) logger.debug(`    Entity ${entityId} ${oneLine(entityInfo[entityId])}`);
         await using(structure.makeGroup({ label: 'Entities' }, { state: { isGhost: ALLOW_GHOST_NODES } }), async group => {
             // here it crashes on 7y7a (16GB RAM Mac), FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
             const entityStructs = await group.makeEntities(entityInfo);
@@ -256,6 +261,8 @@ export class ImageGenerator {
     private async processLigands(structure: StructureNode, context: Captions.StructureContext, entityColors?: Color[]) {
         const structData = structure.data!;
         const ligandInfo = getLigandInfo(structData);
+        logger.debug(`Ligands (${Object.keys(ligandInfo).length}):`);
+        for (const lig in ligandInfo) logger.debug('   ', lig, oneLine(ligandInfo[lig]));
         for (const info of Object.values(ligandInfo)) {
             await using(structure.makeLigEnvComponents(info, { state: { isCollapsed: ALLOW_COLLAPSED_NODES } }), async components => {
                 const visuals = await components.makeLigEnvVisuals(entityColors);
@@ -267,13 +274,28 @@ export class ImageGenerator {
 
     private async processDomains(structure: StructureNode, domains: { [source in SiftsSource]: { [family: string]: DomainRecord[] } }, context: Captions.StructureContext) {
         const chainInfo = getChainInfo(structure.data!.model);
-        const chainCoverages = countChainResidues(structure.data!.model);
+        const chainLengths = countChainResidues(structure.data!.model);
+        logger.debug('Chain lengths:', oneLine(chainLengths));
 
         const allDomains = sortDomainsByEntity(domains);
-        const selectedDomains = selectBestChainForDomains(allDomains, chainCoverages);
+        const selectedDomains = selectBestChainForDomains(allDomains, chainLengths);
         const selectedDomainsByChain = sortDomainsByChain(selectedDomains);
         const allDomainCounts = countDomains(allDomains);
         const selectedDomainCounts = countDomains(selectedDomains);
+
+        logger.debug('Domains:');
+        for (const [source, sourceDoms] of Object.entries(allDomains)) {
+            logger.debug(`    ${source}:`);
+            for (const [family, familyDoms] of Object.entries(sourceDoms)) {
+                logger.debug(`        ${family}:`);
+                for (const [entityId, entityDoms] of Object.entries(familyDoms)) {
+                    logger.debug(`            Entity ${entityId}:`);
+                    for (const dom of entityDoms) {
+                        logger.debug(`                ${oneLine(dom)}:`);
+                    }
+                }
+            }
+        }
 
         const colorsIterator = cycleIterator(ANNOTATION_COLORS);
         for (const [chainId, chainDomains] of Object.entries(selectedDomainsByChain)) {
@@ -315,10 +337,12 @@ export class ImageGenerator {
     }
 
     private async processModifiedResidues(structure: StructureNode, modifiedResidues: ModifiedResidueRecord[], context: Captions.StructureContext) {
-        if (modifiedResidues.length === 0) {
-            return;
-        }
         const modresInfo = getModifiedResidueInfo(modifiedResidues);
+        logger.debug(`Modified residues (${Object.keys(modresInfo).length}):`);
+        for (const modres in modresInfo) logger.debug('   ', modres, oneLine(modresInfo[modres]));
+
+        if (Object.keys(modresInfo).length === 0) return;
+
         const setDefinitions: { [modres: string]: SubstructureDef } = {};
         for (const modres in modresInfo) setDefinitions[modres] = modresInfo[modres].instances;
 

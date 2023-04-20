@@ -2,7 +2,6 @@
   "name": "pdbe-images",
   "version": "0.1.0",
   "description": "Generates images from mmCIF/BCIF files",
-  "main": "index.js",
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",
@@ -10,6 +9,13 @@
     "jest": "jest",
     "test": "npm run lint && npm run jest"
   },
+  "files": [
+    "build"
+  ],
+  "bin":{
+    "pdbe-images": "build/index.js"
+  },
+  "main": "build/main.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/PDBeurope/pdbe-images.git"

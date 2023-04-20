@@ -1,0 +1,5 @@
+tests
+perf-tests
+_spec
+*.tsbuildinfo
+*.js.map
