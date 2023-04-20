@@ -20,7 +20,7 @@
     "Protein Data Bank"
   ],
   "author": "Adam Midlik",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/PDBeurope/pdbe-images/issues"
   },

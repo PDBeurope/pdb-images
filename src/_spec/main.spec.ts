@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2023 EMBL - European Bioinformatics Institute, licensed under Apache 2.0, see LICENSE file for more info.
+ *
+ * @author Adam Midlik <midlik@gmail.com>
+ */
+
 import fs from 'fs';
 import path from 'path';
 
@@ -42,6 +48,16 @@ const EXPECTED_FILENAMES_AF_Q8Q3K0 = [
 ].sort();
 
 
+describe('isImageBlank', () => {
+    it('check isImageBlank works', async () => {
+        expect(isImageBlank(await loadPngToRaw('./test_data/sample_images/white.png'))).toBeTruthy();
+        expect(isImageBlank(await loadPngToRaw('./test_data/sample_images/axes_front.png'))).toBeFalsy();
+        expect(isBorderBlank(await loadPngToRaw('./test_data/sample_images/white.png'))).toBeTruthy();
+        expect(isBorderBlank(await loadPngToRaw('./test_data/sample_images/axes_front.png'))).toBeTruthy();
+    }, TEST_TIMEOUT);
+});
+
+
 describe('makeSaveFunction', () => {
     it('makeSaveFunction', async () => {
         const OUTPUT_DIR = './test_data/outputs/empty';
@@ -53,7 +69,7 @@ describe('makeSaveFunction', () => {
         const plugin = await getTestingHeadlessPlugin();
         try {
             const saveFunction = makeSaveFunction(plugin, OUTPUT_DIR, { size: [{ width: 200, height: 200 }, { width: 100, height: 100 }], render_each_size: false, no_axes: false }, 'https://nope.nope');
-            await saveFunction({ filename: 'example_empty', description: 'Description', clean_description: 'Clean description', alt: 'Alt', _entry_id: '1hda', _view: undefined, _section: [] });
+            await saveFunction({ filename: 'example_empty', description: 'Description', clean_description: 'Clean description', alt: 'Alt', _entry_id: 'empty', _view: 'front', _section: [] });
         } finally {
             plugin.dispose();
         }
@@ -63,6 +79,15 @@ describe('makeSaveFunction', () => {
             'example_empty_image-100x100.png',
             'example_empty_image-200x200.png',
         ]);
+
+        // Check no generated images are blank, or overflowing through border
+        const imageFull = await loadPngToRaw(path.join(OUTPUT_DIR, 'example_empty_image-200x200.png'));
+        expect(isImageBlank(imageFull)).toBeFalsy();
+        expect(isBorderBlank(imageFull)).toBeTruthy();
+
+        const imageDownscaled = await loadPngToRaw(path.join(OUTPUT_DIR, 'example_empty_image-100x100.png'));
+        expect(isImageBlank(imageDownscaled)).toBeFalsy();
+        expect(isBorderBlank(imageDownscaled)).toBeTruthy();
     });
 });
 
@@ -111,7 +136,7 @@ describe('main', () => {
             expect(jsonContent).toContain(`"${filename}"`);
         }
 
-        // Check no generated images are blank, or overflowing through border
+        // Check generated images are not blank, or overflowing through border
         for (const file of expectedFiles) {
             if (file.endsWith('.png')) {
                 const image = await loadPngToRaw(path.join(OUTPUT_DIR, file));
@@ -164,7 +189,7 @@ describe('main', () => {
             expect(jsonContent).toContain(`"${filename}"`);
         }
 
-        // Check no generated images are blank, or overflowing through border
+        // Check generated images are not blank, or overflowing through border
         for (const file of expectedFiles) {
             if (file.endsWith('.png')) {
                 const image = await loadPngToRaw(path.join(OUTPUT_DIR, file));

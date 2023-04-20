@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2023 EMBL - European Bioinformatics Institute, licensed under Apache 2.0, see LICENSE file for more info.
+ *
+ * @author Adam Midlik <midlik@gmail.com>
+ */
+
 import { MolScriptBuilder } from 'molstar/lib/commonjs/mol-script/language/builder';
 import { Expression } from 'molstar/lib/commonjs/mol-script/language/expression';
 

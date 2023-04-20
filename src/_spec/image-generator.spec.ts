@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2023 EMBL - European Bioinformatics Institute, licensed under Apache 2.0, see LICENSE file for more info.
+ *
+ * @author Adam Midlik <midlik@gmail.com>
+ */
+
 import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context'; // this must be imported before ImageGenerator, otherwise fails (circular dependency?)
 
 import { PluginStateSnapshotManager } from 'molstar/lib/commonjs/mol-plugin-state/manager/snapshots';
@@ -5,9 +11,7 @@ import { PDBeAPI } from '../api';
 import { ImageSpec } from '../captions/captions';
 import { ImageGenerator } from '../image-generator';
 import { ImageType } from '../image-generator';
-import { TestingPdb, getTestingHeadlessPlugin, isImageBlank, isBorderBlank } from './_utils';
-import { RawImageData } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
-import { loadPngToRaw } from '../image/resize';
+import { TestingPdb, getTestingHeadlessPlugin } from './_utils';
 
 
 PluginContext; // ensure PluginContext is imported before ImageGenerator
@@ -21,20 +25,6 @@ async function generateStates(pdbId: TestingPdb, imageTypes: ImageType[], views:
         const api = new PDBeAPI('file://./test_data/api');
         const states: { [filename: string]: PluginStateSnapshotManager.StateSnapshot } = {};
         const saveFunction = async (spec: ImageSpec) => { states[spec.filename] = await plugin.getStateSnapshot(); };
-        const generator = new ImageGenerator(plugin, saveFunction, api, imageTypes, views);
-        await generator.processAll(pdbId, `file://./test_data/structures/${pdbId}.${format}`, mode);
-        return states;
-    } finally {
-        plugin.dispose();
-    }
-}
-
-async function generateImages(pdbId: TestingPdb, imageTypes: ImageType[], views: 'front' | 'all' | 'auto', format: 'cif' | 'bcif', mode: 'pdb' | 'alphafold' = 'pdb') {
-    const plugin = await getTestingHeadlessPlugin();
-    try {
-        const api = new PDBeAPI('file://./test_data/api');
-        const states: { [filename: string]: RawImageData } = {};
-        const saveFunction = async (spec: ImageSpec) => { states[spec.filename] = await plugin.getImageRaw(); };
         const generator = new ImageGenerator(plugin, saveFunction, api, imageTypes, views);
         await generator.processAll(pdbId, `file://./test_data/structures/${pdbId}.${format}`, mode);
         return states;
@@ -214,88 +204,6 @@ describe('ImageGenerator states contain some visuals', () => {
         for (const filename of Object.keys(outputs).sort()) {
             const state = outputs[filename];
             expect(getVisualNodes(state)).not.toHaveLength(0);
-        }
-    }, TEST_TIMEOUT);
-});
-
-
-describe('ImageGenerator images are not blank, but have blank border', () => {
-    it('check isImageBlank works', async () => {
-        expect(isImageBlank(await loadPngToRaw('./test_data/sample_images/white.png'))).toBeTruthy();
-        expect(isImageBlank(await loadPngToRaw('./test_data/sample_images/axes_front.png'))).toBeFalsy();
-        expect(isBorderBlank(await loadPngToRaw('./test_data/sample_images/white.png'))).toBeTruthy();
-        expect(isBorderBlank(await loadPngToRaw('./test_data/sample_images/axes_front.png'))).toBeTruthy();
-    }, TEST_TIMEOUT);
-
-    it('entry images, all views', async () => {
-        const images = await generateImages('1ad5', ['entry'], 'all', 'bcif');
-        for (const filename of Object.keys(images).sort()) {
-            expect(isImageBlank(images[filename])).toBeFalsy();
-            expect(isBorderBlank(images[filename])).toBeTruthy();
-        }
-    }, TEST_TIMEOUT);
-
-    it('assembly images', async () => {
-        const images = await generateImages('1ad5', ['assembly'], 'front', 'bcif');
-        for (const filename of Object.keys(images).sort()) {
-            expect(isImageBlank(images[filename])).toBeFalsy();
-            expect(isBorderBlank(images[filename])).toBeTruthy();
-        }
-    }, TEST_TIMEOUT);
-
-    it('entity images', async () => {
-        const images = await generateImages('1ad5', ['entity'], 'front', 'bcif');
-        for (const filename of Object.keys(images).sort()) {
-            expect(isImageBlank(images[filename])).toBeFalsy();
-            expect(isBorderBlank(images[filename])).toBeTruthy();
-        }
-    }, TEST_TIMEOUT);
-
-    it('domain images', async () => {
-        const images = await generateImages('1ad5', ['domain'], 'front', 'bcif');
-        for (const filename of Object.keys(images).sort()) {
-            expect(isImageBlank(images[filename])).toBeFalsy();
-            expect(isBorderBlank(images[filename])).toBeTruthy();
-        }
-    }, TEST_TIMEOUT);
-
-    it('ligand images', async () => {
-        const images = await generateImages('1ad5', ['ligand'], 'front', 'bcif');
-        for (const filename of Object.keys(images).sort()) {
-            expect(isImageBlank(images[filename])).toBeFalsy();
-            expect(isBorderBlank(images[filename])).toBeTruthy();
-        }
-    }, TEST_TIMEOUT);
-
-    it('modres images', async () => {
-        const images = await generateImages('1ad5', ['modres'], 'front', 'bcif');
-        for (const filename of Object.keys(images).sort()) {
-            expect(isImageBlank(images[filename])).toBeFalsy();
-            expect(isBorderBlank(images[filename])).toBeTruthy();
-        }
-    }, TEST_TIMEOUT);
-
-    it('bfactor images', async () => {
-        const images = await generateImages('1ad5', ['bfactor'], 'front', 'bcif');
-        for (const filename of Object.keys(images).sort()) {
-            expect(isImageBlank(images[filename])).toBeFalsy();
-            expect(isBorderBlank(images[filename])).toBeTruthy();
-        }
-    }, TEST_TIMEOUT);
-
-    it('validation images', async () => {
-        const images = await generateImages('1ad5', ['validation'], 'front', 'bcif');
-        for (const filename of Object.keys(images).sort()) {
-            expect(isImageBlank(images[filename])).toBeFalsy();
-            expect(isBorderBlank(images[filename])).toBeTruthy();
-        }
-    }, TEST_TIMEOUT);
-
-    it('AlphaFold images', async () => {
-        const images = await generateImages('AF-Q8W3K0-F1-model_v4', ['all'], 'front', 'cif', 'alphafold');
-        for (const filename of Object.keys(images).sort()) {
-            expect(isImageBlank(images[filename])).toBeFalsy();
-            expect(isBorderBlank(images[filename])).toBeTruthy();
         }
     }, TEST_TIMEOUT);
 });

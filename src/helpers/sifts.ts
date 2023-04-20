@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2023 EMBL - European Bioinformatics Institute, licensed under Apache 2.0, see LICENSE file for more info.
+ *
+ * @author Adam Midlik <midlik@gmail.com>
+ */
+
 /** These are some insanely-looking functions which reorganize/filter SIFTS domain to fit our weird requirements:
  * For each combination of source-family-entity we want the total number of domain instances
  * but then only select one chain and visualize its domains.

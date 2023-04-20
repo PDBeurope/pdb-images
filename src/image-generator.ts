@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2023 EMBL - European Bioinformatics Institute, licensed under Apache 2.0, see LICENSE file for more info.
+ *
+ * @author Adam Midlik <midlik@gmail.com>
+ */
+
 import { Mat3 } from 'molstar/lib/commonjs/mol-math/linear-algebra';
 import { ModelSymmetry } from 'molstar/lib/commonjs/mol-model-formats/structure/property/symmetry';
 import { Model } from 'molstar/lib/commonjs/mol-model/structure';
