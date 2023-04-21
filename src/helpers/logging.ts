@@ -9,7 +9,7 @@ import path from 'path';
 import util from 'util';
 
 
-export const LogLevels = ['all', 'trace', 'debug', 'info', 'warn', 'error', 'fatal', 'mark', 'off'] as const;
+export const LogLevels = ['ALL', 'TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL', 'MARK', 'OFF'] as const;
 export type LogLevel = typeof LogLevels[number]
 
 /** Set logging level and stream globally.

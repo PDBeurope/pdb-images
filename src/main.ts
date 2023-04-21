@@ -45,6 +45,7 @@ export interface Args {
     entry_id: string,
     output_dir: string,
     input: string | undefined,
+    input_public: string | undefined,
     mode: Mode,
     api_url: string,
     no_api: boolean,
@@ -60,22 +61,24 @@ export interface Args {
 }
 
 export function parseArguments(): Args {
-    const parser = new ArgumentParser({ description: 'CLI tool for generating PDBe images of macromolecular models.' });
-    parser.add_argument('entry_id', { help: 'Entry identifier (PDB ID, AlphaFoldDB ID).' });
+    const parser = new ArgumentParser({ description: 'PDBeImages, a CLI tool for generating images of macromolecular models.' });
+    // ArgumentParser will convert `-` to `_` in optional args but not in positional.
+    parser.add_argument('entry_id', { help: 'Entry identifier (PDB ID or AlphaFoldDB ID).' });
     parser.add_argument('output_dir', { help: 'Output directory.' });
-    parser.add_argument('--input', { help: 'Input file or URL (cif or bcif format).' });
+    parser.add_argument('--input', { help: 'Input structure file or URL (cif or bcif format).' });
+    parser.add_argument('--input-public', { help: 'Input structure URL to use in saved Mol* states (.molj files) (cif or bcif format).' });
     parser.add_argument('--mode', { choices: [...Modes], default: 'pdb', help: 'Mode.' });
-    parser.add_argument('--api_url', { default: DEFAULT_PDBE_API_URL, help: `PDBe API URL. Default: ${DEFAULT_PDBE_API_URL}.` });
-    parser.add_argument('--no_api', { action: 'store_true', help: 'Do not use PDBe API at all (some images will be skipped, some entity names will be different in captions, etc.).' });
+    parser.add_argument('--api-url', { default: DEFAULT_PDBE_API_URL, help: `PDBe API URL. Default: ${DEFAULT_PDBE_API_URL}.` });
+    parser.add_argument('--no-api', { action: 'store_true', help: 'Do not use PDBe API at all (some images will be skipped, some entity names will be different in captions, etc.).' });
     parser.add_argument('--size', { nargs: '*', default: [DEFAULT_IMAGE_SIZE], help: `One or more output image sizes, e.g. 800x800 200x200. Default: ${DEFAULT_IMAGE_SIZE}. Oonly the first size is rendered, others are obtained by resizing unless --render_each_size is used.` });
-    parser.add_argument('--render_each_size', { action: 'store_true', help: 'Render image for each size listed in --size, instead of rendering only the first size and resampling to the other sizes.' });
+    parser.add_argument('--render-each-size', { action: 'store_true', help: 'Render image for each size listed in --size, instead of rendering only the first size and resampling to the other sizes.' });
     parser.add_argument('--type', { nargs: '*', choices: [...ImageTypes], default: ['all'], help: 'One or more image types to be created. Use "all" as a shortcut for all types. See README.md for details on image types. Default: all.' }); // TODO describe image types in README.md
     parser.add_argument('--view', { choices: ['front', 'all', 'auto'], default: 'auto', help: 'Select which views should be created for each image type (front view / all views (front, side, top) / auto (creates all views only for these image types: entry, assembly, entity, modres, plddt)). Default: auto.' });
-    parser.add_argument('--opaque_background', { action: 'store_true', help: 'Render opaque background in images (default: transparent background).' });
-    parser.add_argument('--no_axes', { action: 'store_true', help: 'Do not render axis indicators aka PCA arrows (default: render axes when rendering the same scene from multiple view angles (front, side, top))' });
+    parser.add_argument('--opaque-background', { action: 'store_true', help: 'Render opaque background in images (default: transparent background).' });
+    parser.add_argument('--no-axes', { action: 'store_true', help: 'Do not render axis indicators aka PCA arrows (default: render axes when rendering the same scene from multiple view angles (front, side, top))' });
     parser.add_argument('--date', { help: `Date to use as "last_modification" in the caption JSON (default: today's date formatted as YYYY-MM-DD)` });
     parser.add_argument('--clear', { action: 'store_true', help: 'Remove all contents of the output directory before running' });
-    parser.add_argument('--log', { choices: [...LogLevels], default: 'info', help: 'Set logging level. Default: info.' });
+    parser.add_argument('--log', { choices: [...LogLevels], type: (s: string) => s.toUpperCase(), default: 'INFO', help: 'Set logging level. Default: INFO.' });
     const args = parser.parse_args();
     args.size = args.size.map((s: string) => {
         try {
@@ -93,8 +96,9 @@ export async function main(args: Args) {
     configureLogging(args.log, 'stderr');
     logger.info('Arguments:', oneLine(args));
 
-    const publicUrl = DEFAULT_INPUT_URL_TEMPLATES[args.mode].replace(/\$\{id\}/g, args.entry_id); // replace ${id} by actual ID
-    const runtimeUrl = resolveUrl(args.input) ?? publicUrl;
+    const defaultUrl = DEFAULT_INPUT_URL_TEMPLATES[args.mode].replace(/\$\{id\}/g, args.entry_id); // replace ${id} by actual ID
+    const runtimeUrl = resolveUrl(args.input) ?? defaultUrl;
+    const publicUrl = args.input_public ?? defaultUrl;
 
     if (args.clear) {
         fs.rmSync(args.output_dir, { recursive: true, force: true });

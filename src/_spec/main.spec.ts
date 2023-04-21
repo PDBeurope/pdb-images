@@ -117,6 +117,7 @@ describe('args', () => {
                 entry_id: '1ad5',
                 output_dir: '/data/1ad5',
                 input: undefined,
+                input_public: undefined,
                 mode: 'pdb',
                 api_url: 'https://www.ebi.ac.uk/pdbe/api',
                 no_api: false,
@@ -128,7 +129,7 @@ describe('args', () => {
                 no_axes: false,
                 date: undefined,
                 clear: false,
-                log: 'info',
+                log: 'INFO',
             };
             expect(parseArguments()).toEqual(expectedArgs);
         } finally {
@@ -142,14 +143,16 @@ describe('args', () => {
         const oldArgv = process.argv;
         try {
             ArgumentParser.prototype.exit = () => { console.error('ArgumentParser exiting'); throw Error('Exit'); };
-            let cmd = 'node index.js 1ad5 /data/1ad5 --input http://smelly_cat.cif --mode alphafold';
-            cmd += ' --api_url https://smelly_api.com --no_api --size 500x500 300x200 --view front --render_each_size';
-            cmd += ' --type entry assembly plddt --opaque_background --no_axes --date 2023/04/20 --clear --log debug';
-            process.argv = cmd.split(/\s+/);
+            process.argv = 'node index.js 1ad5 /data/1ad5 --input http://smelly_cat.cif \
+                --input-public http://very_public_server.com/smelly_cat.cif --mode alphafold \
+                --api-url https://smelly_api.com --no-api --size 500x500 300x200 --view front --render-each-size \
+                --type entry assembly plddt --opaque-background --no-axes --date 2023/04/20 --clear --log DEBUG \
+                '.trim().split(/\s+/);
             const expectedArgs: Args = {
                 entry_id: '1ad5',
                 output_dir: '/data/1ad5',
                 input: 'http://smelly_cat.cif',
+                input_public: 'http://very_public_server.com/smelly_cat.cif',
                 mode: 'alphafold',
                 api_url: 'https://smelly_api.com',
                 no_api: true,
@@ -161,7 +164,7 @@ describe('args', () => {
                 no_axes: true,
                 date: '2023/04/20',
                 clear: true,
-                log: 'debug',
+                log: 'DEBUG',
             };
             expect(parseArguments()).toEqual(expectedArgs);
         } finally {
@@ -182,6 +185,7 @@ describe('main', () => {
             entry_id: '1ad5',
             output_dir: OUTPUT_DIR,
             input: 'file://./test_data/structures/1ad5.bcif',
+            input_public: undefined,
             mode: 'pdb',
             api_url: 'file://./test_data/api',
             no_api: false,
@@ -193,7 +197,7 @@ describe('main', () => {
             no_axes: false,
             date: undefined,
             clear: true,
-            log: 'debug',
+            log: 'DEBUG',
         };
         await main(args);
 
@@ -235,6 +239,7 @@ describe('main', () => {
             entry_id: 'AF-Q8W3K0-F1-model_v4',
             output_dir: OUTPUT_DIR,
             input: 'file://./test_data/structures/AF-Q8W3K0-F1-model_v4.cif',
+            input_public: undefined,
             mode: 'alphafold',
             api_url: 'file://./test_data/api',
             no_api: false,
@@ -246,7 +251,7 @@ describe('main', () => {
             no_axes: false,
             date: undefined,
             clear: true,
-            log: 'debug',
+            log: 'DEBUG',
         };
         await main(args);
 

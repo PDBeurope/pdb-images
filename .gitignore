@@ -2,7 +2,7 @@
 build/
 lib/
 data/
-test_data/outputs/*
+test_data/outputs/
 
 # Mac junk
 .DS_Store

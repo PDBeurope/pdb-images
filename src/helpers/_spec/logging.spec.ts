@@ -32,7 +32,7 @@ describe('logging', () => {
     });
 
     it('logging on stdout', () => {
-        configureLogging('all', 'stdout');
+        configureLogging('ALL', 'stdout');
         const logger = getLogger(module);
         const capture = captureStream('stdout');
         logger.info('Spam, spam, spam');
@@ -40,7 +40,7 @@ describe('logging', () => {
     });
 
     it('logging on stderr', () => {
-        configureLogging('all', 'stderr');
+        configureLogging('ALL', 'stderr');
         const logger = getLogger(module);
         const capture = captureStream('stderr');
         logger.info('Spam, spam, spam');
@@ -48,7 +48,7 @@ describe('logging', () => {
     });
 
     it('logging DEBUG', () => {
-        configureLogging('all', 'stderr');
+        configureLogging('ALL', 'stderr');
         const logger = getLogger(module);
         const capture = captureStream('stderr');
         logger.debug('Ham, ham, ham');
@@ -56,7 +56,7 @@ describe('logging', () => {
     });
 
     it('logging skip DEBUG when level=INFO', () => {
-        configureLogging('info', 'stderr');
+        configureLogging('INFO', 'stderr');
         const logger = getLogger(module);
         const capture = captureStream('stderr');
         logger.debug('Ham, ham, ham');
@@ -64,7 +64,7 @@ describe('logging', () => {
     });
 
     it('logging print INFO when level=DEBUG', () => {
-        configureLogging('debug', 'stderr');
+        configureLogging('DEBUG', 'stderr');
         const logger = getLogger(module);
         const capture = captureStream('stderr');
         logger.info('Spam, spam, spam');
@@ -72,7 +72,7 @@ describe('logging', () => {
     });
 
     it('logging print INFO when level=INFO', () => {
-        configureLogging('info', 'stderr');
+        configureLogging('INFO', 'stderr');
         const logger = getLogger(module);
         const capture = captureStream('stderr');
         logger.info('Spam, spam, spam');
@@ -80,7 +80,7 @@ describe('logging', () => {
     });
 
     it('logging skip all when level=OFF', () => {
-        configureLogging('off', 'stderr');
+        configureLogging('OFF', 'stderr');
         const logger = getLogger(module);
         const capture = captureStream('stderr');
         logger.debug('Ham, ham, ham');
