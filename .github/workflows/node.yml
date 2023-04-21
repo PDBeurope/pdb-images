@@ -17,6 +17,6 @@ jobs:
     - name: Lint
       run: npm run lint
     - name: Test
-      run: xvfb-run --auto-servernum npm run jest
+      run: npm run jest
     - name: Build
       run: npm run build
