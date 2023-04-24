@@ -252,8 +252,6 @@ npm run build
 node build/index.js  # should print usage
 
 
-
-
 # Bsub explanation:
 bsub 
   -oo tmp/orc_test.log  # destination for job stdout
@@ -272,7 +270,5 @@ release_pdbe_images batch --list entries.txt [OPTIONS]
 ```
 
 
-
 Comments:
 - pip install -e . ?
-

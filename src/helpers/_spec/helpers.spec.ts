@@ -7,8 +7,9 @@
 import fs from 'fs';
 import path from 'path';
 
-import { MoljStateSaver, chainLabel, deepMerge, getModifiedResidueInfo, parseIntStrict, toKebabCase } from '../helpers';
+import { MoljStateSaver, chainLabel, deepMerge, fetchUrl, getModifiedResidueInfo, parseIntStrict, toKebabCase } from '../helpers';
 import { getTestingHeadlessPlugin } from '../../_spec/_utils';
+import { gunzipData } from '../helpers';
 
 
 describe('colors', () => {
@@ -109,6 +110,19 @@ describe('colors', () => {
         expect(toKebabCase('Hello')).toEqual('hello');
         expect(toKebabCase('My favorite things')).toEqual('my-favorite-things');
         expect(toKebabCase('Wait for it ... $ # @?          NOPE!')).toEqual('wait-for-it-nope-');
+    });
+
+    it('fetchUrl', async () => {
+        const URL = 'file://./test_data/dummy/sample.txt';
+        const fetched = await fetchUrl(URL);
+        expect(String(fetched)).toEqual('Spanish Inquisition!');
+    });
+
+    it('gunzipData', async () => {
+        const URL = 'file://./test_data/dummy/sample.txt.gz';
+        const fetched = await fetchUrl(URL);
+        const uncompressed = await gunzipData(fetched);
+        expect(String(uncompressed)).toEqual('Spanish Inquisition!');
     });
 
     it('MoljStateSaver', async () => {

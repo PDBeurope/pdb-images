@@ -5,6 +5,7 @@
  */
 
 import fs from 'fs';
+import zlib from 'zlib';
 
 import { PluginStateSnapshotManager } from 'molstar/lib/commonjs/mol-plugin-state/manager/snapshots';
 import { HeadlessPluginContext } from 'molstar/lib/commonjs/mol-plugin/headless-plugin-context';
@@ -94,6 +95,26 @@ export function toKebabCase(text: string): string {
     return text.toLowerCase().replace(/[^\w]+/g, '-');
 }
 
+/** Fetch data from `url` (http://, https://, file://) and return as bytes */
+export async function fetchUrl(url: string): Promise<ArrayBuffer> {
+    if (url.startsWith('file://')) {
+        return fs.readFileSync(url.substring('file://'.length));
+    } else {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Fetch failed with code ${response.status} (${url})`);
+        return await response.arrayBuffer();
+    }
+}
+
+/** Uncompress data using compressed by gzip */
+export function gunzipData(data: ArrayBuffer): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+        return zlib.gunzip(data, (err, result) => {
+            if (err) reject(err);
+            else resolve(result);
+        });
+    });
+}
 
 /** Helper class for saving state of a Mol* plugin in MOLJ JSON format.
  * Allows some replacements to be applied to the saved state

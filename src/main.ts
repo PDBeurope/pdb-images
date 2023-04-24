@@ -20,7 +20,7 @@ import { setFSModule } from 'molstar/lib/commonjs/mol-util/data-source';
 import { PDBeAPI } from './api';
 import { ImageSpec } from './captions/captions';
 import { collectCaptions } from './captions/collect';
-import { MoljStateSaver, parseIntStrict } from './helpers/helpers';
+import { MoljStateSaver, fetchUrl, gunzipData, parseIntStrict } from './helpers/helpers';
 import { LogLevel, LogLevels, configureLogging, getLogger, oneLine } from './helpers/logging';
 import { ImageGenerator, ImageType, ImageTypes, Mode, Modes } from './image-generator';
 import { addAxisIndicators } from './image/draw';
@@ -65,7 +65,7 @@ export function parseArguments(): Args {
     // ArgumentParser will convert `-` to `_` in optional args but not in positional.
     parser.add_argument('entry_id', { help: 'Entry identifier (PDB ID or AlphaFoldDB ID).' });
     parser.add_argument('output_dir', { help: 'Output directory.' });
-    parser.add_argument('--input', { help: 'Input structure file or URL (cif or bcif format).' });
+    parser.add_argument('--input', { help: 'Input structure file or URL (.cif, .bcif, .cif.gz, .bcif.gz).' });
     parser.add_argument('--input-public', { help: 'Input structure URL to use in saved Mol* states (.molj files) (cif or bcif format).' });
     parser.add_argument('--mode', { choices: [...Modes], default: 'pdb', help: 'Mode.' });
     parser.add_argument('--api-url', { default: DEFAULT_PDBE_API_URL, help: `PDBe API URL. Default: ${DEFAULT_PDBE_API_URL}.` });
@@ -97,7 +97,7 @@ export async function main(args: Args) {
     logger.info('Arguments:', oneLine(args));
 
     const defaultUrl = DEFAULT_INPUT_URL_TEMPLATES[args.mode].replace(/\$\{id\}/g, args.entry_id); // replace ${id} by actual ID
-    const runtimeUrl = resolveUrl(args.input) ?? defaultUrl;
+    let runtimeUrl = resolveUrl(args.input) ?? defaultUrl;
     const publicUrl = args.input_public ?? defaultUrl;
 
     if (args.clear) {
@@ -113,12 +113,23 @@ export async function main(args: Args) {
         }
     }
 
+    let tmpStructureFile: string | undefined = undefined;
+    if (runtimeUrl.endsWith('.gz')) {
+        tmpStructureFile = path.resolve(args.output_dir, runtimeUrl.slice(runtimeUrl.lastIndexOf('/') + 1, runtimeUrl.length - '.gz'.length));
+        logger.info(`Input seems to be gzipped (${runtimeUrl}), decompressing to ${tmpStructureFile}`);
+        const compressed = await fetchUrl(runtimeUrl);
+        const uncompressed = await gunzipData(compressed);
+        fs.writeFileSync(tmpStructureFile, uncompressed);
+        runtimeUrl = 'file://' + tmpStructureFile;
+    }
+
     const api = new PDBeAPI(args.api_url, args.no_api);
     const plugin = await createHeadlessPlugin(args);
     try {
         const saveFunction = makeSaveFunction(plugin, args.output_dir, args, publicUrl);
         const imageGenerator = new ImageGenerator(plugin, saveFunction, api, args.type, args.view);
         await imageGenerator.processAll(args.entry_id, runtimeUrl, args.mode);
+        if (tmpStructureFile) fs.rmSync(tmpStructureFile, { force: true });
         collectCaptions(args.output_dir, args.entry_id, args.date);
     } finally {
         plugin.dispose();
@@ -189,5 +200,5 @@ async function createHeadlessPlugin(args: Pick<Args, 'size' | 'opaque_background
 function resolveUrl(urlOrPath: string | undefined) {
     if (!urlOrPath) return urlOrPath;
     if (urlOrPath.match(/^\w+:\/\//)) return urlOrPath; // is URL
-    else return 'file://' + urlOrPath; // is path
+    else return 'file://' + path.resolve(urlOrPath); // is path
 }

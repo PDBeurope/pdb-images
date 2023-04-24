@@ -19,6 +19,6 @@ Note: Current version of ts-jest (29.1.0) doesn't work perfectly with TypeScript
 TypeError: Cannot read properties of null (reading 'getExtension')
 ```
 
-This will be thrown when graphics not available on the machine (?). GitHub testing workflow solves the issue like this: `sudo apt-get install xvfb && xvfb-run --auto-servernum npm run jest`
+This will be thrown when graphics not available on the machine. GitHub testing workflow solves the issue like this: `sudo apt-get install xvfb && xvfb-run --auto-servernum npm run jest`
 
 TODO add useful log for this error
