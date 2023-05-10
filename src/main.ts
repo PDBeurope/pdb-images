@@ -50,9 +50,9 @@ export interface Args {
     api_url: string,
     no_api: boolean,
     size: { width: number, height: number }[],
-    view: 'front' | 'all' | 'auto',
     render_each_size: boolean,
     type: ImageType[],
+    view: 'front' | 'all' | 'auto',
     opaque_background: boolean,
     no_axes: boolean,
     date: string | undefined,
@@ -65,14 +65,14 @@ export function parseArguments(): Args {
     // ArgumentParser will convert `-` to `_` in optional args but not in positional.
     parser.add_argument('entry_id', { help: 'Entry identifier (PDB ID or AlphaFoldDB ID).' });
     parser.add_argument('output_dir', { help: 'Output directory.' });
-    parser.add_argument('--input', { help: 'Input structure file or URL (.cif, .bcif, .cif.gz, .bcif.gz).' });
+    parser.add_argument('--input', { help: 'Input structure file path or URL (.cif, .bcif, .cif.gz, .bcif.gz).' });
     parser.add_argument('--input-public', { help: 'Input structure URL to use in saved Mol* states (.molj files) (cif or bcif format).' });
     parser.add_argument('--mode', { choices: [...Modes], default: 'pdb', help: 'Mode.' });
     parser.add_argument('--api-url', { default: DEFAULT_PDBE_API_URL, help: `PDBe API URL. Default: ${DEFAULT_PDBE_API_URL}.` });
     parser.add_argument('--no-api', { action: 'store_true', help: 'Do not use PDBe API at all (some images will be skipped, some entity names will be different in captions, etc.).' });
-    parser.add_argument('--size', { nargs: '*', default: [DEFAULT_IMAGE_SIZE], help: `One or more output image sizes, e.g. 800x800 200x200. Default: ${DEFAULT_IMAGE_SIZE}. Oonly the first size is rendered, others are obtained by resizing unless --render_each_size is used.` });
+    parser.add_argument('--size', { nargs: '*', default: [DEFAULT_IMAGE_SIZE], help: `One or more output image sizes, e.g. 800x800 200x200. Default: ${DEFAULT_IMAGE_SIZE}. Only the first size is rendered, others are obtained by resizing unless --render_each_size is used. Use without any value to disable image rendering (only create captions and MOLJ files).` });
     parser.add_argument('--render-each-size', { action: 'store_true', help: 'Render image for each size listed in --size, instead of rendering only the first size and resampling to the other sizes.' });
-    parser.add_argument('--type', { nargs: '*', choices: [...ImageTypes], default: ['all'], help: 'One or more image types to be created. Use "all" as a shortcut for all types. See README.md for details on image types. Default: all.' }); // TODO describe image types in README.md
+    parser.add_argument('--type', { nargs: '*', choices: [...ImageTypes], default: ['all'], help: 'One or more image types to be created. Use "all" as a shortcut for all types. See README.md for details on image types. Default: all. Use without any value to skip all types (only create summary files from existing outputs).' }); // TODO describe image types in README.md
     parser.add_argument('--view', { choices: ['front', 'all', 'auto'], default: 'auto', help: 'Select which views should be created for each image type (front view / all views (front, side, top) / auto (creates all views only for these image types: entry, assembly, entity, modres, plddt)). Default: auto.' });
     parser.add_argument('--opaque-background', { action: 'store_true', help: 'Render opaque background in images (default: transparent background).' });
     parser.add_argument('--no-axes', { action: 'store_true', help: 'Do not render axis indicators aka PCA arrows (default: render axes when rendering the same scene from multiple view angles (front, side, top))' });
@@ -102,6 +102,7 @@ export async function main(args: Args) {
 
     if (args.clear) {
         fs.rmSync(args.output_dir, { recursive: true, force: true });
+        // TODO change this to just remove dir contents, to work in docker with mounted volumes
     }
     fs.mkdirSync(args.output_dir, { recursive: true });
 
