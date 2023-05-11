@@ -80,19 +80,22 @@ function resolvePunctuation(tokens: string[]): string[] {
     return result;
 }
 
-/** Decide if `token` is a HTML tag. */
+/** Decide if `token` is a HTML tag, e.g. <div> or </div>. */
 function isTag(token: string) {
     return token.startsWith('<') && token.endsWith('>');
 }
 
+/** Decide if `token` is a HTML start tag, e.g. <div>. */
 function isTagStart(token: string) {
     return isTag(token) && !token.startsWith('</');
 }
 
+/** Decide if `token` is a HTML end tag, e.g. </div>. */
 function isTagEnd(token: string) {
     return isTag(token) && token.startsWith('</');
 }
 
+/** Get priority for a punctuation character, higher overrides lower (for resolving puntuation clusters)  */
 function getPunctuationPriority(token: string): number | undefined {
     return PUNCTUATION_PRIORITY[token as keyof typeof PUNCTUATION_PRIORITY];
 }

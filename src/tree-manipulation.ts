@@ -25,24 +25,28 @@ import { ParamDefinition } from 'molstar/lib/commonjs/mol-util/param-definition'
 import { PDBeAPI } from './api';
 import { DEFAULT_COLORS, ENTITY_COLORS } from './helpers/colors';
 import { PPartial, chainLabel, deepMerge, toKebabCase } from './helpers/helpers';
-import { EntityInfo, LigandInstanceInfo, getEntityInfo } from './helpers/structure-info';
+import { EntityInfo, LigandInfo, getEntityInfo } from './helpers/structure-info';
 import { SubstructureDef } from './helpers/substructure-def';
 
 
-const LIGAND_ENVIRONMENT_RADIUS = 5; // Angstroms
-const LIGAND_WIDE_ENVIRONMENT_LAYERS = 2; // number of added connected residues
+/** Radius around a ligand to consider as "environment" and show as ball-and-stick in ligand images; in Angstroms, applied by-residue */
+const LIGAND_ENVIRONMENT_RADIUS = 5;
+/** Number of connected residues to add to ligand environment to create "wider environment" and show as cartoon in ligand images */
+const LIGAND_WIDE_ENVIRONMENT_LAYERS = 2;
+/** Opacity for ball-and-stick visual of carbohydrates */
 const BRANCHED_STICKS_OPACITY = 0.5;
 
-const HIGHLIGHT_COLOR = Color.fromRgb(40, 100, 255);
+const DEFAULT_HIGHLIGHT_COLOR = Color.fromRgb(40, 100, 255);
 const FADED_COLOR = Color.fromRgb(120, 120, 120);
 const FADED_OPACITY = 0.5;
 const FADED_SIZE_SCALE = 0.9;
 const EXTRA_FADED_SIZE_SCALE = 0.4;
 
-const BALL_SIZE_FACTOR = 0.25;
-const HIGHTLIGHT_BALL_SIZE_FACTOR = 0.75;
+const STICK_SIZE_FACTOR = 0.25;
+const HIGHTLIGHT_STICK_SIZE_FACTOR = 0.75;
 /** For ligand environments */
-const ENVIRONMENT_BALL_SIZE_FACTOR = 0.11;
+const ENVIRONMENT_STICK_SIZE_FACTOR = 0.11;
+const STICK_SIZE_ASPECT_RATIO = 0.5;
 
 /** Set true to allow any quality level for visuals (including 'lowest', which is really ugly).
  * Set false to allow only 'lower' and better. */
@@ -60,20 +64,27 @@ type StructureParams = ParamDefinition.Values<ReturnType<typeof RootStructureDef
 type VisualParams = ReturnType<typeof StructureRepresentation3D.createDefaultParams>
 
 
+/** Handle for manipulating state tree node */
 abstract class Node<S extends StateObject = StateObject> {
+    /** State tree node, or its nearest non-group ancestor */
     readonly origin: StateObjectSelector<S, any>;
+    /** State tree node (can be a "Group" node) */
     readonly node: StateObjectSelector<S, any> | StateObjectSelector<PluginStateObject.Group, any>;
+
     protected constructor(origin: StateObjectSelector<S, any>, group?: StateObjectSelector<PluginStateObject.Group, any>) {
         this.origin = origin;
         this.node = group ?? origin;
     }
+    /** Return plugin state */
     get state() {
         const state = this.node.state;
         if (!state) throw new Error('state is undefined');
         return state;
     }
+    /** Return data associated with the node (for group nodes automatically get data from a non-group ancestor) */
     get data() { return this.origin.data; }
 
+    /** Create a group node with this node as parent */
     async makeGroup(params?: { label?: string, description?: string }, stateOptions?: Partial<StateTransform.Options>): Promise<this> {
         const refSuffix = params?.label ? toKebabCase(params.label) : 'group';
         const ref = this.childRef(refSuffix);
@@ -112,10 +123,12 @@ abstract class Node<S extends StateObject = StateObject> {
     }
 }
 
+/** Handle for state tree root */
 export class RootNode extends Node<PluginStateObject.Root> {
-    static create(plugin: PluginContext) {
+    static create(plugin: PluginContext): RootNode {
         return new RootNode(new StateObjectSelector(plugin.state.data.root.transform.ref, plugin.state.data));
     }
+    /** Create a data download node with this root as parent */
     async makeDownload(params: { url: string, isBinary: boolean }, idForRef?: string): Promise<DataNode> {
         const ref = this.baseRef(idForRef);
         const dataNode = await this.state.build().to(this.node).apply(Download, params, { ref }).commit();
@@ -124,7 +137,9 @@ export class RootNode extends Node<PluginStateObject.Root> {
     }
 }
 
+/** Handle for Data node */
 export class DataNode extends Node<PluginStateObject.Data.Binary | PluginStateObject.Data.String> {
+    /** Create a CIF node with this node as parent (parse data as CIF) */
     async makeCif(): Promise<CifNode> {
         const ref = this.childRef('cif', true);
         const cifNode = await this.state.build().to(this.node).apply(ParseCif, undefined, { ref }).commit();
@@ -132,7 +147,9 @@ export class DataNode extends Node<PluginStateObject.Data.Binary | PluginStateOb
     }
 }
 
+/** Handle for Cif node */
 export class CifNode extends Node<PluginStateObject.Format.Cif> {
+    /** Create a Trajectory node with this node as parent */
     async makeTrajectory(): Promise<TrajectoryNode> {
         const ref = this.childRef('traj', true);
         const trajNode = await this.state.build().to(this.node).apply(TrajectoryFromMmCif, undefined, { ref }).commit();
@@ -140,7 +157,9 @@ export class CifNode extends Node<PluginStateObject.Format.Cif> {
     }
 }
 
+/** Handle for Trajectory node */
 export class TrajectoryNode extends Node<PluginStateObject.Molecule.Trajectory> {
+    /** Create a Model node with this node as parent */
     async makeModel(modelIndex: number): Promise<ModelNode> {
         const ref = this.childRef(`model-${modelIndex}`, true);
         const modelNode = await this.state.build().to(this.node).apply(ModelFromTrajectory, { modelIndex }, { ref }).commit();
@@ -148,7 +167,9 @@ export class TrajectoryNode extends Node<PluginStateObject.Molecule.Trajectory> 
     }
 }
 
+/** Handle for Model node */
 export class ModelNode extends Node<PluginStateObject.Molecule.Model> {
+    /** Create a CustomModelProperties node with this node as parent */
     async makeCustomModelProperties(api?: PDBeAPI): Promise<ModelNode> {
         const ref = this.childRef('props');
         const customPropsNode = await this.state.build().to(this.node).apply(CustomModelProperties, {
@@ -160,6 +181,7 @@ export class ModelNode extends Node<PluginStateObject.Molecule.Model> {
         }, { ref }).commit();
         return new ModelNode(customPropsNode);
     }
+    /** Create a Structure node with this node as parent */
     async makeStructure(params: StructureParams): Promise<StructureNode> {
         let refSuffix = `struct-${params.type.name}`;
         if (params.type.name === 'assembly') refSuffix += `-${params.type.params.id}`;
@@ -169,7 +191,9 @@ export class ModelNode extends Node<PluginStateObject.Molecule.Model> {
     }
 }
 
+/** Handle for Structure node */
 export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
+    /** Create a substructure node with this node as parent */
     async makeComponent(params: Partial<StructureComponentParams>, options?: Partial<StateTransform.Options>, refSuffix?: string): Promise<StructureNode | undefined> {
         const ref = this.childRef(refSuffix ?? 'comp');
         const component = await this.state.build().to(this.node).apply(StructureComponent, params, { ref, ...options }).commit();
@@ -180,7 +204,7 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
             return undefined;
         }
     }
-    /** Create components "polymer", "branched", "ligand", "ion" for a structure or its part */
+    /** Create components "polymer", "branched", "ligand", "ion" for a structure */
     async makeStandardComponents(): Promise<StandardComponents> {
         const polymer = await this.makeComponent({ type: { name: 'static', params: 'polymer' } }, undefined, 'polymer');
         const ligand = await this.makeComponent({ type: { name: 'static', params: 'ligand' } }, undefined, 'ligand');
@@ -189,7 +213,7 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
         return new StandardComponents({ polymer, branched, ligand, ion });
     }
     /** Create components "ligand" and "environment" for a ligand */
-    async makeLigEnvComponents(ligandInfo: LigandInstanceInfo, options?: Partial<StateTransform.Options>): Promise<LigandEnvironmentComponents> {
+    async makeLigEnvComponents(ligandInfo: LigandInfo, options?: Partial<StateTransform.Options>): Promise<LigandEnvironmentComponents> {
         const ligandLabel = ligandInfo.compId;
         const envLabel = `Environment (${LIGAND_ENVIRONMENT_RADIUS} Å)`;
 
@@ -298,12 +322,14 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
         return selections;
     }
 
+    /** Create a visual node (3D representation) with this node as parent */
     async makeVisual(params: VisualParams, tags?: string[]): Promise<VisualNode> {
         const ref = this.childRef(params.type.name);
         params.type.params.quality ??= decideVisualQuality(this.data);
         const visual = await this.state.build().to(this.node).apply(StructureRepresentation3D, params, { ref, tags }).commit();
         return new VisualNode(visual);
     }
+    /** Create a cartoon visual node with this node as parent */
     async makeCartoon(tags?: string[]): Promise<VisualNode> {
         return await this.makeVisual({
             type: { name: 'cartoon', params: { alpha: 1 } },
@@ -311,13 +337,15 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
             sizeTheme: { name: 'uniform', params: { value: 1 } },
         }, tags);
     }
+    /** Create a ball-and-stick visual node with this node as parent */
     async makeBallsAndSticks(tags?: string[]): Promise<VisualNode> {
         return await this.makeVisual({
-            type: { name: 'ball-and-stick', params: { sizeFactor: BALL_SIZE_FACTOR, sizeAspectRatio: 0.5 } },
+            type: { name: 'ball-and-stick', params: { sizeFactor: STICK_SIZE_FACTOR, sizeAspectRatio: STICK_SIZE_ASPECT_RATIO } },
             colorTheme: { name: 'element-symbol', params: { carbonColor: { name: 'element-symbol', params: {} } } }, // in original: carbonColor: chain-id
             sizeTheme: { name: 'physical', params: {} },
         }, tags);
     }
+    /** Create a carbohydrate visual (3D-SNFG) node with this node as parent */
     async makeCarbohydrate(tags?: string[]): Promise<VisualNode> {
         return await this.makeVisual({
             type: { name: 'carbohydrate', params: {} },
@@ -327,7 +355,10 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
     }
 }
 
+/** Handle for Representation3D (aka visual) node */
 export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Representation3D> {
+    /** Change params of this node.
+     * `change` can be either new params directly or a function that will get current params and current node tags and should return new params. */
     async updateVisual(change: PPartial<VisualParams> | ((oldParams: VisualParams, tags: string[]) => PPartial<VisualParams>)): Promise<void> {
         const update = this.state.build();
         if (this.node.cell) {
@@ -342,16 +373,19 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
         }
         await update.commit();
     }
+    /** Change opacity of this visual */
     async setOpacity(alpha: number) {
         return this.updateVisual({
             type: { params: { alpha: alpha } },
         });
     }
-    async setThinSticks(sizeFactor: number) {
+    /** If this visual is ball-and-stick, make it thin */
+    async setThinBallsAndSticks(sizeFactor: number) {
         return this.updateVisual({
-            type: { params: { sizeFactor: sizeFactor, sizeAspectRatio: 0.5 } },
+            type: { params: { sizeFactor: sizeFactor, sizeAspectRatio: STICK_SIZE_ASPECT_RATIO } },
         });
     }
+    /** Color this visual by entity ID. */
     async setColorByEntity(options?: { ignoreElementColors?: boolean, colorList?: Color[] }) {
         const palette = paletteParam(options?.colorList);
         return this.updateVisual(old => ({
@@ -360,7 +394,7 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
                 : { name: 'entity-id', params: { palette } }
         }));
     }
-    /** Color visuals by auth chain ID (i.e. copies of the same chain in an assembly will have the same color), color balls-and-sticks by element with chainId-colored carbons. */
+    /** Color this visual by auth chain ID (i.e. copies of the same chain in an assembly will have the same color), color balls-and-sticks by element with chainId-colored carbons. */
     async setColorByChainId(options?: { ignoreElementColors?: boolean, colorList?: Color[] }) {
         const palette = paletteParam(options?.colorList);
         return this.updateVisual(old => ({
@@ -369,7 +403,7 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
                 : { name: 'chain-id', params: { palette } }
         }));
     }
-    /** Color visuals by chain instance (i.e. copies of the same chain in an assembly will have different colors), color balls-and-sticks by element with gray carbons. */
+    /** Color this visual by chain instance (i.e. copies of the same chain in an assembly will have different colors), color balls-and-sticks by element with gray carbons. */
     async setColorByChainInstance(options?: { ignoreElementColors?: boolean, colorList?: Color[], entityColorList?: Color[] }) {
         const palette = paletteParam(options?.colorList);
         return this.updateVisual(old => ({
@@ -378,6 +412,7 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
                 : { name: 'unit-index', params: { palette } }
         }));
     }
+    /** Color this visual with a single colore. */
     async setColorUniform(color: Color, options?: { ignoreElementColors: boolean }) {
         return this.updateVisual(old => ({
             colorTheme: (old.type.name === 'ball-and-stick' && !options?.ignoreElementColors) ?
@@ -386,32 +421,21 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
         }));
     }
 
+    /** Color this visual by geometry validation info */
     async setColorByGeometryValidation() {
         return this.updateVisual({
             colorTheme: { name: 'pdbe-structure-quality-report' }
         });
     }
 
+    /** Color this visual by pLDDT values */
     async setColorByPlddt() {
         return this.updateVisual({
             colorTheme: { name: 'plddt-confidence', params: {} }
         });
     }
 
-    async setPutty() {
-        return this.updateVisual({
-            type: { name: 'putty', params: { visuals: null } },
-            sizeTheme: { name: 'uncertainty' }
-        });
-    }
-
-    async setCartoon() {
-        return this.updateVisual({
-            type: { name: 'carton', params: { visuals: null } },
-            sizeTheme: { name: 'uniform', params: null }
-        });
-    }
-
+    /** Color this visual by B-factor values */
     async setColorByBfactor(colormap?: keyof typeof ColorLists | null) {
         const colorList = colormap === null ?
             null
@@ -426,6 +450,24 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
         });
     }
 
+    /** Change this visual to putty type */
+    async setPutty() {
+        return this.updateVisual({
+            type: { name: 'putty', params: { visuals: null } },
+            sizeTheme: { name: 'uncertainty' }
+        });
+    }
+
+    /** Change this visual to cartoon type */
+    async setCartoon() {
+        return this.updateVisual({
+            type: { name: 'carton', params: { visuals: null } },
+            sizeTheme: { name: 'uniform', params: null }
+        });
+    }
+
+    /** Make this visual "faded", i.e. set grey color, lower opacity, and thinner.
+     * If `level` is 2, make even more faded. */
     setFaded(level: 1 | 2 = 1): Promise<void> {
         const sizeScale = level === 1 ? FADED_SIZE_SCALE : EXTRA_FADED_SIZE_SCALE;
         return this.updateVisual((old, tags) => ({
@@ -442,13 +484,14 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
             },
         }));
     }
-    setHighlight(color: Color = HIGHLIGHT_COLOR): Promise<void> {
+    /** Make this visual highlighted, i.e. set distinctive color, full opacity, set fat balls (if it's ball-and-stick) */
+    setHighlight(color: Color = DEFAULT_HIGHLIGHT_COLOR): Promise<void> {
         return this.updateVisual((old, tags) => ({
             type: {
                 params: {
                     alpha: tags.includes('branchedSticks') ? BRANCHED_STICKS_OPACITY : 1,
                     sizeFactor: (tags.includes('ligandSticks') || tags.includes('ionSticks') || tags.includes('modresSticks')) ?
-                        HIGHTLIGHT_BALL_SIZE_FACTOR
+                        HIGHTLIGHT_STICK_SIZE_FACTOR
                         : old.type.params.sizeFactor,
                 }
             },
@@ -459,9 +502,11 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
 }
 
 
+/** Handle for manipulating multiple state tree nodes (siblings) */
 abstract class NodeCollection<KeyType extends string, NodeType extends Node> {
     constructor(public readonly nodes: { [key in KeyType]: NodeType | undefined }) { }
 
+    /** Apply a function to each of these nodes */
     async applyToAll(func: (node: NodeType) => any) {
         for (const key in this.nodes) {
             const node: NodeType | undefined = this.nodes[key];
@@ -470,11 +515,13 @@ abstract class NodeCollection<KeyType extends string, NodeType extends Node> {
             }
         }
     }
+    /** Remove all these nodes from the state tree. */
     async dispose(): Promise<void> {
         await this.applyToAll(node => node.dispose());
     }
 }
 
+/** Collection of nodes for standard structure components (polymer, ligand...) */
 export class StandardComponents extends NodeCollection<StandardComponentType, StructureNode> {
     /** Create visuals like polymer cartoon, ligand balls-and-sticks etc., for a structure or its part */
     async makeStandardVisuals(): Promise<StandardVisuals> {
@@ -494,15 +541,16 @@ export class StandardComponents extends NodeCollection<StandardComponentType, St
     }
 }
 
+/** Collection of nodes for structure components for ligand visualization (ligand, environment, wider enviroment...) */
 export class LigandEnvironmentComponents extends NodeCollection<LigEnvComponentType, StructureNode> {
-    /** Create visuals like polymer cartoon, ligand balls-and-sticks etc., for a structure or its part */
+    /** Create visuals like ligand balls-and-sticks, wider enviroment cartoon... */
     async makeLigEnvVisuals(entityColors?: Color[]): Promise<LigandEnvironmentVisuals> {
         const ligandSticks = await this.nodes.ligand?.makeBallsAndSticks(['ligandSticks']);
         await ligandSticks?.setColorByEntity({ colorList: entityColors ?? ENTITY_COLORS });
         const environmentSticks = await this.nodes.environment?.makeBallsAndSticks(['environmentSticks']);
-        await environmentSticks?.setThinSticks(ENVIRONMENT_BALL_SIZE_FACTOR);
+        await environmentSticks?.setThinBallsAndSticks(ENVIRONMENT_STICK_SIZE_FACTOR);
         const linkageSticks = await this.nodes.linkage?.makeBallsAndSticks(['linkageSticks']);
-        await linkageSticks?.setThinSticks(ENVIRONMENT_BALL_SIZE_FACTOR);
+        await linkageSticks?.setThinBallsAndSticks(ENVIRONMENT_STICK_SIZE_FACTOR);
         const wideEnvironmentCartoon = await this.nodes.wideEnvironment?.makeCartoon(['wideEnvironmentCartoon']);
         await wideEnvironmentCartoon?.setFaded(2);
 
@@ -515,9 +563,11 @@ export class LigandEnvironmentComponents extends NodeCollection<LigEnvComponentT
     }
 }
 
+/** Collection of nodes for standard structure component visuals like polymer cartoon, ligand balls-and-sticks... */
 export class StandardVisuals extends NodeCollection<StandardVisualType, VisualNode> {
 }
 
+/** Collection of nodes for visuals for ligand visualization (ligand balls-and-sticks, wider enviroment cartoon, ...) */
 export class LigandEnvironmentVisuals extends NodeCollection<LigEnvVisualType, VisualNode> {
 }
 
@@ -533,6 +583,7 @@ function decideVisualQuality(structure: Structure | undefined) {
     }
 }
 
+/** Create value that can be passed as the `palette` params when creating/updating a visual node */
 function paletteParam(colorList?: Color[]) {
     return {
         name: 'colors',
@@ -540,6 +591,8 @@ function paletteParam(colorList?: Color[]) {
     };
 }
 
+/** Apply a function to node or node collection and dispose (remove from the tree) it afterwards.
+ * (This is to allow context-manager syntax and avoid forgetting to remove node once it is not necessary) */
 export async function using<T extends Node | NodeCollection<any, any> | undefined, Y>(node: T | Promise<T>, func: (resource: T) => Y | Promise<Y>): Promise<Y> {
     const awNode = await node;
     try {

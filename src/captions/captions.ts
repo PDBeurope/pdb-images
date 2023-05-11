@@ -5,7 +5,7 @@
  */
 
 import { chainLabel, ModifiedResidueInfo } from '../helpers/helpers';
-import { EntityInfo, LigandInstanceInfo } from '../helpers/structure-info';
+import { EntityInfo, LigandInfo } from '../helpers/structure-info';
 import { TextBuilder } from './text-builder';
 
 
@@ -189,7 +189,7 @@ export namespace Captions {
     }
 
     /** Create captions for `ligand` image type. */
-    export function forLigandEnvironment(context: StructureContext & { ligandInfo: LigandInstanceInfo, view: ViewType }): ImageSpec {
+    export function forLigandEnvironment(context: StructureContext & { ligandInfo: LigandInfo, view: ViewType }): ImageSpec {
         const { entryId, ligandInfo, view } = context;
         const nCopies = ligandInfo.nInstancesInEntry;
         const name = entityName(context, ligandInfo.entityId);

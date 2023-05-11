@@ -33,7 +33,7 @@ export function changeCameraZoom(old: Camera.Snapshot, zoomout: number): Camera.
     let relPosition = Vec3.sub(Vec3(), old.position, old.target);
     relPosition = Vec3.scale(relPosition, relPosition, zoomout);
     const newPosition = Vec3.add(Vec3(), old.target, relPosition);
-    return { ...old, position: newPosition };
+    return { ...old, position: newPosition, minNear: 0 }; // minNear:0 is to avoid ugly clipping (e.g. PG5 ligand in 8cxf)
 }
 
 /** Return a new camera snapshot with the same target and camera distance from the target as `old`

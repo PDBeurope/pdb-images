@@ -206,8 +206,9 @@ export interface DomainRecord {
     chunks: DomainChunkRecord[],
 }
 
-/** Attribute names same as in the original process, therefore no consistency */
+/** Represents one contiguous residue range forming a domain */
 interface DomainChunkRecord {
+    /** label_entity_id */
     entityId: string,
     /** label_asym_id */
     chainId: string,
@@ -217,7 +218,7 @@ interface DomainChunkRecord {
     startResidue: number,
     /** label_seq_id of the last residue */
     endResidue: number,
-    /** No idea what this was supposed to mean in the original process(probably segment number
+    /** No idea what this was supposed to mean in the original process (probably segment number
      * from the API before cutting into smaller segments by removing missing residues) */
     segment: number
 }

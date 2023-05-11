@@ -8,10 +8,13 @@ import { ChainIndex, Model, Structure } from 'molstar/lib/commonjs/mol-model/str
 import { Entities } from 'molstar/lib/commonjs/mol-model/structure/model/properties/common';
 
 
+/** Entity type (i.e. value of _entity.type in mmCIF): polymer, non-polymer, water... */
 type EntityType = ReturnType<Entities['data']['type']['value']>
 
+/** Basic info about several entities, mapped by entityId */
 export type EntityInfo = ReturnType<typeof getEntityInfo>
 
+/** Return basic info about entities in the structure, mapped by entityId */
 export function getEntityInfo(structure: Structure) {
     const entities = structure.model.entities;
     const ent: { [entityId: string]: { description: string, type: EntityType, chains: ChainIndex[], index: number } } = {};
@@ -34,18 +37,23 @@ export function getEntityInfo(structure: Structure) {
     return ent;
 }
 
-export interface LigandInstanceInfo {
+/** Info about a ligand (non-polymer entity) and its occurrences in a structure */
+export interface LigandInfo {
     /** Three-letter code, e.g. HEM */
     compId: string,
+    /** Human-friendly (or not) name of the ligand */
     description: string,
+    /** Entity ID */
     entityId: string,
-    /** First of the chains for this ligand (there can be more) */
+    /** label_asym_id of the first copy of this ligand (there can be more),  */
     chainId: string,
-    /** First of the chains for this ligand (there can be more) */
+    /** auth_asym_id of the first copy of this ligand (there can be more),  */
     authChainId: string,
+    /** Number of copies of this ligand in the deposited structure */
     nInstancesInEntry: number,
 }
 
+/** Return info about ligands (non-polymer entities) in the structure, mapped by compId */
 export function getLigandInfo(structure: Structure) {
     const entityInfo = getEntityInfo(structure);
     for (const entityId in entityInfo) {
@@ -55,7 +63,7 @@ export function getLigandInfo(structure: Structure) {
         }
     };
     const hierarchy = structure.model.atomicHierarchy;
-    const result: { [compId: string]: LigandInstanceInfo } = {};
+    const result: { [compId: string]: LigandInfo } = {};
     for (const [entityId, info] of Object.entries(entityInfo)) {
         const iChain = info.chains[0];
         const chainId = hierarchy.chains.label_asym_id.value(iChain);
@@ -74,7 +82,8 @@ export function getLigandInfo(structure: Structure) {
     return result;
 }
 
-export function countChainResidues(model: Model) {
+/** Return the number of residues forming each chain in the model, mapped by label_asym_id */
+export function countChainResidues(model: Model): { [chainId: string]: number } {
     const counts = {} as { [chainId: string]: number };
     const nRes = model.atomicHierarchy.residueAtomSegments.count;
     for (let iRes = 0; iRes < nRes; iRes++) {
@@ -87,6 +96,7 @@ export function countChainResidues(model: Model) {
     return counts;
 }
 
+/** Return basic info about the chains in the model, mapped by label_asym_id */
 export function getChainInfo(model: Model) {
     const result = {} as { [chainId: string]: { authChainId: string, entityId: string } };
     const chains = model.atomicHierarchy.chains;

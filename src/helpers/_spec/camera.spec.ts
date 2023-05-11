@@ -56,9 +56,10 @@ describe('camera', () => {
             target: Vec3.create(1, 1, 1),
             position: Vec3.create(11, 5, -1),
         };
-        const zoomedIn: Camera.Snapshot = { ...oldSnapshot, position: Vec3.create(6, 3, 0) };
-        const zoomedOut: Camera.Snapshot = { ...oldSnapshot, position: Vec3.create(31, 13, -5) };
-        expect(changeCameraZoom(oldSnapshot, 1)).toEqual(oldSnapshot);
+        const zoomedSame: Camera.Snapshot = { ...oldSnapshot, minNear: 0 };
+        const zoomedIn: Camera.Snapshot = { ...oldSnapshot, position: Vec3.create(6, 3, 0), minNear: 0 };
+        const zoomedOut: Camera.Snapshot = { ...oldSnapshot, position: Vec3.create(31, 13, -5), minNear: 0 };
+        expect(changeCameraZoom(oldSnapshot, 1)).toEqual(zoomedSame);
         expect(changeCameraZoom(oldSnapshot, 0.5)).toEqual(zoomedIn);
         expect(changeCameraZoom(oldSnapshot, 3)).toEqual(zoomedOut);
     });

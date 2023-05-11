@@ -28,19 +28,19 @@ import { resizeRawImage, saveRawToPng } from './image/resize';
 
 
 const logger = getLogger(module);
-setFSModule(fs);
+setFSModule(fs); // this is needed to make `fetch` work in MolStar
 
-
-const DEFAULT_PDBE_API_URL = 'https://www.ebi.ac.uk/pdbe/api';
 
 /** ${id} will be replaced by actual identifier (PDB ID or AlphaFoldDB ID) */
 const DEFAULT_INPUT_URL_TEMPLATES: { [mode in Mode]: string } = {
     pdb: 'https://www.ebi.ac.uk/pdbe/entry-files/download/${id}.bcif',
     alphafold: 'https://alphafold.ebi.ac.uk/files/${id}.cif', // There is some issue with AlphaFold bcifs, this might be fixed in the future
 };
+const DEFAULT_PDBE_API_URL = 'https://www.ebi.ac.uk/pdbe/api';
 const DEFAULT_IMAGE_SIZE = '800x800';
 
 
+/** Command line argument values for `main` */
 export interface Args {
     entry_id: string,
     output_dir: string,
@@ -60,9 +60,9 @@ export interface Args {
     log: LogLevel,
 }
 
+/** Return parsed command line arguments for `main` */
 export function parseArguments(): Args {
     const parser = new ArgumentParser({ description: 'PDBeImages, a CLI tool for generating images of macromolecular models.' });
-    // ArgumentParser will convert `-` to `_` in optional args but not in positional.
     parser.add_argument('entry_id', { help: 'Entry identifier (PDB ID or AlphaFoldDB ID).' });
     parser.add_argument('output_dir', { help: 'Output directory.' });
     parser.add_argument('--input', { help: 'Input structure file path or URL (.cif, .bcif, .cif.gz, .bcif.gz).' });
@@ -92,6 +92,7 @@ export function parseArguments(): Args {
     return { ...args };
 }
 
+/** Main workflow for generating images for an entry */
 export async function main(args: Args) {
     configureLogging(args.log, 'stderr');
     logger.info('Arguments:', oneLine(args));
@@ -100,11 +101,12 @@ export async function main(args: Args) {
     let runtimeUrl = resolveUrl(args.input) ?? defaultUrl;
     const publicUrl = args.input_public ?? defaultUrl;
 
-    if (args.clear) {
-        fs.rmSync(args.output_dir, { recursive: true, force: true });
-        // TODO change this to just remove dir contents, to work in docker with mounted volumes
-    }
     fs.mkdirSync(args.output_dir, { recursive: true });
+    if (args.clear) {
+        for (const file of fs.readdirSync(args.output_dir)) {
+            fs.rmSync(path.join(args.output_dir, file));
+        }
+    }
 
     if (runtimeUrl.startsWith('file://')) {
         const inputFile = runtimeUrl.substring('file://'.length);
@@ -137,6 +139,7 @@ export async function main(args: Args) {
     }
 }
 
+/** Return a function that takes ImageSpec object and produces all types of output files (.png, .molj, .caption.json) for the current plugin state */
 export function makeSaveFunction(plugin: HeadlessPluginContext, outDir: string, args: Pick<Args, 'size' | 'render_each_size' | 'no_axes'>, wwwUrl: string) {
     const stateSaver = new MoljStateSaver(plugin, {
         downloadUrl: wwwUrl,
@@ -169,7 +172,7 @@ export function makeSaveFunction(plugin: HeadlessPluginContext, outDir: string, 
     };
 }
 
-
+/** Return a new and initiatized HeadlessPlugin */
 async function createHeadlessPlugin(args: Pick<Args, 'size' | 'opaque_background'>) {
     const options: HeadlessScreenshotHelperOptions = { canvas: defaultCanvas3DParams(), imagePass: defaultImagePassParams() };
 
@@ -197,7 +200,7 @@ async function createHeadlessPlugin(args: Pick<Args, 'size' | 'opaque_background
 }
 
 /** If `urlOrPath` is URL, return it.
- * Otherwise assume it is a path and prepend 'file://' */
+ * Otherwise assume it is a path and prepend 'file://'. */
 function resolveUrl(urlOrPath: string | undefined) {
     if (!urlOrPath) return urlOrPath;
     if (urlOrPath.match(/^\w+:\/\//)) return urlOrPath; // is URL

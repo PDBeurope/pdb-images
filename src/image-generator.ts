@@ -41,19 +41,27 @@ interface DataPromises {
     modifiedResidues?: Promise<PDBeAPIReturn<'getModifiedResidue'>>;
 }
 
+
+/** Class for generating all possible images of an entry */
 export class ImageGenerator {
+    /** Rotation matrix to use for currently created scenes */
     private rotation: Mat3 = Mat3.identity();
+    /** Set of requested image types */
     public readonly imageTypes: Set<ImageType>;
 
     constructor(
+        /** The plugin to perform all operations in */
         public readonly plugin: PluginContext,
+        /** Function that takes ImageSpec object and performs anything necessary to save the current plugin state (e.g. render image, save files...) */
         public readonly saveFunction: (spec: ImageSpec) => any,
+        /** API client for retrieving additional data */
         public readonly api: PDBeAPI,
-        imageTypes?: ImageType[],
+        /** List of requested image types */
+        imageTypes: ImageType[] = ['all'],
         /** 'front' is to render only front view; 'all' is to render front, side, and top view; 'auto' is to render all three views only for certain image types */
         public views: 'front' | 'all' | 'auto' = 'auto',
     ) {
-        if (!imageTypes || imageTypes.includes('all')) {
+        if (imageTypes.includes('all')) {
             this.imageTypes = new Set(ImageTypes);
         } else {
             this.imageTypes = new Set(imageTypes);
@@ -65,6 +73,7 @@ export class ImageGenerator {
         return imageTypes.some(t => this.imageTypes.has(t));
     }
 
+    /** Create all requested images for an entry */
     async processAll(entryId: string, inputUrl: string, mode: 'pdb' | 'alphafold') {
         logger.info('Processing', entryId, 'from', inputUrl);
         const isBinary = inputUrl.endsWith('.bcif');
@@ -111,6 +120,7 @@ export class ImageGenerator {
         }
     }
 
+    /** Create requested images which are generated from the deposited model */
     private async processDepositedStructure(mode: 'pdb' | 'alphafold', entryId: string, model: ModelNode, traj: TrajectoryNode, promises: DataPromises) {
         if (!this.shouldRender('entry', 'validation', 'bfactor', 'ligand', 'domain', 'plddt')) return;
 
@@ -194,6 +204,8 @@ export class ImageGenerator {
         });
     }
 
+    /** Create requested images that are generated from each assembly structure.
+     * If `isPreferredAssembly`, also create images that are generated from the preferred assembly. */
     private async processAssemblyStructure(entryId: string, model: ModelNode, assemblyId: string, isPreferredAssembly: boolean, promises: DataPromises) {
         await using(model.makeStructure({ type: { name: 'assembly', params: { id: assemblyId } } }), async structure => {
             const context = {
@@ -225,6 +237,7 @@ export class ImageGenerator {
         });
     }
 
+    /** Create images for entities */
     private async processEntities(structure: StructureNode, context: Captions.StructureContext, colors: Color[] = ENTITY_COLORS) {
         const { entityInfo, assemblyId } = context;
         logger.debug(`Entities (${Object.keys(entityInfo).length}):`);
@@ -258,6 +271,7 @@ export class ImageGenerator {
         });
     }
 
+    /** Create images for ligands */
     private async processLigands(structure: StructureNode, context: Captions.StructureContext, entityColors?: Color[]) {
         const structData = structure.data!;
         const ligandInfo = getLigandInfo(structData);
@@ -272,6 +286,7 @@ export class ImageGenerator {
         }
     }
 
+    /** Create images for SIFTS domains */
     private async processDomains(structure: StructureNode, domains: { [source in SiftsSource]: { [family: string]: DomainRecord[] } }, context: Captions.StructureContext) {
         const chainInfo = getChainInfo(structure.data!.model);
         const chainLengths = countChainResidues(structure.data!.model);
@@ -336,6 +351,7 @@ export class ImageGenerator {
         };
     }
 
+    /** Create images for modified residues */
     private async processModifiedResidues(structure: StructureNode, modifiedResidues: ModifiedResidueRecord[], context: Captions.StructureContext) {
         const modresInfo = getModifiedResidueInfo(modifiedResidues);
         logger.debug(`Modified residues (${Object.keys(modresInfo).length}):`);
@@ -364,11 +380,16 @@ export class ImageGenerator {
         });
     }
 
+    /** Set rotation matrix to align PCA axes of `structure` with screen axes and zoom whole visible scene. */
     private orientAndZoom(structure: StructureNode, referenceRotation?: Mat3) {
         this.rotation = structureLayingTransform([structure.data!], referenceRotation).rotation;
         zoomAll(this.plugin);
     }
 
+    /** Run saveFunction on the current state.
+     * Will run saveFunction either once (front view) or three times (front, side, top view) depending on `this.view`.
+     * The `view` parameter has effect only when `this.view` is `'auto'`.
+     */
     private async saveViews(views: 'front' | 'all', spec: (view: 'front' | 'side' | 'top' | undefined) => ImageSpec) {
         if (this.views === 'all' || (this.views === 'auto' && views === 'all')) {
             adjustCamera(this.plugin, s => changeCameraRotation(s, this.rotation));
