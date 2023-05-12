@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+
+        .tile {
+            min-width: 80px;
+            margin: 2px;
+            padding: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Entity colors</h2>
+    <p>
+        These colors are used for coloring entities.
+        Colors for polymer and branched entities are drawn from the beginning of the sequence,
+        colors for non-polymer entities (ligands) are drawn from the end (more bleached colors that will not conflict
+        with chemical element coloring).
+        Grays are avoided on purpose.
+    </p>
+    <div style="display: flex; flex-wrap: wrap;">
+        <div class="tile" style="background-color: #1b9e77;">#1b9e77</div>
+        <div class="tile" style="background-color: #d95f02;">#d95f02</div>
+        <div class="tile" style="background-color: #7570b3;">#7570b3</div>
+        <div class="tile" style="background-color: #e7298a;">#e7298a</div>
+        <div class="tile" style="background-color: #66a61e;">#66a61e</div>
+        <div class="tile" style="background-color: #e6ab02;">#e6ab02</div>
+        <div class="tile" style="background-color: #a6761d;">#a6761d</div>
+        <div class="tile" style="background-color: #7f3c8d;">#7f3c8d</div>
+        <div class="tile" style="background-color: #11a579;">#11a579</div>
+        <div class="tile" style="background-color: #3969ac;">#3969ac</div>
+        <div class="tile" style="background-color: #f2b701;">#f2b701</div>
+        <div class="tile" style="background-color: #e73f74;">#e73f74</div>
+        <div class="tile" style="background-color: #80ba5a;">#80ba5a</div>
+        <div class="tile" style="background-color: #e68310;">#e68310</div>
+        <div class="tile" style="background-color: #008695;">#008695</div>
+        <div class="tile" style="background-color: #cf1c90;">#cf1c90</div>
+        <div class="tile" style="background-color: #f97b72;">#f97b72</div>
+        <div class="tile" style="background-color: #66c5cc;">#66c5cc</div>
+        <div class="tile" style="background-color: #f6cf71;">#f6cf71</div>
+        <div class="tile" style="background-color: #f89c74;">#f89c74</div>
+        <div class="tile" style="background-color: #dcb0f2;">#dcb0f2</div>
+        <div class="tile" style="background-color: #87c55f;">#87c55f</div>
+        <div class="tile" style="background-color: #9eb9f3;">#9eb9f3</div>
+        <div class="tile" style="background-color: #fe88b1;">#fe88b1</div>
+        <div class="tile" style="background-color: #c9db74;">#c9db74</div>
+        <div class="tile" style="background-color: #8be0a4;">#8be0a4</div>
+        <div class="tile" style="background-color: #b497e7;">#b497e7</div>
+        <div class="tile" style="background-color: #e5c494;">#e5c494</div>
+        <div class="tile" style="background-color: #66c2a5;">#66c2a5</div>
+        <div class="tile" style="background-color: #fc8d62;">#fc8d62</div>
+        <div class="tile" style="background-color: #8da0cb;">#8da0cb</div>
+        <div class="tile" style="background-color: #e78ac3;">#e78ac3</div>
+        <div class="tile" style="background-color: #a6d854;">#a6d854</div>
+    </div>
+
+    <h2>Annotation colors</h2>
+    <p>
+        These colors are used for coloring SIFTS domains and modified residues.
+        Colors for domains are drawn from the beginning of the sequence,
+        colors for modified residues are drawn from the end.
+        Grays are avoided on purpose.
+    </p>
+    <div style="display: flex; flex-wrap: wrap;">
+        <div class="tile" style="background-color: #e41a1c">#e41a1c</div>
+        <div class="tile" style="background-color: #377eb8">#377eb8</div>
+        <div class="tile" style="background-color: #4daf4a">#4daf4a</div>
+        <div class="tile" style="background-color: #984ea3">#984ea3</div>
+        <div class="tile" style="background-color: #ff7f00">#ff7f00</div>
+        <div class="tile" style="background-color: #ffff33">#ffff33</div>
+        <div class="tile" style="background-color: #a65628">#a65628</div>
+        <div class="tile" style="background-color: #f781bf">#f781bf</div>
+        <div class="tile" style="background-color: #e58606">#e58606</div>
+        <div class="tile" style="background-color: #5d69b1">#5d69b1</div>
+        <div class="tile" style="background-color: #52bca3">#52bca3</div>
+        <div class="tile" style="background-color: #99c945">#99c945</div>
+        <div class="tile" style="background-color: #cc61b0">#cc61b0</div>
+        <div class="tile" style="background-color: #24796c">#24796c</div>
+        <div class="tile" style="background-color: #daa51b">#daa51b</div>
+        <div class="tile" style="background-color: #764e9f">#764e9f</div>
+        <div class="tile" style="background-color: #ed645a">#ed645a</div>
+    </div>
+
+    <p>
+        These color lists are defined in src/helpers/colors.ts. To print them, add these lines:
+    </p>
+    <p>   
+        <code>for (const c of ENTITY_COLORS) console.debug(Color.toHexStyle(c));</code><br>
+        <code>for (const c of ANNOTATION_COLORS) console.debug(Color.toHexStyle(c));</code>
+    </p>
+</body>
+
+</html>

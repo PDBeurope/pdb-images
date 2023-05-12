@@ -17,10 +17,10 @@ const SET2 = colorArray(ColorLists['set-2'].list.slice(0, 7)); // Discard the la
 const DARK2 = colorArray(ColorLists['dark-2'].list.slice(0, 7)); // Discard the last color (gray)
 
 const SET1_SAFE = [SET1[2], SET1[3], SET1[4], SET1[6], SET1[7]]; // Discard colors that conflict with element coloring (red oxygen, blue nitrogen, yellow sulfur)
-const SET2_SAFE = [SET2[0], SET2[1], SET2[2], SET2[3], SET2[4], SET2[6]]; // Discard colors that conflict with element coloring (yellow sulfur)
+const SET2_SAFE = [SET2[6], SET2[0], SET2[1], SET2[2], SET2[3], SET2[4]]; // Discard colors that conflict with element coloring (yellow sulfur), move the poopish #6 as first, so is drawn as last
 
 // Plotly palettes
-const VIVID = [0xe58606, 0x5d69b1, 0x52bca3, 0x99c945, 0xcc61b0, 0x24796c, 0xdaa51b, 0x2f8ac4, 0x764e9f, 0xed645a] as Color[]; // Dropped the last color (0xa5aa99 gray)
+const VIVID = [0xe58606, 0x5d69b1, 0x52bca3, 0x99c945, 0xcc61b0, 0x24796c, 0xdaa51b, 0x764e9f, 0xed645a] as Color[]; // Dropped the last color (0xa5aa99 gray) and 0x2f8ac4 blue (too similir to the blue in Set1)
 const BOLD = [0x7f3c8d, 0x11a579, 0x3969ac, 0xf2b701, 0xe73f74, 0x80ba5a, 0xe68310, 0x008695, 0xcf1c90, 0xf97b72] as Color[]; // Dropped the last color (0xa5aa99 gray)
 const PASTEL = [0x66c5cc, 0xf6cf71, 0xf89c74, 0xdcb0f2, 0x87c55f, 0x9eb9f3, 0xfe88b1, 0xc9db74, 0x8be0a4, 0xb497e7] as Color[]; // Dropped the last color (0xb3b3b3 gray)
 

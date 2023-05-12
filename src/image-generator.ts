@@ -126,7 +126,7 @@ export class ImageGenerator {
 
         await using(model.makeStructure({ type: { name: 'model', params: {} } }), async structure => {
             const group = await structure.makeGroup({ label: 'Whole Entry' }, { state: { isGhost: ALLOW_GHOST_NODES } });
-            const components = await group.makeStandardComponents();
+            const components = await group.makeStandardComponents(ALLOW_COLLAPSED_NODES);
             const visuals = await components.makeStandardVisuals();
             this.orientAndZoom(structure);
             const nModels = traj.data?.frameCount ?? 1;
@@ -152,7 +152,7 @@ export class ImageGenerator {
                             for (let iModel = 1; iModel < nModels; iModel++) {
                                 const otherModel = await group.makeModel(iModel);
                                 const otherStructure = await otherModel.makeStructure({ type: { name: 'model', params: {} } });
-                                const otherComponents = await otherStructure.makeStandardComponents();
+                                const otherComponents = await otherStructure.makeStandardComponents(ALLOW_COLLAPSED_NODES);
                                 const otherVisuals = await otherComponents.makeStandardVisuals();
                                 otherModel.setCollapsed(ALLOW_COLLAPSED_NODES);
                                 allVisuals.push(...Object.values(otherVisuals.nodes));
@@ -182,9 +182,9 @@ export class ImageGenerator {
                     }
                 }
                 await visuals.applyToAll(vis => vis.setFaded());
-                await visuals.applyToAll(vis => vis.setGhost(false));
-                await visuals.applyToAll(vis => vis.setCollapsed(ALLOW_COLLAPSED_NODES));
-                await visuals.applyToAll(vis => vis.setVisible(false));
+                group.setGhost(false);
+                group.setCollapsed(ALLOW_COLLAPSED_NODES);
+                group.setVisible(false);
 
                 if (this.shouldRender('ligand')) {
                     await this.processLigands(structure, context, colors.entities);
@@ -214,7 +214,7 @@ export class ImageGenerator {
             };
             const colors = assignEntityAndUnitColors(structure.data!);
             const group = await structure.makeGroup({ label: 'Whole Assembly' }, { state: { isGhost: ALLOW_GHOST_NODES } });
-            const components = await group.makeStandardComponents();
+            const components = await group.makeStandardComponents(ALLOW_COLLAPSED_NODES);
             const visuals = await components.makeStandardVisuals();
             this.orientAndZoom(structure);
             if (this.shouldRender('assembly')) {
@@ -242,13 +242,13 @@ export class ImageGenerator {
         const { entityInfo, assemblyId } = context;
         logger.debug(`Entities (${Object.keys(entityInfo).length}):`);
         for (const entityId in entityInfo) logger.debug(`    Entity ${entityId} ${oneLine(entityInfo[entityId])}`);
-        await using(structure.makeGroup({ label: 'Entities' }, { state: { isGhost: ALLOW_GHOST_NODES } }), async group => {
+        await using(structure.makeGroup({ label: 'Entities' }), async group => {
             // here it crashes on 7y7a (16GB RAM Mac), FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
             const entityStructs = await group.makeEntities(entityInfo);
             for (const [entityId, entityStruct] of Object.entries(entityStructs)) {
                 if (!entityStruct) continue;
                 const entityColor = colors[entityInfo[entityId].index % colors.length];
-                const components = await entityStruct.makeStandardComponents();
+                const components = await entityStruct.makeStandardComponents(ALLOW_COLLAPSED_NODES);
                 const visuals = await components.makeStandardVisuals();
                 await visuals.applyToAll(vis => vis.setHighlight(entityColor));
                 entityStruct.setVisible(false);
@@ -278,7 +278,7 @@ export class ImageGenerator {
         logger.debug(`Ligands (${Object.keys(ligandInfo).length}):`);
         for (const lig in ligandInfo) logger.debug('   ', lig, oneLine(ligandInfo[lig]));
         for (const info of Object.values(ligandInfo)) {
-            await using(structure.makeLigEnvComponents(info, { state: { isCollapsed: ALLOW_COLLAPSED_NODES } }), async components => {
+            await using(structure.makeLigEnvComponents(info, ALLOW_COLLAPSED_NODES), async components => {
                 const visuals = await components.makeLigEnvVisuals(entityColors);
                 this.orientAndZoom(components.nodes.ligand!);
                 await this.saveViews('front', view => Captions.forLigandEnvironment({ ...context, view, ligandInfo: info }));
@@ -318,8 +318,9 @@ export class ImageGenerator {
             await using(structure.makeAuthChain(authChainId, chainId), async chain => { // selecting by authChainId to include ligands
                 if (!chain) return;
                 const entityId = chainInfo[chainId].entityId;
-                const components = await chain.makeStandardComponents();
+                const components = await chain.makeStandardComponents(ALLOW_COLLAPSED_NODES);
                 const visuals = await components.makeStandardVisuals();
+                chain.setCollapsed(ALLOW_COLLAPSED_NODES);
                 this.orientAndZoom(chain);
                 await visuals.applyToAll(vis => vis.setFaded());
 
@@ -335,10 +336,10 @@ export class ImageGenerator {
                         const totalCopies = allDomainCounts[source][familyId][entityId];
                         const shownCopies = selectedDomainCounts[source][familyId][entityId];
                         await using(structure.makeGroup({ label: 'Domains' }, { state: { isGhost: ALLOW_GHOST_NODES } }), async group => {
-                            const domainStructures = await group.makeSubstructures(domDefs);
+                            const domainStructures = await group.makeSubstructures(domDefs, ALLOW_COLLAPSED_NODES);
                             const outOfRangeCopies = shownCopies - Object.keys(domainStructures).length; // this will be >0 when a domain is out of observed residue ranges (e.g. 8eiu chain KA [auth h] Pfam PF03948)
                             for (const domainStruct of Object.values(domainStructures)) {
-                                const components = await domainStruct.makeStandardComponents();
+                                const components = await domainStruct.makeStandardComponents(ALLOW_COLLAPSED_NODES);
                                 const visuals = await components.makeStandardVisuals();
                                 const color = colorsIterator.next().value!; // same color for all visual of the domain
                                 await visuals.applyToAll(vis => vis.setColorUniform(color));
@@ -363,7 +364,7 @@ export class ImageGenerator {
         for (const modres in modresInfo) setDefinitions[modres] = modresInfo[modres].instances;
 
         const colorsIterator = cycleIterator(MODRES_COLORS);
-        await using(structure.makeGroup({ label: 'Modified Residues' }, { state: { isGhost: ALLOW_GHOST_NODES } }), async group => {
+        await using(structure.makeGroup({ label: 'Modified Residues' }), async group => {
             const modresStructures = await group.makeSubstructures(setDefinitions);
             for (const struct of Object.values(modresStructures)) {
                 const visual = await struct.makeBallsAndSticks(['modresSticks']);

@@ -205,15 +205,17 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
         }
     }
     /** Create components "polymer", "branched", "ligand", "ion" for a structure */
-    async makeStandardComponents(): Promise<StandardComponents> {
-        const polymer = await this.makeComponent({ type: { name: 'static', params: 'polymer' } }, undefined, 'polymer');
-        const ligand = await this.makeComponent({ type: { name: 'static', params: 'ligand' } }, undefined, 'ligand');
-        const branched = await this.makeComponent({ type: { name: 'static', params: 'branched' } }, undefined, 'branched');
-        const ion = await this.makeComponent({ type: { name: 'static', params: 'ion' } }, undefined, 'ion');
+    async makeStandardComponents(collapsed: boolean = false): Promise<StandardComponents> {
+        const options: Partial<StateTransform.Options> = { state: { isCollapsed: collapsed } };
+        const polymer = await this.makeComponent({ type: { name: 'static', params: 'polymer' } }, options, 'polymer');
+        const ligand = await this.makeComponent({ type: { name: 'static', params: 'ligand' } }, options, 'ligand');
+        const branched = await this.makeComponent({ type: { name: 'static', params: 'branched' } }, options, 'branched');
+        const ion = await this.makeComponent({ type: { name: 'static', params: 'ion' } }, options, 'ion');
         return new StandardComponents({ polymer, branched, ligand, ion });
     }
     /** Create components "ligand" and "environment" for a ligand */
-    async makeLigEnvComponents(ligandInfo: LigandInfo, options?: Partial<StateTransform.Options>): Promise<LigandEnvironmentComponents> {
+    async makeLigEnvComponents(ligandInfo: LigandInfo, collapsed: boolean = false): Promise<LigandEnvironmentComponents> {
+        const options: Partial<StateTransform.Options> = { state: { isCollapsed: collapsed } };
         const ligandLabel = ligandInfo.compId;
         const envLabel = `Environment (${LIGAND_ENVIRONMENT_RADIUS} Å)`;
 
@@ -311,12 +313,13 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
     }
 
     /** Create multiple components from a stucture, based on substructure definitions */
-    async makeSubstructures(subs: { [id: string]: SubstructureDef }): Promise<{ [id: string]: StructureNode }> {
+    async makeSubstructures(subs: { [id: string]: SubstructureDef }, collapsed: boolean = false): Promise<{ [id: string]: StructureNode }> {
         const selections: { [id: string]: StructureNode } = {};
         for (const id in subs) {
             const selection = await this.makeSubstructure(id, subs[id]);
             if (selection) {
                 selections[id] = selection;
+                selection.setCollapsed(collapsed);
             }
         }
         return selections;

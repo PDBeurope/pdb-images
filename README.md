@@ -67,7 +67,7 @@ node index.js 1hda data/output_1hda/ \
     --view front \
     --opaque-background \
     --no-axes \
-    --date "2023-04-20" \
+    --date 2023-04-20 \
     --clear \
     --log DEBUG
 ```           
@@ -80,9 +80,13 @@ Additional input data will be retrieved from a PDBe API (default `https://www.eb
 
 ### Output
 
+#### Image files
+
 The program creates a collection of image types. Each scene can be rendered in different views (front, side, top; `--view` argument) and in different resolutions (`--size` argument). Besides the rendered images in PNG format, the program also saves `.molj` files (Mol* plugin states, aka snapshots, which can be loaded in Mol*) and `.caption.json` files (image captions).
 
-**Summary files:** After generating all images, two summary files are created: 
+#### Summary files
+ 
+After generating all images, two summary files are created: 
 
 * `{pdb}_filelist` contains the list of created images (without file suffixes, i.e. `1ad5_deposited_chain_front` instead of `1ad5_deposited_chain_front_image-800x800.png`)
 * `{pdb}.json` contains the structured list of created images, including their captions and some other metadata.
@@ -93,7 +97,7 @@ If the output directory contains older files from previous runs, these will also
 
 ### Generated image types
 
-**PDBeImages** generates many types of images. By default, it will create all image types that make sense for the entry. Alternatively, the user can select a subset of image types by the option `--type`. These are all the available types:
+**PDBeImages** generates many types of images. By default, it will create all image types that make sense for the selected mode (`pdb`/`alphafold`) and entry. Alternatively, the user can select a subset of image types by the option `--type`. These are all the available types:
 
 * `entry` – Create images of the whole deposited structure, colored by chains and colored by entities (i.e. chemically distinct molecules).
   * –> `{pdb}_deposited_chain_{view}_image-{size}.png`
@@ -116,6 +120,8 @@ If the output directory contains older files from previous runs, these will also
 * `plddt` – Create an image of the deposited structure with color-coded pLDDT values. This is only for `--mode alphafold`.
   * –> `{pdb}_modres_{modres}_image-{size}.png`
 * `all` – A shortcut to create all meaningful image types (i.e. all but `plddt` in `pdb` mode, `plddt` in `alphafold` mode).
+
+By default, some image types are rendered in three views (front, side, top view) with axis arrows shown in the left bottom corner, while other image types are only rendered in front view without axis arrows. This can be changed by `--view` and `--no-axes` arguments.
 
 
 ## FAQ
