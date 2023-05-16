@@ -39,6 +39,15 @@ function isReallyObject(obj: any) {
     return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
 }
 
+/** Return an object with keys `keys` and their values same as in `obj` */
+export function pickObjectKeys<T, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+    const result: Partial<Pick<T, K>> = {};
+    for (const key of keys) {
+        result[key] = obj[key];
+    }
+    return result as Pick<T, K>;
+}
+
 
 /** Information about occurences of a modified residue in a structure. */
 export interface ModifiedResidueInfo {

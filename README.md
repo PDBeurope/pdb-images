@@ -105,7 +105,7 @@ If the output directory contains older files from previous runs, these will also
 * `assembly` – For each assembly listed in the mmCIF file, create images of the whole assembly, colored by chains and colored by entities.
   * –> `{pdb}_assembly_{assembly}_chain_{view}_image-{size}.png`
   * –> `{pdb}_assembly_{assembly}_chemically_distinct_molecules_{view}_image-{size}.png`
-* `entity` - For each distinct entity, create an image of the preferred assembly with this entity highlighted. This excludes the water entity.
+* `entity` - For each distinct entity, create an image of the preferred assembly with this entity highlighted. This excludes the water entity. If an entity is not present in the preferred assembly, the program will instead use the first assembly where this entity is present (e.g. entity 5 in 7nys).
   * –> `{pdb}_entity_{entity}_{view}_image-{size}.png`
 * `domain` – Create images for SIFTS mappings (CATH, SCOP, Pfam, Rfam). Namely, for each combination of SIFTS family and entity, select a chain belonging to that entity and create an image of the chain with highlighted SIFTS domain(s). If there are domains from the same family in different entities, process each of them separately. If there are multiple domains from the same family in the same entity but in different chains, process just one of the chains. If there are multiple domains from the same family within one chain, render this chain with each domain highlighted in a different color (choose the chain with most domain in such case). Requires API.
   * –> `{pdb}_{entity}_{chain}_{source}_{family}_image-{size}.png`

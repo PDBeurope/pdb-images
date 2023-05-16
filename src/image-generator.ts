@@ -15,7 +15,7 @@ import { DomainRecord, ModifiedResidueRecord, PDBeAPI, PDBeAPIReturn, SiftsSourc
 import { Captions, ImageSpec } from './captions/captions';
 import { adjustCamera, changeCameraRotation, combineRotations, zoomAll } from './helpers/camera';
 import { ANNOTATION_COLORS, ENTITY_COLORS, MODRES_COLORS, assignEntityAndUnitColors, cycleIterator } from './helpers/colors';
-import { getModifiedResidueInfo } from './helpers/helpers';
+import { getModifiedResidueInfo, pickObjectKeys } from './helpers/helpers';
 import { getLogger, oneLine } from './helpers/logging';
 import { countDomains, selectBestChainForDomains, sortDomainsByChain, sortDomainsByEntity } from './helpers/sifts';
 import { countChainResidues, getChainInfo, getEntityInfo, getLigandInfo } from './helpers/structure-info';
@@ -48,6 +48,8 @@ export class ImageGenerator {
     private rotation: Mat3 = Mat3.identity();
     /** Set of requested image types */
     public readonly imageTypes: Set<ImageType>;
+    /** List of entities that were not found in the preferred assembly and should be retried in other assemblies */
+    private failedEntities: string[] = [];
 
     constructor(
         /** The plugin to perform all operations in */
@@ -101,14 +103,22 @@ export class ImageGenerator {
 
                     // Images from assembly structures
                     if (mode === 'pdb' && this.shouldRender('assembly', 'entity', 'modres')) {
-                        const assemblies = ModelSymmetry.Provider.get(model.data!)?.assemblies ?? [];
-                        const preferredAssembly = await promises.preferredAssembly;
+                        let assemblies = ModelSymmetry.Provider.get(model.data!)?.assemblies ?? [];
+                        const preferredAssemblyId = (await promises.preferredAssembly)?.assemblyId;
                         logger.debug(`Assemblies (${assemblies.length}):`);
                         for (const ass of assemblies) logger.debug('   ', oneLine(ass));
-                        logger.debug('Preferred assembly:', preferredAssembly?.assemblyId);
+                        logger.debug('Preferred assembly:', preferredAssemblyId);
+                        assemblies = [
+                            ...assemblies.filter(ass => ass.id === preferredAssemblyId),
+                            ...assemblies.filter(ass => ass.id !== preferredAssemblyId),
+                        ];
                         for (const assembly of assemblies) {
-                            const isPreferredAssembly = assembly.id === preferredAssembly?.assemblyId;
+                            const isPreferredAssembly = assembly.id === preferredAssemblyId;
                             await this.processAssemblyStructure(entryId, model, assembly.id, isPreferredAssembly, promises);
+                        }
+                        if (this.failedEntities.length > 0) {
+                            logger.error(`Failed to create images for these entities: ${this.failedEntities}`);
+                            this.failedEntities = [];
                         }
                     }
                 });
@@ -123,6 +133,7 @@ export class ImageGenerator {
     /** Create requested images which are generated from the deposited model */
     private async processDepositedStructure(mode: 'pdb' | 'alphafold', entryId: string, model: ModelNode, traj: TrajectoryNode, promises: DataPromises) {
         if (!this.shouldRender('entry', 'validation', 'bfactor', 'ligand', 'domain', 'plddt')) return;
+        logger.info('Processing deposited structure');
 
         await using(model.makeStructure({ type: { name: 'model', params: {} } }), async structure => {
             const group = await structure.makeGroup({ label: 'Whole Entry' }, { state: { isGhost: ALLOW_GHOST_NODES } });
@@ -207,6 +218,7 @@ export class ImageGenerator {
     /** Create requested images that are generated from each assembly structure.
      * If `isPreferredAssembly`, also create images that are generated from the preferred assembly. */
     private async processAssemblyStructure(entryId: string, model: ModelNode, assemblyId: string, isPreferredAssembly: boolean, promises: DataPromises) {
+        logger.info(`Processing assembly ${assemblyId}`, isPreferredAssembly ? '(preferred)' : '(non-preferred)');
         await using(model.makeStructure({ type: { name: 'assembly', params: { id: assemblyId } } }), async structure => {
             const context = {
                 entryId, assemblyId, isPreferredAssembly, nModels: 1,
@@ -225,23 +237,31 @@ export class ImageGenerator {
                 await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'entities', view }));
             }
 
-            if (isPreferredAssembly) {
+            if (isPreferredAssembly && this.shouldRender('entity') || this.failedEntities.length > 0) {
+                if (this.failedEntities.length > 0) logger.info(`Retrying previously failed entities: ${this.failedEntities}`);
+                const todoEntities = isPreferredAssembly ? undefined : this.failedEntities; // undefined means all
                 await visuals.applyToAll(vis => vis.setFaded());
-                if (this.shouldRender('entity')) {
-                    await this.processEntities(structure, context, colors.entities);
-                }
-                if (this.shouldRender('modres')) {
-                    await this.processModifiedResidues(structure, await promises.modifiedResidues ?? [], context);
-                }
+                const summary = await this.processEntities(structure, context, colors.entities, todoEntities);
+                this.failedEntities = summary.failedEntities;
+            }
+            if (isPreferredAssembly && this.shouldRender('modres')) {
+                await visuals.applyToAll(vis => vis.setFaded());
+                await this.processModifiedResidues(structure, await promises.modifiedResidues ?? [], context);
             }
         });
     }
 
-    /** Create images for entities */
-    private async processEntities(structure: StructureNode, context: Captions.StructureContext, colors: Color[] = ENTITY_COLORS) {
-        const { entityInfo, assemblyId } = context;
+    /** Create images for entities listed in `todoEntities`.
+     * Process all entities if `todoEntities===undefined`. */
+    private async processEntities(structure: StructureNode, context: Captions.StructureContext, colors: Color[] = ENTITY_COLORS, todoEntities?: string[]) {
+        const { assemblyId } = context;
+        let { entityInfo } = context;
         logger.debug(`Entities (${Object.keys(entityInfo).length}):`);
         for (const entityId in entityInfo) logger.debug(`    Entity ${entityId} ${oneLine(entityInfo[entityId])}`);
+        if (todoEntities) {
+            entityInfo = pickObjectKeys(entityInfo, todoEntities);
+        }
+        const summary = { successfulEntities: [] as string[], failedEntities: [] as string[], skippedEntities: [] as string[] };
         await using(structure.makeGroup({ label: 'Entities' }), async group => {
             // here it crashes on 7y7a (16GB RAM Mac), FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
             const entityStructs = await group.makeEntities(entityInfo);
@@ -257,18 +277,22 @@ export class ImageGenerator {
             for (const [entityId, entityStruct] of Object.entries(entityStructs)) {
                 if (entityInfo[entityId].type === 'water') {
                     logger.info(`Skipping images for entity ${entityId} (water entity)`);
+                    summary.skippedEntities.push(entityId);
                     continue;
                 }
                 if (!entityStruct) {
-                    const assembly = assemblyId ? `assembly ${assemblyId}` : 'the model';
+                    const assembly = assemblyId ? `assembly ${assemblyId}` : 'the deposited structure';
                     logger.warn(`Skipping images for entity ${entityId} (not present in ${assembly})`);
+                    summary.failedEntities.push(entityId);
                     continue;
                 }
                 entityStruct.setVisible(true);
                 await this.saveViews('all', view => Captions.forHighlightedEntity({ ...context, entityId, view }));
                 entityStruct.setVisible(false);
+                summary.successfulEntities.push(entityId);
             }
         });
+        return summary;
     }
 
     /** Create images for ligands */

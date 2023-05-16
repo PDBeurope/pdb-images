@@ -7,7 +7,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { MoljStateSaver, chainLabel, deepMerge, fetchUrl, getModifiedResidueInfo, parseIntStrict, toKebabCase } from '../helpers';
+import { MoljStateSaver, chainLabel, deepMerge, fetchUrl, getModifiedResidueInfo, parseIntStrict, pickObjectKeys, toKebabCase } from '../helpers';
 import { getTestingHeadlessPlugin } from '../../_spec/_utils';
 import { gunzipData } from '../helpers';
 
@@ -34,6 +34,12 @@ describe('colors', () => {
     });
     it('deepMerge - add value and replace value', () => {
         expect(deepMerge({ a: { b: 1 }, x: [1, 2, 3] } as any, { x: 'hi', a: { c: 2 } })).toEqual({ a: { b: 1, c: 2 }, x: 'hi' });
+    });
+
+    it('pickObjectKeys', () => {
+        expect(pickObjectKeys({ a: 1, b: 2, c: 3, d: 4 }, [])).toEqual({});
+        expect(pickObjectKeys({ a: 1, b: 2, c: 3, d: 4 }, ['a', 'd'])).toEqual({ a: 1, d: 4 });
+        expect(pickObjectKeys({ a: 1, b: 2, c: 3, d: 4 }, ['a', 'b', 'c', 'd'])).toEqual({ a: 1, b: 2, c: 3, d: 4 });
     });
 
     it('getModifiedResidueInfo', () => {
