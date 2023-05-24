@@ -126,6 +126,35 @@ export function gunzipData(data: ArrayBuffer): Promise<Buffer> {
     });
 }
 
+export interface SafeAsync<T> {
+    /** Request result of the original promise (i.e. once `result()` is called and the original promise reject, an error will be thrown). */
+    result: () => Promise<T>,
+}
+
+/** Avoid throwing error if unawaited promise rejects.
+ * ```
+ * const p = safeAsync(async () => {...});
+ * // if rejects now, no problem
+ * const result = await p.result(); // if rejects now, error thrown
+ * ```
+ */
+export function safeAsync<T>(asyncFunction: () => Promise<T>): SafeAsync<T> {
+    let ok: boolean;
+    let theResult: T;
+    let theReason: any;
+    const promise = asyncFunction().then(result => { ok = true; theResult = result; }).catch(reason => { ok = false; theReason = reason; });
+    return {
+        async result() {
+            await promise;
+            if (ok) {
+                return theResult;
+            } else {
+                throw theReason;
+            }
+        }
+    };
+}
+
 /** Helper class for saving state of a Mol* plugin in MOLJ JSON format.
  * Allows some replacements to be applied to the saved state
  * (e.g. replace private URL used runtime by a public URL). */

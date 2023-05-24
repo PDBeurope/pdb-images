@@ -7,12 +7,12 @@
 import fs from 'fs';
 import path from 'path';
 
-import { MoljStateSaver, chainLabel, deepMerge, fetchUrl, getModifiedResidueInfo, parseIntStrict, pickObjectKeys, toKebabCase } from '../helpers';
+import { MoljStateSaver, chainLabel, deepMerge, fetchUrl, getModifiedResidueInfo, parseIntStrict, pickObjectKeys, safeAsync, toKebabCase } from '../helpers';
 import { getTestingHeadlessPlugin } from '../../_spec/_utils';
 import { gunzipData } from '../helpers';
 
 
-describe('colors', () => {
+describe('helpers', () => {
     it('deepMerge - replace value simple', () => {
         expect(deepMerge(1 as any, 2)).toEqual(2);
         expect(deepMerge(1 as any, null)).toEqual(null);
@@ -129,6 +129,39 @@ describe('colors', () => {
         const fetched = await fetchUrl(URL);
         const uncompressed = await gunzipData(fetched);
         expect(String(uncompressed)).toEqual('Spanish Inquisition!');
+    });
+
+    it('safeAsync - resolving promise resolves', async () => {
+        const goodPromise = safeAsync(() => new Promise((resolve, reject) => {
+            setTimeout(() => resolve('A'), 500);
+        }));
+        const result = await goodPromise.result();
+        expect(result).toEqual('A');
+    });
+    it('safeAsync - awaited rejecting promise -> throw', async () => {
+        const badPromise = safeAsync(() => new Promise((resolve, reject) => {
+            setTimeout(() => reject('A'), 500);
+        }));
+        const goodPromise = safeAsync(() => new Promise((resolve, reject) => {
+            setTimeout(() => resolve('B'), 700);
+        }));
+        let thrown: boolean = false;
+        try {
+            const result = await badPromise.result();
+        } catch {
+            thrown = true;
+        }
+        expect(thrown).toEqual(true);
+    });
+    it('safeAsync - unawaited rejecting promise -> do not throw', async () => {
+        const badPromise = safeAsync(() => new Promise((resolve, reject) => {
+            setTimeout(() => reject('A'), 500);
+        }));
+        const goodPromise = safeAsync(() => new Promise((resolve, reject) => {
+            setTimeout(() => resolve('B'), 700);
+        }));
+        const result = await goodPromise.result();
+        expect(result).toEqual('B');
     });
 
     it('MoljStateSaver', async () => {
