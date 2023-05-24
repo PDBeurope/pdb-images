@@ -132,19 +132,13 @@ describe('helpers', () => {
     });
 
     it('safeAsync - resolving promise resolves', async () => {
-        const goodPromise = safeAsync(() => new Promise((resolve, reject) => {
-            setTimeout(() => resolve('A'), 500);
-        }));
+        const goodPromise = safeAsync(() => goodFunction());
         const result = await goodPromise.result();
-        expect(result).toEqual('A');
+        expect(result).toEqual('B');
     });
     it('safeAsync - awaited rejecting promise -> throw', async () => {
-        const badPromise = safeAsync(() => new Promise((resolve, reject) => {
-            setTimeout(() => reject('A'), 500);
-        }));
-        const goodPromise = safeAsync(() => new Promise((resolve, reject) => {
-            setTimeout(() => resolve('B'), 700);
-        }));
+        const badPromise = safeAsync(() => badFunction());
+        const goodPromise = safeAsync(() => goodFunction());
         let thrown: boolean = false;
         try {
             const result = await badPromise.result();
@@ -154,15 +148,20 @@ describe('helpers', () => {
         expect(thrown).toEqual(true);
     });
     it('safeAsync - unawaited rejecting promise -> do not throw', async () => {
-        const badPromise = safeAsync(() => new Promise((resolve, reject) => {
-            setTimeout(() => reject('A'), 500);
-        }));
-        const goodPromise = safeAsync(() => new Promise((resolve, reject) => {
-            setTimeout(() => resolve('B'), 700);
-        }));
+        const badPromise = safeAsync(() => badFunction());
+        const goodPromise = safeAsync(() => goodFunction());
         const result = await goodPromise.result();
         expect(result).toEqual('B');
     });
+    it('safeAsync - nested unawaited rejecting promise -> do not throw', async () => {
+        const badPromise = safeAsync(() => foo());
+        const badPromise2 = safeAsync(() => bar());
+        const goodPromise = safeAsync(() => goodFunction());
+        await sleep(1000);
+        const result = await goodPromise.result();
+        expect(result).toEqual('B');
+    });
+
 
     it('MoljStateSaver', async () => {
         const INPUT_FILE = './test_data/states/1hda.molj';
@@ -200,3 +199,24 @@ describe('helpers', () => {
         }
     });
 });
+
+async function sleep(ms: number) {
+    await new Promise<void>((resolve, reject) => setTimeout(() => resolve(), ms))
+}
+async function badFunction() {
+    await sleep(500);
+    throw new Error('A');
+}
+async function goodFunction() {
+    await sleep(2000);
+    return 'B';
+}
+async function foo() {
+    await badFunction();
+    return 5;
+}
+async function bar() {
+    const magic = await foo();
+    await goodFunction();
+    return 37 + magic;
+}

@@ -28,6 +28,7 @@ export class PDBeAPI {
      * and return as parsed JSON. */
     private async get(url: string): Promise<any> {
         if (this.offline) return {};
+        if (Math.random()<0.25) throw new Error(`Random error ${url}`);
         if (url.startsWith('file://')) {
             const text = fs.readFileSync(url.substring('file://'.length), { encoding: 'utf8' });
             return JSON.parse(text);

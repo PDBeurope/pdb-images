@@ -85,10 +85,10 @@ export class ImageGenerator {
         let success = false;
         try {
             const promises: DataPromises = (mode === 'pdb') ? {
-                entityNames: safeAsync(() => this.api.getEntityNames(entryId)),
-                preferredAssembly: safeAsync(() => this.api.getPreferredAssembly(entryId)),
-                siftsMappings: safeAsync(() => this.api.getSiftsMappings(entryId)),
-                modifiedResidues: safeAsync(() => this.api.getModifiedResidue(entryId)),
+                entityNames: safeAsync(() => this.api.getEntityNames(entryId), 'entityNames'),
+                preferredAssembly: safeAsync(() => this.api.getPreferredAssembly(entryId), 'preferredAssembly'),
+                siftsMappings: safeAsync(() => this.api.getSiftsMappings(entryId), 'siftsMappings'),
+                modifiedResidues: safeAsync(() => this.api.getModifiedResidue(entryId), 'modifiedResidues'),
             } : {}; // allow async fetching in the meantime
 
             const root = RootNode.create(this.plugin);
