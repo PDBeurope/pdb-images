@@ -7,7 +7,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { MoljStateSaver, chainLabel, deepMerge, fetchUrl, getModifiedResidueInfo, parseIntStrict, pickObjectKeys, safeAsync, toKebabCase } from '../helpers';
+import { MoljStateSaver, chainLabel, deepMerge, fetchUrl, getModifiedResidueInfo, parseIntStrict, pickObjectKeys, safePromise, toKebabCase } from '../helpers';
 import { getTestingHeadlessPlugin } from '../../_spec/_utils';
 import { gunzipData } from '../helpers';
 
@@ -131,14 +131,14 @@ describe('helpers', () => {
         expect(String(uncompressed)).toEqual('Spanish Inquisition!');
     });
 
-    it('safeAsync - resolving promise resolves', async () => {
-        const goodPromise = safeAsync(() => goodFunction());
+    it('safePromise - resolving promise -> resolve', async () => {
+        const goodPromise = safePromise(() => goodFunction());
         const result = await goodPromise.result();
         expect(result).toEqual('B');
     });
-    it('safeAsync - awaited rejecting promise -> throw', async () => {
-        const badPromise = safeAsync(() => badFunction());
-        const goodPromise = safeAsync(() => goodFunction());
+    it('safePromise - awaited rejecting promise -> throw', async () => {
+        const badPromise = safePromise(() => badFunction());
+        const goodPromise = safePromise(() => goodFunction());
         let thrown: boolean = false;
         try {
             const result = await badPromise.result();
@@ -147,16 +147,16 @@ describe('helpers', () => {
         }
         expect(thrown).toEqual(true);
     });
-    it('safeAsync - unawaited rejecting promise -> do not throw', async () => {
-        const badPromise = safeAsync(() => badFunction());
-        const goodPromise = safeAsync(() => goodFunction());
+    it('safePromise - unawaited rejecting promise -> do not throw', async () => {
+        const badPromise = safePromise(() => badFunction());
+        const goodPromise = safePromise(() => goodFunction());
         const result = await goodPromise.result();
         expect(result).toEqual('B');
     });
-    it('safeAsync - nested unawaited rejecting promise -> do not throw', async () => {
-        const badPromise = safeAsync(() => foo());
-        const badPromise2 = safeAsync(() => bar());
-        const goodPromise = safeAsync(() => goodFunction());
+    it('safePromise - nested unawaited rejecting promise -> do not throw', async () => {
+        const badPromise = safePromise(() => foo());
+        const badPromise2 = safePromise(() => bar());
+        const goodPromise = safePromise(() => goodFunction());
         await sleep(1000);
         const result = await goodPromise.result();
         expect(result).toEqual('B');
@@ -201,7 +201,7 @@ describe('helpers', () => {
 });
 
 async function sleep(ms: number) {
-    await new Promise<void>((resolve, reject) => setTimeout(() => resolve(), ms))
+    await new Promise<void>((resolve, reject) => setTimeout(() => resolve(), ms));
 }
 async function badFunction() {
     await sleep(500);

@@ -13,10 +13,7 @@ import { deepClone } from 'molstar/lib/commonjs/mol-util/object';
 
 import { ModifiedResidueRecord } from '../api';
 import { SubstructureDef } from './substructure-def';
-import { getLogger } from './logging';
 
-
-const logger = getLogger(module);
 
 /** Like `Partial<T>` but recursive (i.e. values themselves can be partial). */
 export type PPartial<T> = T extends {} ? { [P in keyof T]?: PPartial<T[P]> } | undefined : T
@@ -129,48 +126,35 @@ export function gunzipData(data: ArrayBuffer): Promise<Buffer> {
     });
 }
 
-export interface SafeAsync<T> {
+export interface SafePromise<T> {
     /** Request result of the original promise (i.e. once `result()` is called and the original promise reject, an error will be thrown). */
     result: () => Promise<T>,
 }
 
 /** Avoid throwing error if unawaited promise rejects.
  * ```
- * const p = safeAsync(async () => {...});
+ * const p = safePromise(async () => {...});
  * // if rejects now, no problem
  * const result = await p.result(); // if rejects now, error thrown
  * ```
  */
-export function safeAsync<T>(asyncFunction: () => Promise<T>, log?: string): SafeAsync<T> {
+export function safePromise<T>(asyncFunction: () => Promise<T>): SafePromise<T> {
     let ok: boolean;
     let theResult: T;
     let theReason: any;
     const promise = asyncFunction().then(result => { ok = true; theResult = result; }).catch(reason => { ok = false; theReason = reason; });
-    if (log) logger.warn('Started safe async:', log);
     return {
         async result() {
-            if (log) logger.warn('Awaiting safe async:', log);
             await promise;
             if (ok) {
-                if (log) logger.warn('Successful safe async:', log);
                 return theResult;
             } else {
-                if (log) logger.warn('Failed safe async:', log);
                 throw theReason;
             }
         }
     };
 }
 
-export type Maybe<T> = { ok: true, value: T } | { ok: false, error: Error }
-export namespace Maybe {
-    export function success<T>(value: T): Maybe<T> {
-        return { ok: true, value: value };
-    }
-    export function failure<T>(error: Error | string): Maybe<T> {
-        return { ok: false, error: typeof error === 'string' ? new Error(error) : error };
-    }
-}
 
 /** Helper class for saving state of a Mol* plugin in MOLJ JSON format.
  * Allows some replacements to be applied to the saved state

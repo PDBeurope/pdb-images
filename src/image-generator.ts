@@ -15,7 +15,7 @@ import { DomainRecord, ModifiedResidueRecord, PDBeAPI, PDBeAPIReturn, SiftsSourc
 import { Captions, ImageSpec } from './captions/captions';
 import { adjustCamera, changeCameraRotation, combineRotations, zoomAll } from './helpers/camera';
 import { ANNOTATION_COLORS, ENTITY_COLORS, MODRES_COLORS, assignEntityAndUnitColors, cycleIterator } from './helpers/colors';
-import { SafeAsync, getModifiedResidueInfo, pickObjectKeys, safeAsync } from './helpers/helpers';
+import { SafePromise, getModifiedResidueInfo, pickObjectKeys, safePromise } from './helpers/helpers';
 import { getLogger, oneLine } from './helpers/logging';
 import { countDomains, selectBestChainForDomains, sortDomainsByChain, sortDomainsByEntity } from './helpers/sifts';
 import { countChainResidues, getChainInfo, getEntityInfo, getLigandInfo } from './helpers/structure-info';
@@ -35,10 +35,10 @@ export const ImageTypes = ['entry', 'assembly', 'entity', 'domain', 'ligand', 'm
 export type ImageType = typeof ImageTypes[number]
 
 interface DataPromises {
-    entityNames?: SafeAsync<PDBeAPIReturn<'getEntityNames'>>;
-    preferredAssembly?: SafeAsync<PDBeAPIReturn<'getPreferredAssembly'>>;
-    siftsMappings?: SafeAsync<PDBeAPIReturn<'getSiftsMappings'>>;
-    modifiedResidues?: SafeAsync<PDBeAPIReturn<'getModifiedResidue'>>;
+    entityNames?: SafePromise<PDBeAPIReturn<'getEntityNames'>>;
+    preferredAssembly?: SafePromise<PDBeAPIReturn<'getPreferredAssembly'>>;
+    siftsMappings?: SafePromise<PDBeAPIReturn<'getSiftsMappings'>>;
+    modifiedResidues?: SafePromise<PDBeAPIReturn<'getModifiedResidue'>>;
 }
 
 
@@ -85,10 +85,10 @@ export class ImageGenerator {
         let success = false;
         try {
             const promises: DataPromises = (mode === 'pdb') ? {
-                entityNames: safeAsync(() => this.api.getEntityNames(entryId), 'entityNames'),
-                preferredAssembly: safeAsync(() => this.api.getPreferredAssembly(entryId), 'preferredAssembly'),
-                siftsMappings: safeAsync(() => this.api.getSiftsMappings(entryId), 'siftsMappings'),
-                modifiedResidues: safeAsync(() => this.api.getModifiedResidue(entryId), 'modifiedResidues'),
+                entityNames: safePromise(() => this.api.getEntityNames(entryId)),
+                preferredAssembly: safePromise(() => this.api.getPreferredAssembly(entryId)),
+                siftsMappings: safePromise(() => this.api.getSiftsMappings(entryId)),
+                modifiedResidues: safePromise(() => this.api.getModifiedResidue(entryId)),
             } : {}; // allow async fetching in the meantime
 
             const root = RootNode.create(this.plugin);

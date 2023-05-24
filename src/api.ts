@@ -6,6 +6,7 @@
 
 import fs from 'fs';
 import { getLogger } from './helpers/logging';
+import { safePromise } from './helpers/helpers';
 
 
 const logger = getLogger(module);
@@ -28,7 +29,6 @@ export class PDBeAPI {
      * and return as parsed JSON. */
     private async get(url: string): Promise<any> {
         if (this.offline) return {};
-        if (Math.random()<0.25) throw new Error(`Random error ${url}`);
         if (url.startsWith('file://')) {
             const text = fs.readFileSync(url.substring('file://'.length), { encoding: 'utf8' });
             return JSON.parse(text);
@@ -111,10 +111,10 @@ export class PDBeAPI {
     /** Get list of instances of SIFTS domains within a PDB entry,
      * sorted by source (CATH, Pfam, Rfam, SCOP) and family (e.g. 1.10.630.10, PF00067). */
     async getSiftsMappings(pdbId: string): Promise<{ [source in SiftsSource]: { [family: string]: DomainRecord[] } }> {
-        const promiseProtein = this.get(`${this.baseUrl}/mappings/${pdbId}`);
-        const promiseNucleic = this.get(`${this.baseUrl}/nucleic_mappings/${pdbId}`);
-        const jsonProtein = await promiseProtein;
-        const jsonNucleic = await promiseNucleic;
+        const promiseProtein = safePromise(() => this.get(`${this.baseUrl}/mappings/${pdbId}`));
+        const promiseNucleic = safePromise(() => this.get(`${this.baseUrl}/nucleic_mappings/${pdbId}`));
+        const jsonProtein = await promiseProtein.result();
+        const jsonNucleic = await promiseNucleic.result();
         const entryDataProtein = jsonProtein[pdbId] ?? {};
         const entryDataNucleic = jsonNucleic[pdbId] ?? {};
         const entryData = { ...entryDataProtein, ...entryDataNucleic };
