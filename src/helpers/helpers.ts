@@ -144,7 +144,7 @@ export class MoljStateSaver {
         } = {},
     ) { }
 
-    /** Save state in MOLJ format into `filename`. Apply replacements, if they wer provided in the constructor. */
+    /** Save state in MOLJ format into `filename`. Apply replacements, if they were provided in the constructor. */
     async save(filename: string) {
         const snapshot = deepClone(await this.plugin.getStateSnapshot());
         this.applyReplacements(snapshot);

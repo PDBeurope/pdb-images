@@ -12,9 +12,17 @@ const logger = getLogger(module);
 
 /** Client for access to PDBe REST API */
 export class PDBeAPI {
+    /** API base URL, without trailing slash, after which route and entry ID can be appended, e.g. 'https://www.ebi.ac.uk/pdbe/api' */
+    public readonly baseUrl: string;
+    /** If `true`, this is a mock API client which returns correct types but without any specific data. */
+    public readonly offline: boolean;
+
     /** Create a client accessing API at `baseUrl` (like 'https://www.ebi.ac.uk/pdbe/api').
      * If `offline`, create a mock client which returns correct types but without any specific data. */
-    constructor(public readonly baseUrl: string, public readonly offline: boolean = false) { }
+    constructor(baseUrl: string, offline: boolean = false) {
+        this.baseUrl = (baseUrl[baseUrl.length - 1] === '/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
+        this.offline = offline;
+    }
 
     /** Fetch contents of `url` ('http://...', 'https://...', 'file://...')
      * and return as parsed JSON. */
