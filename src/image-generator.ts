@@ -98,9 +98,6 @@ export class ImageGenerator {
                 await using(traj.makeModel(0), async rawModel => {
                     const model = await rawModel.makeCustomModelProperties(this.api);
 
-                    // Images from deposited model structure
-                    await this.processDepositedStructure(mode, entryId, model, traj, promises);
-
                     // Images from assembly structures
                     if (mode === 'pdb' && this.shouldRender('assembly', 'entity', 'modres')) {
                         let assemblies = ModelSymmetry.Provider.get(model.data!)?.assemblies ?? [];
@@ -116,10 +113,16 @@ export class ImageGenerator {
                             const isPreferredAssembly = assembly.id === preferredAssemblyId;
                             await this.processAssemblyStructure(entryId, model, assembly.id, isPreferredAssembly, promises);
                         }
-                        if (this.failedEntities.length > 0) {
-                            logger.error(`Failed to create images for these entities: ${this.failedEntities}`);
-                            this.failedEntities = [];
-                        }
+                    }
+
+                    // Images from deposited model structure
+                    if (this.shouldRender('entry', 'validation', 'bfactor', 'ligand', 'domain', 'plddt') || this.failedEntities.length > 0) {
+                        await this.processDepositedStructure(mode, entryId, model, traj, promises);
+                    }
+
+                    if (this.failedEntities.length > 0) {
+                        logger.error(`Failed to create images for these entities: ${this.failedEntities}`);
+                        this.failedEntities = [];
                     }
                 });
             });
@@ -132,15 +135,14 @@ export class ImageGenerator {
 
     /** Create requested images which are generated from the deposited model */
     private async processDepositedStructure(mode: 'pdb' | 'alphafold', entryId: string, model: ModelNode, traj: TrajectoryNode, promises: DataPromises) {
-        if (!this.shouldRender('entry', 'validation', 'bfactor', 'ligand', 'domain', 'plddt')) return;
         logger.info('Processing deposited structure');
-
         await using(model.makeStructure({ type: { name: 'model', params: {} } }), async structure => {
             const group = await structure.makeGroup({ label: 'Whole Entry' }, { state: { isGhost: ALLOW_GHOST_NODES } });
             const components = await group.makeStandardComponents(ALLOW_COLLAPSED_NODES);
             const visuals = await components.makeStandardVisuals();
             this.orientAndZoom(structure);
             const nModels = traj.data?.frameCount ?? 1;
+            logger.info('Number of models:', nModels);
             const context = {
                 entryId, assemblyId: undefined, isPreferredAssembly: false, nModels,
                 entityNames: promises.entityNames ? await promises.entityNames.result() : {},
@@ -149,7 +151,6 @@ export class ImageGenerator {
             const colors = assignEntityAndUnitColors(structure.data!);
 
             if (mode === 'pdb') {
-                logger.info('Number of models:', nModels);
                 if (this.shouldRender('entry')) {
                     if (nModels === 1) {
                         await visuals.applyToAll(vis => vis.setColorByChainInstance({ colorList: colors.units, entityColorList: colors.entities }));
@@ -193,7 +194,15 @@ export class ImageGenerator {
                         logger.info('Skipping B-factor images because the structure is not from diffraction.');
                     }
                 }
+
                 await visuals.applyToAll(vis => vis.setFaded());
+
+                if (this.failedEntities.length > 0) {
+                    logger.info(`Retrying previously failed entities: ${this.failedEntities}`);
+                    const summary = await this.processEntities(structure, context, colors.entities, this.failedEntities);
+                    this.failedEntities = summary.failedEntities;
+                }
+
                 group.setGhost(false);
                 group.setCollapsed(ALLOW_COLLAPSED_NODES);
                 group.setVisible(false);

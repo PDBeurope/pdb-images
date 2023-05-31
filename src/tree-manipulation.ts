@@ -75,8 +75,12 @@ abstract class Node<S extends StateObject = StateObject> {
         this.origin = origin;
         this.node = group ?? origin;
     }
+    /** Create a new instance of the same subclass as this */
+    private createAnother(origin: StateObjectSelector<S, any>, group?: StateObjectSelector<PluginStateObject.Group, any>): this {
+        return Object.create(this).constructor(origin, group);
+    }
     /** Return plugin state */
-    get state() {
+    get state(): State {
         const state = this.node.state;
         if (!state) throw new Error('state is undefined');
         return state;
@@ -89,25 +93,20 @@ abstract class Node<S extends StateObject = StateObject> {
         const refSuffix = params?.label ? toKebabCase(params.label) : 'group';
         const ref = this.childRef(refSuffix);
         const groupNode = await this.state.build().to(this.node).apply(CreateGroup, params, { ref, ...stateOptions }).commit();
-        return Object.getPrototypeOf(this).constructor(this.origin, groupNode);
+        const result = this.createAnother(this.origin, groupNode);
+        return result;
     }
     /** Make a node visible, i.e. visuals within its subtree will be visible in 3D */
     setVisible(visible: boolean): void {
-        if (this.node.cell) {
-            setSubtreeVisibility(this.state, this.node.cell.transform.ref, !visible); // true means hide, ¯\_(ツ)_/¯
-        }
+        setSubtreeVisibility(this.state, this.node.ref, !visible); // true means hide, ¯\_(ツ)_/¯
     }
     /** Make a node collapsed, i.e. its subtree will be hidden in state tree view */
     setCollapsed(collapsed: boolean): void {
-        if (this.node.cell) {
-            this.state.updateCellState(this.node.ref, { isCollapsed: collapsed });
-        }
+        this.state.updateCellState(this.node.ref, { isCollapsed: collapsed });
     }
     /** Make a node "ghost", i.e. it will not be shown in state tree view */
     setGhost(ghost: boolean): void {
-        if (this.node.cell) {
-            this.state.updateCellState(this.node.ref, { isGhost: ghost });
-        }
+        this.state.updateCellState(this.node.ref, { isGhost: ghost });
     }
     /** Create a ref string for a new node. */
     protected baseRef(idForRef?: string): string | undefined {
@@ -123,6 +122,7 @@ abstract class Node<S extends StateObject = StateObject> {
     }
 }
 
+
 /** Handle for state tree root */
 export class RootNode extends Node<PluginStateObject.Root> {
     static create(plugin: PluginContext): RootNode {
@@ -137,6 +137,7 @@ export class RootNode extends Node<PluginStateObject.Root> {
     }
 }
 
+
 /** Handle for Data node */
 export class DataNode extends Node<PluginStateObject.Data.Binary | PluginStateObject.Data.String> {
     /** Create a CIF node with this node as parent (parse data as CIF) */
@@ -146,6 +147,7 @@ export class DataNode extends Node<PluginStateObject.Data.Binary | PluginStateOb
         return new CifNode(cifNode);
     }
 }
+
 
 /** Handle for Cif node */
 export class CifNode extends Node<PluginStateObject.Format.Cif> {
@@ -157,6 +159,7 @@ export class CifNode extends Node<PluginStateObject.Format.Cif> {
     }
 }
 
+
 /** Handle for Trajectory node */
 export class TrajectoryNode extends Node<PluginStateObject.Molecule.Trajectory> {
     /** Create a Model node with this node as parent */
@@ -166,6 +169,7 @@ export class TrajectoryNode extends Node<PluginStateObject.Molecule.Trajectory> 
         return new ModelNode(modelNode);
     }
 }
+
 
 /** Handle for Model node */
 export class ModelNode extends Node<PluginStateObject.Molecule.Model> {
@@ -190,6 +194,7 @@ export class ModelNode extends Node<PluginStateObject.Molecule.Model> {
         return new StructureNode(structure);
     }
 }
+
 
 /** Handle for Structure node */
 export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
@@ -358,6 +363,7 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
     }
 }
 
+
 /** Handle for Representation3D (aka visual) node */
 export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Representation3D> {
     /** Change params of this node.
@@ -524,6 +530,7 @@ abstract class NodeCollection<KeyType extends string, NodeType extends Node> {
     }
 }
 
+
 /** Collection of nodes for standard structure components (polymer, ligand...) */
 export class StandardComponents extends NodeCollection<StandardComponentType, StructureNode> {
     /** Create visuals like polymer cartoon, ligand balls-and-sticks etc., for a structure or its part */
@@ -565,6 +572,7 @@ export class LigandEnvironmentComponents extends NodeCollection<LigEnvComponentT
         });
     }
 }
+
 
 /** Collection of nodes for standard structure component visuals like polymer cartoon, ligand balls-and-sticks... */
 export class StandardVisuals extends NodeCollection<StandardVisualType, VisualNode> {
