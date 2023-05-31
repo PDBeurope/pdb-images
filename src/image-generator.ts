@@ -263,13 +263,9 @@ export class ImageGenerator {
     /** Create images for entities listed in `todoEntities`.
      * Process all entities if `todoEntities===undefined`. */
     private async processEntities(structure: StructureNode, context: Captions.StructureContext, colors: Color[] = ENTITY_COLORS, todoEntities?: string[]) {
-        const { assemblyId } = context;
-        let { entityInfo } = context;
+        const { assemblyId, entityInfo } = context;
         logger.debug(`Entities (${Object.keys(entityInfo).length}):`);
         for (const entityId in entityInfo) logger.debug(`    Entity ${entityId} ${oneLine(entityInfo[entityId])}`);
-        if (todoEntities) {
-            entityInfo = pickObjectKeys(entityInfo, todoEntities);
-        }
         const summary = { successfulEntities: [] as string[], failedEntities: [] as string[], skippedEntities: [] as string[] };
         await using(structure.makeGroup({ label: 'Entities' }), async group => {
             // here it crashes on 7y7a (16GB RAM Mac), FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
@@ -283,16 +279,17 @@ export class ImageGenerator {
                 entityStruct.setVisible(false);
                 entityStruct.setCollapsed(ALLOW_COLLAPSED_NODES);
             }
-            for (const [entityId, entityStruct] of Object.entries(entityStructs)) {
-                if (entityInfo[entityId].type === 'water') {
-                    logger.info(`Skipping images for entity ${entityId} (water entity)`);
-                    summary.skippedEntities.push(entityId);
-                    continue;
-                }
+            for (const entityId of todoEntities ?? Object.keys(entityStructs)) {
+                const entityStruct = entityStructs[entityId];
                 if (!entityStruct) {
                     const assembly = assemblyId ? `assembly ${assemblyId}` : 'the deposited structure';
                     logger.warn(`Skipping images for entity ${entityId} (not present in ${assembly})`);
                     summary.failedEntities.push(entityId);
+                    continue;
+                }
+                if (entityInfo[entityId].type === 'water') {
+                    logger.info(`Skipping images for entity ${entityId} (water entity)`);
+                    summary.skippedEntities.push(entityId);
                     continue;
                 }
                 entityStruct.setVisible(true);

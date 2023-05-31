@@ -77,7 +77,7 @@ abstract class Node<S extends StateObject = StateObject> {
     }
     /** Create a new instance of the same subclass as this */
     private createAnother(origin: StateObjectSelector<S, any>, group?: StateObjectSelector<PluginStateObject.Group, any>): this {
-        return Object.create(this).constructor(origin, group);
+        return Object.create(Object.getPrototypeOf(this)).constructor(origin, group);
     }
     /** Return plugin state */
     get state(): State {
