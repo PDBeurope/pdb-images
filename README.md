@@ -105,7 +105,7 @@ If the output directory contains older files from previous runs, these will also
 * `assembly` – For each assembly listed in the mmCIF file, create images of the whole assembly, colored by chains and colored by entities.
   * –> `{pdb}_assembly_{assembly}_chain_{view}_image-{size}.png`
   * –> `{pdb}_assembly_{assembly}_chemically_distinct_molecules_{view}_image-{size}.png`
-* `entity` - For each distinct entity, create an image of the preferred assembly with this entity highlighted. This excludes the water entity. If an entity is not present in the preferred assembly, the program will instead use the first assembly where this entity is present (e.g. entity 5 in 7nys).
+* `entity` - For each distinct entity, create an image of the preferred assembly with this entity highlighted. This excludes the water entity. If an entity is not present in the preferred assembly, the program will instead use the first assembly where this entity is present (e.g. entity 5 in 7nys). If an entity is not present in any assembly, the deposited model will be used instead (e.g. entity 3 in 6ml1).
   * –> `{pdb}_entity_{entity}_{view}_image-{size}.png`
 * `domain` – Create images for SIFTS mappings (CATH, SCOP, Pfam, Rfam). Namely, for each combination of SIFTS family and entity, select a chain belonging to that entity and create an image of the chain with highlighted SIFTS domain(s). If there are domains from the same family in different entities, process each of them separately. If there are multiple domains from the same family in the same entity but in different chains, process just one of the chains. If there are multiple domains from the same family within one chain, render this chain with each domain highlighted in a different color (choose the chain with most domain in such case). Requires API.
   * –> `{pdb}_{entity}_{chain}_{source}_{family}_image-{size}.png`
@@ -152,7 +152,13 @@ By default, some image types are rendered in three views (front, side, top view)
   
   This will be thrown when X server not available on the machine, which is a common situation in large computing infrastructures or cloud environments. 
   
-  The easiest solution is to use `xvfb` X server like this: `sudo apt-get install xvfb && xvfb-run --auto-servernum npm run jest`. This approach is used for the GitHub testing workflow. Unfortunatelly `xvfb` is a purely software implementation and cannot use GPU, thus not allowing the full performance potential of PDBeImages.
-
-  TODO find a solution to this and write it here
- (maybe try this: https://stackoverflow.com/questions/63023662/running-headless-chrome-with-webgl-and-nvidia-gpu-inside-a-container)
+  The easiest solution is to use `xvfb` X server: 
+  
+  ```sh
+  sudo apt-get install xvfb
+  xvfb-run --auto-servernum node ./build/index.js 1ad5 data/output_1ad5/
+  ```
+  
+  This approach is used for the GitHub testing workflow (`sudo apt-get install xvfb && xvfb-run --auto-servernum npm run jest`). It is also used in the enclosed Dockerfile.
+  
+  The downside of this approach is that `xvfb` is a purely software implementation and cannot use GPU, thus not allowing the full performance potential of PDBeImages.
