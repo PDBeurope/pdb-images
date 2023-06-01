@@ -70,7 +70,7 @@ export function parseArguments(): Args {
     parser.add_argument('--no-api', { action: 'store_true', help: 'Do not use PDBe API at all (some images will be skipped, some entity names will be different in captions, etc.).' });
     parser.add_argument('--size', { nargs: '*', default: [DEFAULT_IMAGE_SIZE], help: `One or more output image sizes, e.g. 800x800 200x200. Default: ${DEFAULT_IMAGE_SIZE}. Only the first size is rendered, others are obtained by resizing unless --render_each_size is used. Use without any value to disable image rendering (only create captions and MOLJ files).` });
     parser.add_argument('--render-each-size', { action: 'store_true', help: 'Render image for each size listed in --size, instead of rendering only the first size and resampling to the other sizes.' });
-    parser.add_argument('--type', { nargs: '*', choices: [...ImageTypes], default: ['all'], help: 'One or more image types to be created. Use "all" as a shortcut for all types. See README.md for details on image types. Default: all. Use without any value to skip all types (only create summary files from existing outputs).' }); // TODO describe image types in README.md
+    parser.add_argument('--type', { nargs: '*', choices: [...ImageTypes], default: ['all'], help: 'One or more image types to be created. Use "all" as a shortcut for all types. See README.md for details on image types. Default: all. Use without any value to skip all types (only create summary files from existing outputs).' });
     parser.add_argument('--view', { choices: ['front', 'all', 'auto'], default: 'auto', help: 'Select which views should be created for each image type (front view / all views (front, side, top) / auto (creates all views only for these image types: entry, assembly, entity, modres, plddt)). Default: auto.' });
     parser.add_argument('--opaque-background', { action: 'store_true', help: 'Render opaque background in images (default: transparent background).' });
     parser.add_argument('--no-axes', { action: 'store_true', help: 'Do not render axis indicators aka PCA arrows (default: render axes when rendering the same scene from multiple view angles (front, side, top))' });
@@ -95,10 +95,6 @@ export async function main(args: Args) {
     configureLogging(args.log, 'stderr');
     logger.info('Arguments:', oneLine(args));
 
-    const defaultUrl = DEFAULT_INPUT_URL_TEMPLATES[args.mode].replace(/\$\{id\}/g, args.entry_id); // replace ${id} by actual ID
-    let runtimeUrl = resolveUrl(args.input) ?? defaultUrl;
-    const publicUrl = args.input_public ?? defaultUrl;
-
     fs.mkdirSync(args.output_dir, { recursive: true });
     if (args.clear) {
         for (const file of fs.readdirSync(args.output_dir)) {
@@ -106,35 +102,32 @@ export async function main(args: Args) {
         }
     }
 
-    if (runtimeUrl.startsWith('file://')) {
-        const inputFile = runtimeUrl.substring('file://'.length);
-        if (!fs.existsSync(inputFile)) {
-            logger.fatal(`Input file not found: ${inputFile}`);
-            throw new Error(`Input file not found: ${inputFile}`);
+    if (args.type.length > 0) {
+        const defaultUrl = DEFAULT_INPUT_URL_TEMPLATES[args.mode].replace(/\$\{id\}/g, args.entry_id); // replace ${id} by actual ID
+        let runtimeUrl = resolveUrl(args.input) ?? defaultUrl;
+        const publicUrl = args.input_public ?? defaultUrl;
+
+        checkUrlFileExists(runtimeUrl);
+        const tmpStructureFile = await tryGunzipUrl(runtimeUrl, args.output_dir);
+        if (tmpStructureFile) {
+            runtimeUrl = 'file://' + tmpStructureFile;
         }
+
+        const api = new PDBeAPI(args.api_url, args.no_api);
+        const plugin = await createHeadlessPlugin(args);
+        try {
+            const saveFunction = makeSaveFunction(plugin, args.output_dir, args, publicUrl);
+            const imageGenerator = new ImageGenerator(plugin, saveFunction, api, args.type, args.view);
+            await imageGenerator.processAll(args.entry_id, runtimeUrl, args.mode);
+            if (tmpStructureFile) fs.rmSync(tmpStructureFile, { force: true });
+        } finally {
+            plugin.dispose();
+        }
+    } else {
+        logger.info('Not creating any images, only collecting filelist and captions.');
     }
 
-    let tmpStructureFile: string | undefined = undefined;
-    if (runtimeUrl.endsWith('.gz')) {
-        tmpStructureFile = path.resolve(args.output_dir, runtimeUrl.slice(runtimeUrl.lastIndexOf('/') + 1, runtimeUrl.length - '.gz'.length));
-        logger.info(`Input seems to be gzipped (${runtimeUrl}), decompressing to ${tmpStructureFile}`);
-        const compressed = await fetchUrl(runtimeUrl);
-        const uncompressed = await gunzipData(compressed);
-        fs.writeFileSync(tmpStructureFile, uncompressed);
-        runtimeUrl = 'file://' + tmpStructureFile;
-    }
-
-    const api = new PDBeAPI(args.api_url, args.no_api);
-    const plugin = await createHeadlessPlugin(args);
-    try {
-        const saveFunction = makeSaveFunction(plugin, args.output_dir, args, publicUrl);
-        const imageGenerator = new ImageGenerator(plugin, saveFunction, api, args.type, args.view);
-        await imageGenerator.processAll(args.entry_id, runtimeUrl, args.mode);
-        if (tmpStructureFile) fs.rmSync(tmpStructureFile, { force: true });
-        collectCaptions(args.output_dir, args.entry_id, args.date);
-    } finally {
-        plugin.dispose();
-    }
+    collectCaptions(args.output_dir, args.entry_id, args.date);
 }
 
 /** Return a new and initiatized HeadlessPlugin */
@@ -170,4 +163,32 @@ function resolveUrl(urlOrPath: string | undefined) {
     if (!urlOrPath) return urlOrPath;
     if (urlOrPath.match(/^\w+:\/\//)) return urlOrPath; // is URL
     else return 'file://' + path.resolve(urlOrPath); // is path
+}
+
+/** If `url` is a file:// URL, check if the file exists and throw error if it is not found.
+ * If `url` is a different kind of URL, do nothing. */
+function checkUrlFileExists(url: string) {
+    if (url.startsWith('file://')) {
+        const inputFile = url.substring('file://'.length);
+        if (!fs.existsSync(inputFile)) {
+            logger.fatal(`Input file not found: ${inputFile}`);
+            throw new Error(`Input file not found: ${inputFile}`);
+        }
+    }
+}
+
+/** If `url` ends with '.gz', uncompress it, save to `outputDir`, and return path to the uncompressed file.
+ * Otherwise return undefined. */
+async function tryGunzipUrl(url: string, outputDir: string): Promise<string | undefined> {
+    if (url.endsWith('.gz')) {
+        const outputFilename = url.slice(url.lastIndexOf('/') + 1, url.length - '.gz'.length);
+        const outputPath = path.resolve(outputDir, outputFilename);
+        logger.info(`Input seems to be gzipped (${url}), decompressing to ${outputPath}`);
+        const compressed = await fetchUrl(url);
+        const uncompressed = await gunzipData(compressed);
+        fs.writeFileSync(outputPath, uncompressed);
+        return outputPath;
+    } else {
+        return undefined;
+    }
 }
