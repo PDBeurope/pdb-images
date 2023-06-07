@@ -393,6 +393,7 @@ export class ImageGenerator {
         const setDefinitions: { [modres: string]: SubstructureDef } = {};
         for (const modres in modresInfo) setDefinitions[modres] = modresInfo[modres].instances;
 
+        const unprocessedModres = new Set(Object.keys(modresInfo));
         const colorsIterator = cycleIterator(MODRES_COLORS);
         await using(structure.makeGroup({ label: 'Modified Residues' }), async group => {
             const modresStructures = await group.makeSubstructures(setDefinitions);
@@ -407,7 +408,9 @@ export class ImageGenerator {
                 struct.setVisible(true);
                 await this.saveViews('all', view => Captions.forModifiedResidue({ ...context, modresInfo: { ...modresInfo[modres], nInstances }, view }));
                 struct.setVisible(false);
+                unprocessedModres.delete(modres);
             };
+            if (unprocessedModres.size > 0) logger.error(`Failed to create images for these modified residues: ${Array.from(unprocessedModres).sort()}`);
         });
     }
 
