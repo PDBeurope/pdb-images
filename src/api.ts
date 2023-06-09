@@ -9,6 +9,9 @@ import { getLogger } from './helpers/logging';
 import { safePromise } from './helpers/helpers';
 
 
+const FETCH_RETRY_N_TRIES = 5;
+const FETCH_RETRY_MAX_WAIT_SECONDS = 30;
+
 const logger = getLogger(module);
 
 /** Client for access to PDBe REST API */
@@ -17,12 +20,55 @@ export class PDBeAPI {
     public readonly baseUrl: string;
     /** If `true`, this is a mock API client which returns correct types but without any specific data. */
     public readonly offline: boolean;
+    /** If `true`, retry any failed API call. */
+    public readonly retry: boolean;
 
     /** Create a client accessing API at `baseUrl` (like 'https://www.ebi.ac.uk/pdbe/api').
      * If `offline`, create a mock client which returns correct types but without any specific data. */
-    constructor(baseUrl: string, offline: boolean = false) {
+    constructor(baseUrl: string, offline: boolean = false, retry: boolean = false) {
         this.baseUrl = (baseUrl[baseUrl.length - 1] === '/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
         this.offline = offline;
+        this.retry = retry;
+    }
+
+    /** Try to fetch `url`, return object with response if successful or with error if threw. */
+    private static async tryFetch(url: string) {
+        try {
+            const response = await fetch(url);
+            return { response: response, error: undefined };
+        } catch (error) {
+            return { response: undefined, error: error };
+        }
+    }
+
+    /** Try to fetch `url` up to `nTries` times.
+     * Wait random time (up to `maxWaitSeconds` seconds) before each retry.
+     * Return the response of first successful try (i.e. returns with status code other than 5xx (Server error)),
+     * or the response of the last try (regardless of status code) or throw if the last try threw. */
+    private static async fetchWithRetry(url: string, nTries: number, maxWaitSeconds: number): Promise<Response> {
+        if (nTries < 1) throw new Error(`Invalid value for 'nTries', must be at least 1`);
+        for (let i = 1; i <= nTries; i++) {
+            const { response, error } = await PDBeAPI.tryFetch(url);
+            const success = response && !(response.status >= 500 && response.status <= 599);
+            if (success) {
+                if (i > 1) logger.debug(`Succeeded to fetch ${url}, try ${i}/${nTries}`);
+                return response;
+            } else {
+                const reason = response ? `status code ${response.status}` : `threw error ${error}`;
+                logger.debug(`Failed to fetch ${url}, try ${i}/${nTries}, ${reason}`);
+                if (i === nTries) {
+                    logger.error(`Failed to fetch ${url} after trying ${nTries} times`);
+                    if (response) return response;
+                    else throw error;
+                }
+                if (maxWaitSeconds > 0) {
+                    const waitSeconds = maxWaitSeconds * Math.random();
+                    logger.debug(`Waiting ${Math.round(waitSeconds)} seconds before retry`);
+                    await new Promise(resolve => setTimeout(resolve, 1000 * waitSeconds));
+                }
+            }
+        }
+        throw new Error('AssertionError');
     }
 
     /** Fetch contents of `url` ('http://...', 'https://...', 'file://...')
@@ -33,7 +79,7 @@ export class PDBeAPI {
             const text = fs.readFileSync(url.substring('file://'.length), { encoding: 'utf8' });
             return JSON.parse(text);
         } else {
-            const response = await fetch(url);
+            const response = this.retry ? await PDBeAPI.fetchWithRetry(url, FETCH_RETRY_N_TRIES, FETCH_RETRY_MAX_WAIT_SECONDS) : await fetch(url);
             if (response.status === 404) return {}; // PDBe API returns 404 in some cases (e.g. when there are no modified residues)
             if (!response.ok) throw new Error(`API call failed with code ${response.status} (${url})`);
             const text = await response.text();

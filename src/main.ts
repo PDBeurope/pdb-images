@@ -46,6 +46,7 @@ export interface Args {
     input_public: string | undefined,
     mode: Mode,
     api_url: string,
+    api_retry: boolean,
     no_api: boolean,
     size: { width: number, height: number }[],
     render_each_size: boolean,
@@ -67,6 +68,7 @@ export function parseArguments(): Args {
     parser.add_argument('--input-public', { help: 'Input structure URL to use in saved Mol* states (.molj files) (cif or bcif format).' });
     parser.add_argument('--mode', { choices: [...Modes], default: 'pdb', help: 'Mode.' });
     parser.add_argument('--api-url', { default: DEFAULT_PDBE_API_URL, help: `PDBe API URL. Default: ${DEFAULT_PDBE_API_URL}.` });
+    parser.add_argument('--api-retry', { action: 'store_true', help: 'Retry any failed API call up to 5 times, waiting random time (up to 30 seconds) before each retry.' });
     parser.add_argument('--no-api', { action: 'store_true', help: 'Do not use PDBe API at all (some images will be skipped, some entity names will be different in captions, etc.).' });
     parser.add_argument('--size', { nargs: '*', default: [DEFAULT_IMAGE_SIZE], help: `One or more output image sizes, e.g. 800x800 200x200. Default: ${DEFAULT_IMAGE_SIZE}. Only the first size is rendered, others are obtained by resizing unless --render_each_size is used. Use without any value to disable image rendering (only create captions and MOLJ files).` });
     parser.add_argument('--render-each-size', { action: 'store_true', help: 'Render image for each size listed in --size, instead of rendering only the first size and resampling to the other sizes.' });
@@ -113,7 +115,7 @@ export async function main(args: Args) {
             runtimeUrl = 'file://' + tmpStructureFile;
         }
 
-        const api = new PDBeAPI(args.api_url, args.no_api);
+        const api = new PDBeAPI(args.api_url, args.no_api, args.api_retry);
         const plugin = await createHeadlessPlugin(args);
         try {
             const saveFunction = makeSaveFunction(plugin, args.output_dir, args, publicUrl);

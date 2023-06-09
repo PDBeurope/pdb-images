@@ -60,6 +60,7 @@ node index.js 1hda data/output_1hda/ \
     --input-public https://www.ebi.ac.uk/pdbe/entry-files/download/1hda.bcif \
     --mode pdb \
     --api-url https://www.ebi.ac.uk/pdbe/api \
+    --api-retry \
     --no-api \
     --size 500x500 300x200 \
     --render-each-size \

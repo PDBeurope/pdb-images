@@ -86,6 +86,7 @@ describe('args', () => {
                 input_public: undefined,
                 mode: 'pdb',
                 api_url: 'https://www.ebi.ac.uk/pdbe/api',
+                api_retry: false,
                 no_api: false,
                 size: [{ width: 800, height: 800 }],
                 view: 'auto',
@@ -111,7 +112,7 @@ describe('args', () => {
             ArgumentParser.prototype.exit = () => { console.error('ArgumentParser exiting'); throw Error('Exit'); };
             process.argv = 'node index.js 1ad5 /data/1ad5 --input http://smelly_cat.cif \
                 --input-public http://very_public_server.com/smelly_cat.cif --mode alphafold \
-                --api-url https://smelly_api.com --no-api --size 500x500 300x200 --view front --render-each-size \
+                --api-url https://smelly_api.com --api-retry --no-api --size 500x500 300x200 --view front --render-each-size \
                 --type entry assembly plddt --opaque-background --no-axes --date 2023/04/20 --clear --log DEBUG \
                 '.trim().split(/\s+/);
             const expectedArgs: Args = {
@@ -121,6 +122,7 @@ describe('args', () => {
                 input_public: 'http://very_public_server.com/smelly_cat.cif',
                 mode: 'alphafold',
                 api_url: 'https://smelly_api.com',
+                api_retry: true,
                 no_api: true,
                 size: [{ width: 500, height: 500 }, { width: 300, height: 200 }],
                 view: 'front',
@@ -154,6 +156,7 @@ describe('main', () => {
             input_public: undefined,
             mode: 'pdb',
             api_url: 'file://./test_data/api',
+            api_retry: false,
             no_api: false,
             size: [{ width: 200, height: 200 }, { width: 100, height: 100 }],
             view: 'front',
@@ -208,6 +211,7 @@ describe('main', () => {
             input_public: undefined,
             mode: 'alphafold',
             api_url: 'file://./test_data/api',
+            api_retry: false,
             no_api: false,
             size: [{ width: 200, height: 200 }, { width: 100, height: 100 }],
             view: 'all',
