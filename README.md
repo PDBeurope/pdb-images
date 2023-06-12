@@ -125,6 +125,33 @@ If the output directory contains older files from previous runs, these will also
 By default, some image types are rendered in three views (front, side, top view) with axis arrows shown in the left bottom corner, while other image types are only rendered in front view without axis arrows. This can be changed by `--view` and `--no-axes` arguments.
 
 
+## Run in Docker
+
+NOTE: Docker image for PDBeImages uses Xvfb, which results in much worse performance compared to running it directly on a machine with GPU (see FAQ).
+
+### Get image from repository and run
+
+```sh
+docker run -v ~/data/output_1ad5:/out midlik/pdbe-images:amd64 1ad5 /out
+```
+
+### Build and run
+
+```sh
+docker build . -t pdbe-images
+docker run -v ~/data/output_1ad5:/out pdbe-images 1ad5 /out
+```
+
+### Run in Singularity
+
+```sh
+singularity build ./pdbe-images docker://midlik/pdbe-images:amd64
+singularity run --env XVFB_DIR=~/data/xvfb ./pdbe-images 1ad5 ~/data/output_1ad5
+```
+
+It is important to set `XVFB_DIR` variable to an existing mounted directory (use `--bind` if paths are not mounted automatically). When running multiple jobs in parallel, set a separate `XVFB_DIR` for each job.
+
+
 ## FAQ
 
 - `npm install` fails on the `gl` package, printing something like:
@@ -153,7 +180,7 @@ By default, some image types are rendered in three views (front, side, top view)
   
   This will be thrown when X server not available on the machine, which is a common situation in large computing infrastructures or cloud environments. 
   
-  The easiest solution is to use `xvfb` X server: 
+  The easiest solution is to use `Xvfb` X server: 
   
   ```sh
   sudo apt-get install xvfb
@@ -162,4 +189,4 @@ By default, some image types are rendered in three views (front, side, top view)
   
   This approach is used for the GitHub testing workflow (`sudo apt-get install xvfb && xvfb-run --auto-servernum npm run jest`). It is also used in the enclosed Dockerfile.
   
-  The downside of this approach is that `xvfb` is a purely software implementation and cannot use GPU, thus not allowing the full performance potential of PDBeImages.
+  The downside of this approach is that `Xvfb` is a purely software implementation and cannot use GPU (this information cannot be found in any official source but a bunch of people on StackOverflow say so), thus not allowing the full performance potential of PDBeImages.

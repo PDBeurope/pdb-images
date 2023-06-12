@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# This is a modification of `xvfb-run` script provided by Xvfb package.
+# The only change is the order of if-statements in `clean_up` function
+# (the original solution sometimes exited with leaving a living process).
+
+# ORIGINAL HEADER:
 # This script starts an instance of Xvfb, the "fake" X server, runs a command
 # with that server available, and kills the X server when done.  The return
 # value of the command becomes the return value of this script.
@@ -9,7 +14,7 @@
 
 set -e
 
-PROGNAME=xvfb-run
+PROGNAME=xvfb-run-2
 SERVERNUM=99
 AUTHFILE=
 ERRORFILE=/dev/null
@@ -81,22 +86,26 @@ clean_up() {
     if [ -e "$AUTHFILE" ]; then
         XAUTHORITY=$AUTHFILE xauth remove ":$SERVERNUM" >>"$ERRORFILE" 2>&1
     fi
-    echo "XVFB-DEBUG: XVFB_RUN_TMPDIR=$XVFB_RUN_TMPDIR" >>"$ERRORFILE"
-    echo "XVFB-DEBUG: XVFBPID=$XVFBPID" >>"$ERRORFILE"
     if [ -n "$XVFBPID" ]; then
-        echo "XVFB-DEBUG: Killing XVFBPID $XVFBPID" >>"$ERRORFILE"
         kill "$XVFBPID" >>"$ERRORFILE" 2>&1
     fi
     if [ -n "$XVFB_RUN_TMPDIR" ]; then
-        echo "XVFB-DEBUG: XVFB_RUN_TMPDIR is not empty string: $XVFB_RUN_TMPDIR" >>"$ERRORFILE"
         if ! rm -r "$XVFB_RUN_TMPDIR"; then
             error "problem while cleaning up temporary directory"
             exit 5
         fi
     fi
-    # echo "XVFB-DEBUG: continuing" >>"$ERRORFILE"
+    # ORIGINAL CODE:
+    # if [ -e "$AUTHFILE" ]; then
+    #     XAUTHORITY=$AUTHFILE xauth remove ":$SERVERNUM" >>"$ERRORFILE" 2>&1
+    # fi
+    # if [ -n "$XVFB_RUN_TMPDIR" ]; then
+    #     if ! rm -r "$XVFB_RUN_TMPDIR"; then
+    #         error "problem while cleaning up temporary directory"
+    #         exit 5
+    #     fi
+    # fi
     # if [ -n "$XVFBPID" ]; then
-    #     echo "XVFB-DEBUG: Killing XVFBPID $XVFBPID" >>"$ERRORFILE"
     #     kill "$XVFBPID" >>"$ERRORFILE" 2>&1
     # fi
 }
