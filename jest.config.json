@@ -7,8 +7,7 @@
         "\\.ts$": "ts-jest"
     },
     "moduleDirectories": [
-        "node_modules",
-        "lib"
+        "node_modules"
     ],
     "testEnvironmentOptions": {
         "url": "http://localhost/"

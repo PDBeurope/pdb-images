@@ -1,7 +1,7 @@
-FROM amd64/ubuntu:22.04
+FROM ubuntu:22.04
 
 RUN apt-get update -y
-RUN apt-get install -y build-essential libxi-dev libglu1-mesa-dev libglew-dev pkg-config python-is-python3 curl xvfb
+RUN apt-get install -y curl xvfb
 
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 RUN apt-get install -y nodejs
@@ -9,7 +9,8 @@ RUN apt-get install -y nodejs
 RUN mkdir -p /pdbe-images
 WORKDIR /pdbe-images
 COPY package.json ./
-RUN npm install
+RUN npm install  ||  { apt-get install -y python-is-python3 pkg-config build-essential libxi-dev libglew-dev && npm install; }
+# Extra packages are needed to build `gl` library on arm64
 
 COPY src ./src
 COPY tsconfig.json ./

@@ -10,12 +10,12 @@
     "test": "npm run lint && npm run jest"
   },
   "files": [
-    "build"
+    "lib/"
   ],
+  "directories.lib": "lib/",
   "bin":{
-    "pdbe-images": "build/index.js"
+    "pdbe-images": "./lib/cli/pdbe-images.js"
   },
-  "main": "build/main.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/PDBeurope/pdbe-images.git"

@@ -3,7 +3,7 @@
 **PDBeImages** is a command line tool for generating images of macromolecular structures from mmCIF or binary CIF structure files based on Mol*.
 
 
-## Installation, building, and development
+## Development
 
 ### Install dependencies
 
@@ -16,7 +16,7 @@ npm install
 ### Build
 
 ```sh
-rm -rf ./build/  # For a clean build
+rm -rf ./lib/  # For a clean build
 npm run build
 ```
 
@@ -33,29 +33,43 @@ npm run lint
 npm run jest
 ```
 
-### Include as dependency
+## Including as dependency
 
-**PDBeImages** is not yet available in the NPM registry but we are working on it.
+**PDBeImages** is available in the NPM registry. You can add it as a dependency to your own package:
+
+```sh
+npm install pdbe-images
+```
+
+## Installing as CLI tool
+
+**PDBeImages** is available in the NPM registry. You can install it globally on your machine:
+
+```sh
+npm install -g pdbe-images
+```
 
 
 ## Usage
 
+NOTE: The following examples assume you installed PDBeImages globally with `npm install -g pdbe-images`. If you installed locally in the current directory (`npm install pdbe-images`), use `npx pdbe-images` instead of `pdbe-images`. If you cloned the git repository and built it, use `node ./lib/cli/pdbe-images.js` instead of `pdbe-images`
+
 Print help:
 
 ```sh
-node ./build/index.js --help
+pdbe-images --help
 ```
 
 Generate all images for PDB entry `1ad5` and save in directory `data/output_1ad5/`, with default settings:
 
 ```sh
-node ./build/index.js 1ad5 data/output_1ad5/
+pdbe-images 1ad5 data/output_1ad5/
 ```
 
 Another example, with all command line arguments given:
 
 ```sh
-node index.js 1hda data/output_1hda/ \
+pdbe-images 1hda data/output_1hda/ \
     --input test_data/structures/1hda.cif \
     --input-public https://www.ebi.ac.uk/pdbe/entry-files/download/1hda.bcif \
     --mode pdb \
@@ -138,7 +152,8 @@ docker run -v ~/data/output_1ad5:/out midlik/pdbe-images:amd64 1ad5 /out
 ### Build and run
 
 ```sh
-docker build . -t pdbe-images
+docker build . -t pdbe-images                         # if you run it on the same architecture as build
+docker build . -t pdbe-images --platform linux/amd64  # if you need it for a different architecture
 docker run -v ~/data/output_1ad5:/out pdbe-images 1ad5 /out
 ```
 
@@ -171,20 +186,20 @@ It is important to set `XVFB_DIR` variable to an existing mounted directory (use
   
   or follow instructions here: <https://www.npmjs.com/package/gl#system-dependencies>
 
-- Installation completed successfully and running `node ./build/index.js --help` works fine, but trying to run image generation gives an error like this:
+- Installation completed successfully and running `pdbe-images --help` works fine, but trying to run image generation gives an error like this:
 
   ```
           var ext = gl.getExtension('ANGLE_instanced_arrays');
   TypeError: Cannot read properties of null (reading 'getExtension')
   ```
   
-  This will be thrown when X server not available on the machine, which is a common situation in large computing infrastructures or cloud environments. 
+  This will be thrown when X server is not available on the machine, which is a common situation in large computing infrastructures or cloud environments. 
   
   The easiest solution is to use `Xvfb` X server: 
   
   ```sh
   sudo apt-get install xvfb
-  xvfb-run --auto-servernum node ./build/index.js 1ad5 data/output_1ad5/
+  xvfb-run --auto-servernum pdbe-images 1ad5 data/output_1ad5/
   ```
   
   This approach is used for the GitHub testing workflow (`sudo apt-get install xvfb && xvfb-run --auto-servernum npm run jest`). It is also used in the enclosed Dockerfile.
