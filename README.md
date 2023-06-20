@@ -52,7 +52,7 @@ npm install -g pdbe-images
 
 ## Usage
 
-NOTE: The following examples assume you installed PDBeImages globally with `npm install -g pdbe-images`. If you installed locally in the current directory (`npm install pdbe-images`), use `npx pdbe-images` instead of `pdbe-images`. If you cloned the git repository and built it, use `node ./lib/cli/pdbe-images.js` instead of `pdbe-images`
+NOTE: The following examples assume you installed PDBeImages globally with `npm install -g pdbe-images`. If you installed locally in the current directory (`npm install pdbe-images`), use `npx pdbe-images` instead of `pdbe-images`. If you cloned the git repository and built it, use `node ./lib/cli/pdbe-images.js` instead of `pdbe-images`.
 
 Print help:
 
@@ -156,6 +156,8 @@ docker build . -t pdbe-images                         # if you run it on the sam
 docker build . -t pdbe-images --platform linux/amd64  # if you need it for a different architecture
 docker run -v ~/data/output_1ad5:/out pdbe-images 1ad5 /out
 ```
+
+(Add `-f Dockerfile-dev` to the build command if you want to build the current state of the project in Docker instead of using NPM package.)
 
 ### Run in Singularity
 

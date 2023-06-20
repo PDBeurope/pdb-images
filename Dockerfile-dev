@@ -10,8 +10,14 @@ RUN test "$(arch)" = "x86_64" || apt-get install -y python-is-python3 pkg-config
 RUN mkdir -p /pdbe-images
 WORKDIR /pdbe-images
 
-COPY pdbe-images-0.1.0.tgz ./pdbe-images-0.1.0.tgz
-RUN npm install -g ./pdbe-images-0.1.0.tgz
+COPY package.json ./
+RUN npm install
+
+COPY src ./src
+COPY tsconfig.json ./
+RUN npm run build
+
+RUN npm install -g .
 
 RUN mkdir -p /xvfb
 ENV XVFB_DIR="/xvfb"
