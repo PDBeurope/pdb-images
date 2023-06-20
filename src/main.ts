@@ -25,9 +25,9 @@ import { ImageGenerator, ImageType, ImageTypes, Mode, Modes } from './image-gene
 import { makeSaveFunction } from './save';
 
 
-const logger = getLogger(module);
+export const VERSION = '0.1.0';
 setFSModule(fs); // this is needed to make `fetch` work in MolStar
-
+const logger = getLogger(module);
 
 /** ${id} will be replaced by actual identifier (PDB ID or AlphaFoldDB ID) */
 const DEFAULT_INPUT_URL_TEMPLATES: { [mode in Mode]: string } = {
@@ -62,6 +62,7 @@ export interface Args {
 /** Return parsed command line arguments for `main` */
 export function parseArguments(): Args {
     const parser = new ArgumentParser({ description: 'PDBeImages, a CLI tool for generating images of macromolecular models.' });
+    parser.add_argument('-v', '--version', { action: 'version', version: VERSION, help: 'Print version info and exit.' });
     parser.add_argument('entry_id', { help: 'Entry identifier (PDB ID or AlphaFoldDB ID).' });
     parser.add_argument('output_dir', { help: 'Output directory.' });
     parser.add_argument('--input', { help: 'Input structure file path or URL (.cif, .bcif, .cif.gz, .bcif.gz).' });
@@ -75,9 +76,9 @@ export function parseArguments(): Args {
     parser.add_argument('--type', { nargs: '*', choices: [...ImageTypes], default: ['all'], help: 'One or more image types to be created. Use "all" as a shortcut for all types. See README.md for details on image types. Default: all. Use without any value to skip all types (only create summary files from existing outputs).' });
     parser.add_argument('--view', { choices: ['front', 'all', 'auto'], default: 'auto', help: 'Select which views should be created for each image type (front view / all views (front, side, top) / auto (creates all views only for these image types: entry, assembly, entity, modres, plddt)). Default: auto.' });
     parser.add_argument('--opaque-background', { action: 'store_true', help: 'Render opaque background in images (default: transparent background).' });
-    parser.add_argument('--no-axes', { action: 'store_true', help: 'Do not render axis indicators aka PCA arrows (default: render axes when rendering the same scene from multiple view angles (front, side, top))' });
-    parser.add_argument('--date', { help: `Date to use as "last_modification" in the caption JSON (default: today's date formatted as YYYY-MM-DD)` });
-    parser.add_argument('--clear', { action: 'store_true', help: 'Remove all contents of the output directory before running' });
+    parser.add_argument('--no-axes', { action: 'store_true', help: 'Do not render axis indicators aka PCA arrows (default: render axes when rendering the same scene from multiple view angles (front, side, top)).' });
+    parser.add_argument('--date', { help: `Date to use as "last_modification" in the caption JSON (default: today's date formatted as YYYY-MM-DD).` });
+    parser.add_argument('--clear', { action: 'store_true', help: 'Remove all contents of the output directory before running.' });
     parser.add_argument('--log', { choices: [...LogLevels], type: (s: string) => s.toUpperCase(), default: 'INFO', help: 'Set logging level. Default: INFO.' });
     const args = parser.parse_args();
     args.size = args.size.map((s: string) => {

@@ -111,3 +111,10 @@ export function isBorderBlank(image: RawImageData): boolean {
     }
     return true;
 }
+
+/** Get version from the package.json file */
+export function versionFromPackageJson(): string {
+    const packageJsonString = fs.readFileSync('./package.json', { encoding: 'utf-8' });
+    const packageJson = JSON.parse(packageJsonString);
+    return packageJson.version;
+}

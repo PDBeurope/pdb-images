@@ -9,8 +9,8 @@ import fs from 'fs';
 import path from 'path';
 
 import { loadPngToRaw } from '../image/resize';
-import { Args, main, parseArguments } from '../main';
-import { isBorderBlank, isImageBlank } from './_utils';
+import { Args, VERSION, main, parseArguments } from '../main';
+import { isBorderBlank, isImageBlank, versionFromPackageJson } from './_utils';
 
 
 const TEST_TIMEOUT = 600_000; // ms
@@ -47,6 +47,13 @@ const EXPECTED_FILENAMES_AF_Q8Q3K0 = [
     'AF-Q8W3K0-F1-model_v4_plddt_side',
     'AF-Q8W3K0-F1-model_v4_plddt_top',
 ].sort();
+
+
+describe('version', () => {
+    it('version agrees with package.json', () => {
+        expect(VERSION).toEqual(versionFromPackageJson());
+    });
+});
 
 
 describe('isImageBlank', () => {

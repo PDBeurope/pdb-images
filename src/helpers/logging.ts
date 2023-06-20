@@ -13,6 +13,8 @@ import util from 'util';
 export const LogLevels = ['ALL', 'TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL', 'MARK', 'OFF'] as const;
 export type LogLevel = typeof LogLevels[number]
 
+const ROOT_DIRS = ['src', 'lib', 'build'];
+
 /** Set logging level and stream globally.
  * Use `configureLogging('off', 'stdout')` to disable all logs. */
 export function configureLogging(level: LogLevel, stream: 'stdout' | 'stderr') {
@@ -31,7 +33,7 @@ export function configureLogging(level: LogLevel, stream: 'stdout' | 'stderr') {
  * Always call like this: `const logger = getLogger(module)` */
 export function getLogger(module: NodeModule) {
     const modulePathParts = module.filename.split(path.sep);
-    const rootPathLength = Math.max(modulePathParts.lastIndexOf('build'), modulePathParts.lastIndexOf('src')) + 1;
+    const rootPathLength = Math.max(...ROOT_DIRS.map(dir => modulePathParts.lastIndexOf(dir))) + 1;
     const name = modulePathParts.slice(rootPathLength).join('/');
     const logger = log4js.getLogger(name);
     return logger;
