@@ -1,6 +1,6 @@
 {
   "name": "pdbe-images",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Generates images from mmCIF/BCIF files",
   "scripts": {
     "build": "tsc",

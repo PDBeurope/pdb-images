@@ -25,7 +25,7 @@ import { ImageGenerator, ImageType, ImageTypes, Mode, Modes } from './image-gene
 import { makeSaveFunction } from './save';
 
 
-export const VERSION = '0.1.0';
+export const VERSION = '1.0.0';
 setFSModule(fs); // this is needed to make `fetch` work in MolStar
 const logger = getLogger(module);
 
