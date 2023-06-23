@@ -58,4 +58,4 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ${{ secrets.REGISTRY_USERNAME }}/pdbe-images:latest
+          tags: ${{ secrets.REGISTRY_USERNAME }}/packages/pdbe-images:latest
