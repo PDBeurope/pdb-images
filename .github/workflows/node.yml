@@ -47,15 +47,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Login to GitLab
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ vars.GITLAB_REGISTRY }}
-          username: ${{ secrets.GITLAB_USERNAME }}
-          password: ${{ secrets.GITLAB_PASSWORD }}
-      
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          push: true
-          tags: ${{ secrets.GITLAB_USERNAME }}/pdbe-images:latest
+      - name: Login to GitLab Container Registry
+        run: echo ${{ secrets.REGISTRY_PASSWORD }} | docker login -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin ${{ vars.REGISTRY_URL }}
+
+      - name: Build and tag Docker image
+        run: docker build -t ${{ vars.REGISTRY_URL }}/${{ secrets.REGISTRY_USERNAME }}/packages/pdbe-images:latest .
+
+      - name: Push Docker image to GitLab Container Registry
+        run: docker push ${{ vars.REGISTRY_URL }}/${{ secrets.REGISTRY_USERNAME }}/packages/pdbe-images:latest
