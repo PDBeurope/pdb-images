@@ -138,6 +138,9 @@ If the output directory contains older files from previous runs, these will also
 
 By default, some image types are rendered in three views (front, side, top view) with axis arrows shown in the left bottom corner, while other image types are only rendered in front view without axis arrows. This can be changed by `--view` and `--no-axes` arguments.
 
+By default, the images are rendered in one resolution, 800x800. This can be changed by `--size` argument. If multiple sizes are provided (e.g. `--size 100x100 800x800 1600x1600`), only the largest size (measured by area) will be rendered and the others will be obtained by resizing (use `--render_each_size` to render each size separately). 
+If you use `--size` without any value, no PNG images will be rendered but captions (`.caption.json`) and state files (`.molj`) will still be created. 
+
 
 ## Run in Docker
 

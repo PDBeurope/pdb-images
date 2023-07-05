@@ -34,8 +34,10 @@ export function makeSaveFunction(plugin: HeadlessPluginContext, outDir: string, 
         fs.writeFileSync(path.join(outDir, `${spec.filename}.caption.json`), JSON.stringify(spec, undefined, 2), { encoding: 'utf8' });
         await stateSaver.save(path.join(outDir, `${spec.filename}.molj`));
 
+        const imageSizes = Array.from(args.size).sort((a, b) => b.width * b.height - a.width * a.height); // Sort from largest to smallest
         let fullsizeImage: RawImageData | undefined = undefined;
-        for (const size of args.size) {
+
+        for (const size of imageSizes) {
             let image: RawImageData;
             if (args.render_each_size || !fullsizeImage) {
                 // Render new image
