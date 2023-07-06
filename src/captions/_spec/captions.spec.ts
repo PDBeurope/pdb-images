@@ -44,7 +44,7 @@ describe('captions', () => {
             _extras: { preferred: false },
             _section: ['assembly', '1'],
             _view: 'side',
-            alt: 'PDB entry 1hda coloured by chemically distinct molecules, side view.',
+            alt: 'Hetero-tetrameric assembly 1 of PDB entry 1hda coloured by chemically distinct molecules, side view.',
             clean_description: 'Hetero-tetrameric assembly 1 of PDB entry 1hda coloured by chemically distinct molecules, side view. This structure contains: 2 copies of Hemoglobin alpha chain; 2 copies of Hemoglobin beta chain; 4 copies of PROTOPORPHYRIN IX CONTAINING FE; 1 copy of water.',
             description: "Hetero-tetrameric assembly 1 of PDB entry <span class='highlight'>1hda</span> coloured by chemically distinct molecules, side view. This structure contains: <ul class='image_legend_ul'><li class='image_legend_li'>2 copies of <span class='highlight'>Hemoglobin alpha chain</span>;</li> <li class='image_legend_li'>2 copies of <span class='highlight'>Hemoglobin beta chain</span>;</li> <li class='image_legend_li'>4 copies of <span class='highlight'>PROTOPORPHYRIN IX CONTAINING FE</span>;</li> <li class='image_legend_li'>1 copy of <span class='highlight'>water</span>.</li></ul>",
             filename: '1hda_assembly_1_chemically_distinct_molecules_side',
