@@ -58,7 +58,7 @@ export namespace Captions {
         const colorClause = coloring === 'chains' ? 'by chain' : 'by chemically distinct molecules';
         const modelClause = nModels > 1 ? `ensemble of ${nModels} models` : '';
         const description = new TextBuilder();
-        description.push(structurePhrase2(context), B_, entryId, _B, 'coloured', colorClause, ',', modelClause, ',', viewPhrase(view), '.');
+        description.push(structurePhrase(context), B_, entryId, _B, 'coloured', colorClause, ',', modelClause, ',', viewPhrase(view), '.');
         description.push('This structure contains', ':', UL_);
         for (const entityId in entityInfo) {
             const name = entityName(context, entityId);
@@ -70,7 +70,7 @@ export namespace Captions {
         const colorSuffix = coloring === 'chains' ? 'chain' : 'chemically_distinct_molecules';
         return {
             filename: `${entryId}_${assemblyPrefix}_${colorSuffix}${viewSuffix(view)}`,
-            alt: new TextBuilder().push(structurePhrase2(context, 'short'), entryId, 'coloured', colorClause, ',', modelClause, ',', viewPhrase(view), '.').buildPlainText(),
+            alt: new TextBuilder().push(structurePhrase(context, 'short'), entryId, 'coloured', colorClause, ',', modelClause, ',', viewPhrase(view), '.').buildPlainText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
             _entry_id: entryId,
@@ -137,7 +137,7 @@ export namespace Captions {
         const nCopies = entityInfo[entityId].chains.length;
         const name = entityName(context, entityId);
         const description = new TextBuilder();
-        description.push(structurePhrase2(context), B_, entryId, _B,
+        description.push(structurePhrase(context), B_, entryId, _B,
             'contains', countNoun(nCopies, 'cop|y|ies'), 'of', B_, name, _B, '.',
             capital(viewPhrase(view)), '.');
         return {
@@ -218,7 +218,7 @@ export namespace Captions {
         const assemblyPrefix = assemblyId ? `assembly-${assemblyId}` : 'entry';
         const nCopies = modresInfo.nInstances;
         const description = new TextBuilder();
-        description.push(structurePhrase2(context), B_, entryId, _B,
+        description.push(structurePhrase(context), B_, entryId, _B,
             'contains', countNoun(nCopies, 'instance|s'), 'of modified residue', B_, modresInfo.compId, `(${modresInfo.compName})`, _B, '.',
             capital(viewPhrase(view)), '.');
         return {
@@ -233,15 +233,9 @@ export namespace Captions {
         };
     }
 
-    // /** Return a phrase like 'The deposited structure' or 'Homo-tetrameric assembly 1' */
-    // function structurePhrase(context: StructureContext) {
-    //     if (context.assemblyId) return `${capital(homoHeteroHowManyMer(context.entityInfo))}ic assembly ${context.assemblyId}`;
-    //     else return 'The deposited structure';
-    // }
-
     /** Return a phrase like 'The deposited structure of PDB entry' or 'Homo-tetrameric assembly 1 of PDB entry' if `type` is 'verbose'.
      * Return a phrase like 'PDB entry' or 'Homo-tetrameric assembly 1 of PDB entry' if `type` is 'short'. */
-    function structurePhrase2(context: StructureContext, type: 'verbose' | 'short' = 'verbose') {
+    function structurePhrase(context: StructureContext, type: 'verbose' | 'short' = 'verbose') {
         if (context.assemblyId) {
             return `${capital(homoHeteroHowManyMer(context.entityInfo))}ic assembly ${context.assemblyId} of PDB entry`;
         } else if (type === 'verbose') {

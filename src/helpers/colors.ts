@@ -192,7 +192,7 @@ namespace SisterColors {
         const [hue0, sat0, lum0] = PslColors.colorToPsl(base);
         const hue = remap(magicNumber2(i), hue0, params.hueRadius);
         const sat = remap(magicNumber3(i), sat0, params.satRadius, params.satMin, params.satMax);
-        const lum = remap(magicNumber(i), lum0, params.lumRadius, params.lumMin, params.lumMax);
+        const lum = remap((1 - magicNumber(i)) % 1, lum0, params.lumRadius, params.lumMin, params.lumMax);
         return PslColors.pslToColor(PslColors.PSL(hue, sat, lum));
     }
 
@@ -213,11 +213,19 @@ namespace SisterColors {
      * 0 maps to center, [0, 0.5) map to [center, center+radius), [0.5, 1) map to [center-radius, center).
      * If min and/or max are given, shift the codomain to fully fit in [min, max), but 0 must still map to center. */
     function remap(value: number, center: number, radius: number, min?: number, max?: number) {
-        const start = center - radius;
-        if (min !== undefined) Math.max(min, start);
-        if (max !== undefined) Math.min(max - 2 * radius, start);
-        const valueShift = (center - start) / (2 * radius);
-        return start + ((value + valueShift) % 1) * 2 * radius;
+        let start = center - radius;
+        const range = (min !== undefined && max !== undefined) ? Math.min(2 * radius, max - min) : 2 * radius;
+        if (min !== undefined) {
+            start = Math.max(start, min);
+            center = Math.max(center, min);
+        }
+        if (max !== undefined) {
+            start = Math.min(start, max - range);
+            center = Math.min(center, max - 0.001 * range);
+        }
+
+        const valueShift = (range > 0) ? (center - start) / range : 0;
+        return start + ((value + valueShift) % 1) * range;
     }
 
     /** Golden ratio */
