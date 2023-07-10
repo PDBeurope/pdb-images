@@ -63,7 +63,9 @@ export namespace Captions {
         for (const entityId in entityInfo) {
             const name = entityName(context, entityId);
             const nCopies = entityInfo[entityId].chains.length;
-            description.push(LI_, countNoun(nCopies, 'cop|y|ies'), 'of', B_, name, _B, ';', _LI);
+            if (nCopies > 0) {
+                description.push(LI_, countNoun(nCopies, 'cop|y|ies'), 'of', B_, name, _B, ';', _LI);
+            }
         }
         description.push('.', _UL);
         const assemblyPrefix = assemblyId ? `assembly_${assemblyId}` : 'deposited';
@@ -261,7 +263,7 @@ export namespace Captions {
     function homoHeteroHowManyMer(entityInfo: EntityInfo): string {
         let nTypes = 0;
         for (const info of Object.values(entityInfo)) {
-            if (info.type === 'polymer') {
+            if (info.type === 'polymer' && info.chains.length > 0) {
                 nTypes += 1;
             }
         }
