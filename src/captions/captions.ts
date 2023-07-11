@@ -259,7 +259,7 @@ export namespace Captions {
         else return '';
     }
 
-    /** Return a word like 'homo-tetramer' or 'hetero-20-mer', based on the number of polymeric chains in a structure. */
+    /** Return a word like 'homo tetramer' or 'hetero 20-mer', based on the number of polymeric chains in a structure. */
     function homoHeteroHowManyMer(entityInfo: EntityInfo): string {
         let nTypes = 0;
         for (const info of Object.values(entityInfo)) {
@@ -271,9 +271,9 @@ export namespace Captions {
         if (suffix === 'monomer' || nTypes === 0) {
             return suffix; // nTypes can be zero, some entries don't contain polymer (1aga)
         } else if (nTypes === 1) {
-            return 'homo-' + suffix;
+            return 'homo ' + suffix;
         } else {
-            return 'hetero-' + suffix;
+            return 'hetero ' + suffix;
         }
     }
 
