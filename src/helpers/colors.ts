@@ -10,6 +10,7 @@ import { ElementSymbolColors } from 'molstar/lib/commonjs/mol-theme/color/elemen
 import { Color, ColorListEntry } from 'molstar/lib/commonjs/mol-util/color/color';
 import { ColorLists } from 'molstar/lib/commonjs/mol-util/color/lists';
 import { Hcl } from 'molstar/lib/commonjs/mol-util/color/spaces/hcl';
+import { getElementsInChains, getEntityInfo } from './structure-info';
 
 
 const SET1 = colorArray(ColorLists['set-1'].list.slice(0, 8)); // Discard the last color (gray)
@@ -60,13 +61,27 @@ export function assignEntityAndUnitColors(structure: Structure) {
 
     structure = structure.parent ?? structure;
 
+    const entityInfo = getEntityInfo(structure);
     const entities = structure.model.entities;
-    const entityColors = [];
+    const entityColors: Color[] = [];
     const entityIndex: { [entityId: string]: number } = {};
     for (let i = 0; i < entities.data._rowCount; i++) {
         const id = entities.data.id.value(i);
         const typ = entities.data.type.value(i);
-        const color = typ === 'water' ? waterColor : typ === 'non-polymer' ? ligandColors.next().value! : polymerColors.next().value!;
+        const elementSymbols = getElementsInChains(structure, entityInfo[id]?.chains ?? []);
+        let color: Color | undefined;
+        if (typ === 'water') {
+            color = waterColor;
+        }
+        if (!color && elementSymbols.length === 1) {
+            color = ElementSymbolColors[elementSymbols[0] as keyof ElementSymbolColors]; // might be undefined!
+        }
+        if (!color && typ === 'non-polymer') {
+            color = ligandColors.next().value!;
+        }
+        if (!color) {
+            color = polymerColors.next().value!;
+        }
         entityColors.push(color);
         entityIndex[id] = i;
     }
