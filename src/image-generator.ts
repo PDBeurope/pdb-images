@@ -153,10 +153,11 @@ export class ImageGenerator {
             if (mode === 'pdb') {
                 if (this.shouldRender('entry')) {
                     if (nModels === 1) {
-                        await visuals.applyToAll(vis => vis.setColorByChainInstance({ colorList: colors.units, entityColorList: colors.entities }));
+                        await visuals.applyToAll(vis => vis.setColorByChainInstance({ colorList: colors.units, entityColorList: colors.entities, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') })); 
+                        // TODO remove ignoreElementsColors bit once element colors can be applied with carbonColor: unit-index (everywhere in this file)
                         await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'chains', view }));
 
-                        await visuals.applyToAll(vis => vis.setColorByEntity({ colorList: colors.entities }));
+                        await visuals.applyToAll(vis => vis.setColorByEntity({ colorList: colors.entities, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') }));
                         await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'entities', view }));
                     } else {
                         model.setCollapsed(ALLOW_COLLAPSED_NODES);
@@ -171,10 +172,10 @@ export class ImageGenerator {
                                 allVisuals.push(...Object.values(otherVisuals.nodes));
                             }
                             this.zoomAll(); // zoom whole ensemble (needed e.g. for 3gaw)
-                            for (const vis of allVisuals) await vis?.setColorByChainInstance();
+                            for (const vis of allVisuals) await vis?.setColorByChainInstance({ ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') });
                             await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'chains', view }));
 
-                            for (const vis of allVisuals) await vis?.setColorByEntity();
+                            for (const vis of allVisuals) await vis?.setColorByEntity({ ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') });
                             await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'entities', view }));
                         });
                         this.zoomAll(); // zoom back to model 1
@@ -241,10 +242,10 @@ export class ImageGenerator {
             const visuals = await components.makeStandardVisuals();
             this.orientAndZoomAll(structure);
             if (this.shouldRender('assembly')) {
-                await visuals.applyToAll(vis => vis.setColorByChainInstance({ colorList: colors.units, entityColorList: colors.entities }));
+                await visuals.applyToAll(vis => vis.setColorByChainInstance({ colorList: colors.units, entityColorList: colors.entities, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') }));
                 await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'chains', view }));
 
-                await visuals.applyToAll(vis => vis.setColorByEntity({ colorList: colors.entities }));
+                await visuals.applyToAll(vis => vis.setColorByEntity({ colorList: colors.entities, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') }));
                 await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'entities', view }));
             }
 
@@ -374,7 +375,7 @@ export class ImageGenerator {
                                 const components = await domainStruct.makeStandardComponents(ALLOW_COLLAPSED_NODES);
                                 const visuals = await components.makeStandardVisuals();
                                 const color = colorsIterator.next().value!; // same color for all visual of the domain
-                                await visuals.applyToAll(vis => vis.setColorUniform(color));
+                                await visuals.applyToAll(vis => vis.setColorUniform(color, { ignoreElementColors: true }));
                             }
                             await this.saveViews('front', view => Captions.forDomain({ ...context, source, familyId, familyName, entityId, chainId, authChainId, totalCopies, shownCopies, outOfRangeCopies, view }));
                         });
