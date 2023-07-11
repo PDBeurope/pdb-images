@@ -55,9 +55,9 @@ const ALLOW_LOWEST_QUALITY = false;
 
 export type StructureObjSelector = StateObjectSelector<PluginStateObject.Molecule.Structure, any>
 
-type StandardComponentType = 'polymer' | 'ligand' | 'branched' | 'ion'
+type StandardComponentType = 'polymer' | 'branched' | 'ligand' | 'ion' | 'nonstandard'
 type LigEnvComponentType = 'ligand' | 'environment' | 'wideEnvironment' | 'linkage'
-type StandardVisualType = 'polymerCartoon' | 'ligandSticks' | 'branchedCarbohydrate' | 'branchedSticks' | 'ionSticks'
+type StandardVisualType = 'polymerCartoon' | 'branchedCarbohydrate' | 'branchedSticks' | 'ligandSticks' | 'ionSticks' | 'nonstandardSticks'
 type LigEnvVisualType = 'ligandSticks' | 'environmentSticks' | 'linkageSticks' | 'wideEnvironmentCartoon'
 
 type StructureParams = ParamDefinition.Values<ReturnType<typeof RootStructureDefinition.getParams>>
@@ -209,14 +209,15 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
             return undefined;
         }
     }
-    /** Create components "polymer", "branched", "ligand", "ion" for a structure */
+    /** Create components "polymer", "branched", "ligand", "ion", "nonstandard" for a structure */
     async makeStandardComponents(collapsed: boolean = false): Promise<StandardComponents> {
         const options: Partial<StateTransform.Options> = { state: { isCollapsed: collapsed } };
         const polymer = await this.makeComponent({ type: { name: 'static', params: 'polymer' } }, options, 'polymer');
-        const ligand = await this.makeComponent({ type: { name: 'static', params: 'ligand' } }, options, 'ligand');
         const branched = await this.makeComponent({ type: { name: 'static', params: 'branched' } }, options, 'branched');
+        const ligand = await this.makeComponent({ type: { name: 'static', params: 'ligand' } }, options, 'ligand');
         const ion = await this.makeComponent({ type: { name: 'static', params: 'ion' } }, options, 'ion');
-        return new StandardComponents({ polymer, branched, ligand, ion });
+        const nonstandard = await this.makeComponent({ type: { name: 'static', params: 'non-standard' } }, options, 'nonstandard');
+        return new StandardComponents({ polymer, branched, ligand, ion, nonstandard });
     }
     /** Create components "ligand" and "environment" for a ligand */
     async makeLigEnvComponents(ligandInfo: LigandInfo, collapsed: boolean = false): Promise<LigandEnvironmentComponents> {
@@ -541,12 +542,14 @@ export class StandardComponents extends NodeCollection<StandardComponentType, St
         await branchedSticks?.setOpacity(BRANCHED_STICKS_OPACITY);
         const ligandSticks = await this.nodes.ligand?.makeBallsAndSticks(['ligandSticks']);
         const ionSticks = await this.nodes.ion?.makeBallsAndSticks(['ionSticks']);
+        const nonstandardSticks = await this.nodes.nonstandard?.makeBallsAndSticks(['nonstandardSticks']);
         return new StandardVisuals({
             polymerCartoon,
             branchedCarbohydrate,
             branchedSticks,
             ligandSticks,
             ionSticks,
+            nonstandardSticks,
         });
     }
 }
