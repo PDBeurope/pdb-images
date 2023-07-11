@@ -140,7 +140,7 @@ export class ImageGenerator {
             const group = await structure.makeGroup({ label: 'Whole Entry' }, { state: { isGhost: ALLOW_GHOST_NODES } });
             const components = await group.makeStandardComponents(ALLOW_COLLAPSED_NODES);
             const visuals = await components.makeStandardVisuals();
-            this.orientAndZoom(structure);
+            this.orientAndZoomAll(structure);
             const nModels = traj.data?.frameCount ?? 1;
             logger.info('Number of models:', nModels);
             const context = {
@@ -170,12 +170,14 @@ export class ImageGenerator {
                                 otherModel.setCollapsed(ALLOW_COLLAPSED_NODES);
                                 allVisuals.push(...Object.values(otherVisuals.nodes));
                             }
+                            this.zoomAll(); // zoom whole ensemble (needed e.g. for 3gaw)
                             for (const vis of allVisuals) await vis?.setColorByChainInstance();
                             await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'chains', view }));
 
                             for (const vis of allVisuals) await vis?.setColorByEntity();
                             await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'entities', view }));
                         });
+                        this.zoomAll(); // zoom back to model 1
                         model.setCollapsed(false);
                     }
                 }
@@ -237,7 +239,7 @@ export class ImageGenerator {
             const group = await structure.makeGroup({ label: 'Whole Assembly' }, { state: { isGhost: ALLOW_GHOST_NODES } });
             const components = await group.makeStandardComponents(ALLOW_COLLAPSED_NODES);
             const visuals = await components.makeStandardVisuals();
-            this.orientAndZoom(structure);
+            this.orientAndZoomAll(structure);
             if (this.shouldRender('assembly')) {
                 await visuals.applyToAll(vis => vis.setColorByChainInstance({ colorList: colors.units, entityColorList: colors.entities }));
                 await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'chains', view }));
@@ -310,7 +312,7 @@ export class ImageGenerator {
         for (const info of Object.values(ligandInfo)) {
             await using(structure.makeLigEnvComponents(info, ALLOW_COLLAPSED_NODES), async components => {
                 const visuals = await components.makeLigEnvVisuals(entityColors);
-                this.orientAndZoom(components.nodes.ligand!);
+                this.orientAndZoomAll(components.nodes.ligand!);
                 await this.saveViews('front', view => Captions.forLigandEnvironment({ ...context, view, ligandInfo: info }));
             });
         }
@@ -351,7 +353,7 @@ export class ImageGenerator {
                 const components = await chain.makeStandardComponents(ALLOW_COLLAPSED_NODES);
                 const visuals = await components.makeStandardVisuals();
                 chain.setCollapsed(ALLOW_COLLAPSED_NODES);
-                this.orientAndZoom(chain);
+                this.orientAndZoomAll(chain);
                 await visuals.applyToAll(vis => vis.setFaded());
 
                 for (const [source, sourceDomains] of Object.entries(chainDomains)) {
@@ -414,10 +416,15 @@ export class ImageGenerator {
         });
     }
 
-    /** Set rotation matrix to align PCA axes of `structure` with screen axes and zoom whole visible scene. */
-    private orientAndZoom(structure: StructureNode, referenceRotation?: Mat3) {
-        this.rotation = structureLayingTransform([structure.data!], referenceRotation).rotation;
+    /** Zoom whole visible scene, without changing camera rotation. */
+    private zoomAll() {
         zoomAll(this.plugin);
+    }
+
+    /** Set rotation matrix to align PCA axes of `structure` with screen axes and zoom whole visible scene. */
+    private orientAndZoomAll(structure: StructureNode, referenceRotation?: Mat3) {
+        this.rotation = structureLayingTransform([structure.data!], referenceRotation).rotation;
+        this.zoomAll();
     }
 
     /** Run saveFunction on the current state.
