@@ -34,13 +34,20 @@ const LIGAND_ENVIRONMENT_RADIUS = 5;
 /** Number of connected residues to add to ligand environment to create "wider environment" and show as cartoon in ligand images */
 const LIGAND_WIDE_ENVIRONMENT_LAYERS = 2;
 /** Opacity for ball-and-stick visual of carbohydrates */
-const BRANCHED_STICKS_OPACITY = 0.5;
+const BRANCHED_STICKS_OPACITY = 0.3;
 
 const DEFAULT_HIGHLIGHT_COLOR = Color.fromRgb(40, 100, 255);
 const FADED_COLOR = Color.fromRgb(120, 120, 120);
-const FADED_OPACITY = 0.5;
 const FADED_SIZE_SCALE = 0.9;
 const EXTRA_FADED_SIZE_SCALE = 0.4;
+/** Level of opacity used for domain and ligand images */
+const FADED_OPACITY = 0.5;
+/** Parameter for structure-size-dependent opacity, used for entity images */
+const SMART_FADED_OPACITY_PARAMS = {
+    targetOpacity: 0.9, // ~ desired opacity of the structure as a whole
+    baseOpacity: 0.05, // minimum opacity (for infinitely large structure)
+    n0: 100, // artificial offset of residue count
+}; // This will result in opacity ~0.4 for tiny structures, ~0.05 for huge structures
 
 const STICK_SIZE_FACTOR = 0.25;
 const HIGHTLIGHT_STICK_SIZE_FACTOR = 0.75;
@@ -476,14 +483,18 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
         });
     }
 
+
     /** Make this visual "faded", i.e. set grey color, lower opacity, and thinner.
-     * If `level` is 2, make even more faded. */
-    setFaded(level: 1 | 2 = 1): Promise<void> {
-        const sizeScale = level === 1 ? FADED_SIZE_SCALE : EXTRA_FADED_SIZE_SCALE;
+     * Level 'normal' is basic fading with constant opacity;
+     * level 'extra' is stronger fading with thinner cartoon (e.g. for wider ligand environment);
+     * level 'size-dependent' sets opacity based on size of the whole structure (makes larger structures more transparent). */
+    setFaded(level: 'normal' | 'size-dependent' | 'extra'): Promise<void> {
+        const opacity = level === 'size-dependent' ? smartFadedOpacity(this.getStructure()?.root) : FADED_OPACITY;
+        const sizeScale = level === 'extra' ? EXTRA_FADED_SIZE_SCALE : FADED_SIZE_SCALE;
         return this.updateVisual((old, tags) => ({
             type: {
                 params: {
-                    alpha: FADED_OPACITY * (tags.includes('branchedSticks') ? BRANCHED_STICKS_OPACITY : 1),
+                    alpha: opacity * (tags.includes('branchedSticks') ? BRANCHED_STICKS_OPACITY : 1),
                 }
             },
             colorTheme: { name: 'uniform', params: { value: FADED_COLOR } },
@@ -507,6 +518,13 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
             },
             colorTheme: { name: 'uniform', params: { value: color } }
         }));
+    }
+
+    /** Return structure from which this visual was created */
+    private getStructure(): Structure | undefined {
+        const data = this.node.data;
+        const structure = (data as any).sourceData as Structure | undefined;
+        return (structure instanceof Structure) ? structure : undefined;
     }
 
 }
@@ -565,7 +583,7 @@ export class LigandEnvironmentComponents extends NodeCollection<LigEnvComponentT
         const linkageSticks = await this.nodes.linkage?.makeBallsAndSticks(['linkageSticks']);
         await linkageSticks?.setThinBallsAndSticks(ENVIRONMENT_STICK_SIZE_FACTOR);
         const wideEnvironmentCartoon = await this.nodes.wideEnvironment?.makeCartoon(['wideEnvironmentCartoon']);
-        await wideEnvironmentCartoon?.setFaded(2);
+        await wideEnvironmentCartoon?.setFaded('extra');
 
         return new LigandEnvironmentVisuals({
             ligandSticks,
@@ -603,6 +621,19 @@ function paletteParam(colorList?: Color[]) {
         name: 'colors',
         params: { list: { kind: 'set', colors: colorList ?? DEFAULT_COLORS } }
     };
+}
+
+/** Calculate optimal opacity of a visual based on structure size. */
+function smartFadedOpacity(structure: Structure | undefined, params: typeof SMART_FADED_OPACITY_PARAMS = SMART_FADED_OPACITY_PARAMS) {
+    const { targetOpacity, baseOpacity, n0 } = params;
+    const nRes = structure?.polymerResidueCount ?? 0;
+    // The formula is derived from Lamber-Beer law:
+    // -log(1 - targetOpacity) = -log(I/I0) = A = epsilon c l,
+    // assuming that optical path length l is proportional to cube root of residue count.
+    // This is of course very simplified.
+    // Artificial parameters `n0` and `baseOpacity` are to avoid too high/low opacity for tiny/huge structures.
+    const theoreticalOpacity = 1 - (1 - targetOpacity) ** (1 / (n0 + nRes) ** (1 / 3));
+    return baseOpacity + theoreticalOpacity;
 }
 
 /** Apply a function to node or node collection and dispose (remove from the tree) it afterwards.

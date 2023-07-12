@@ -15,7 +15,7 @@ import { DomainRecord, ModifiedResidueRecord, PDBeAPI, PDBeAPIReturn, SiftsSourc
 import { Captions, ImageSpec } from './captions/captions';
 import { adjustCamera, changeCameraRotation, combineRotations, zoomAll } from './helpers/camera';
 import { ANNOTATION_COLORS, ENTITY_COLORS, MODRES_COLORS, assignEntityAndUnitColors, cycleIterator } from './helpers/colors';
-import { SafePromise, getModifiedResidueInfo, pickObjectKeys, safePromise } from './helpers/helpers';
+import { SafePromise, getModifiedResidueInfo, safePromise } from './helpers/helpers';
 import { getLogger, oneLine } from './helpers/logging';
 import { countDomains, selectBestChainForDomains, sortDomainsByChain, sortDomainsByEntity } from './helpers/sifts';
 import { countChainResidues, getChainInfo, getEntityInfo, getLigandInfo } from './helpers/structure-info';
@@ -153,7 +153,7 @@ export class ImageGenerator {
             if (mode === 'pdb') {
                 if (this.shouldRender('entry')) {
                     if (nModels === 1) {
-                        await visuals.applyToAll(vis => vis.setColorByChainInstance({ colorList: colors.units, entityColorList: colors.entities, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') })); 
+                        await visuals.applyToAll(vis => vis.setColorByChainInstance({ colorList: colors.units, entityColorList: colors.entities, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') }));
                         // TODO remove ignoreElementsColors bit once element colors can be applied with carbonColor: unit-index (everywhere in this file)
                         await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'chains', view }));
 
@@ -198,7 +198,7 @@ export class ImageGenerator {
                     }
                 }
 
-                await visuals.applyToAll(vis => vis.setFaded());
+                await visuals.applyToAll(vis => vis.setFaded('size-dependent'));
 
                 if (this.failedEntities.length > 0) {
                     logger.info(`Retrying previously failed entities: ${this.failedEntities}`);
@@ -252,12 +252,12 @@ export class ImageGenerator {
             if (isPreferredAssembly && this.shouldRender('entity') || this.failedEntities.length > 0) {
                 if (this.failedEntities.length > 0) logger.info(`Retrying previously failed entities: ${this.failedEntities}`);
                 const todoEntities = isPreferredAssembly ? undefined : this.failedEntities; // undefined means all
-                await visuals.applyToAll(vis => vis.setFaded());
+                await visuals.applyToAll(vis => vis.setFaded('size-dependent'));
                 const summary = await this.processEntities(structure, context, colors.entities, todoEntities);
                 this.failedEntities = summary.failedEntities;
             }
             if (isPreferredAssembly && this.shouldRender('modres') && promises.modifiedResidues) {
-                await visuals.applyToAll(vis => vis.setFaded());
+                await visuals.applyToAll(vis => vis.setFaded('size-dependent'));
                 await this.processModifiedResidues(structure, await promises.modifiedResidues.result(), context);
             }
         });
@@ -355,7 +355,7 @@ export class ImageGenerator {
                 const visuals = await components.makeStandardVisuals();
                 chain.setCollapsed(ALLOW_COLLAPSED_NODES);
                 this.orientAndZoomAll(chain);
-                await visuals.applyToAll(vis => vis.setFaded());
+                await visuals.applyToAll(vis => vis.setFaded('normal'));
 
                 for (const [source, sourceDomains] of Object.entries(chainDomains)) {
                     for (const [familyId, familyDomains] of Object.entries(sourceDomains)) {
