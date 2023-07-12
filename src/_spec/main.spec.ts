@@ -177,7 +177,7 @@ describe('main', () => {
         };
         await main(args);
 
-        let expectedFiles = ['1ad5.json', '1ad5_filelist'];
+        let expectedFiles = ['1ad5.json', '1ad5_filelist', '1ad5_api_data.json'];
         for (const filename of EXPECTED_FILENAMES_1AD5) {
             expectedFiles.push(filename + '.caption.json', filename + '.molj', filename + '_image-100x100.png', filename + '_image-200x200.png');
         }
@@ -232,7 +232,7 @@ describe('main', () => {
         };
         await main(args);
 
-        let expectedFiles = ['AF-Q8W3K0-F1-model_v4.json', 'AF-Q8W3K0-F1-model_v4_filelist'];
+        let expectedFiles = ['AF-Q8W3K0-F1-model_v4.json', 'AF-Q8W3K0-F1-model_v4_filelist', 'AF-Q8W3K0-F1-model_v4_api_data.json'];
         for (const filename of EXPECTED_FILENAMES_AF_Q8Q3K0) {
             expectedFiles.push(filename + '.caption.json', filename + '.molj', filename + '_image-100x100.png', filename + '_image-200x200.png');
         }

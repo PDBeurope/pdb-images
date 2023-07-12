@@ -16,8 +16,8 @@ describe('api', () => {
         expect(NO_API.pdbeStructureQualityReportPrefix()).toBeUndefined();
         expect(await NO_API.getEntityNames('1hda')).toEqual({} as PDBeAPIReturn<'getEntityNames'>);
         expect(await NO_API.getAssemblies('1hda')).toEqual([] as PDBeAPIReturn<'getAssemblies'>);
-        expect(await NO_API.getPreferredAssembly('1hda'))
-            .toEqual({ assemblyId: '1', form: '?', preferred: true, name: '?' } as PDBeAPIReturn<'getPreferredAssembly'>);
+        expect(await NO_API.getPreferredAssemblyId('1hda'))
+            .toEqual(undefined as PDBeAPIReturn<'getPreferredAssemblyId'>);
         expect(await NO_API.getModifiedResidue('1hda')).toEqual([] as PDBeAPIReturn<'getModifiedResidue'>);
         expect(await NO_API.getSiftsMappings('1hda'))
             .toEqual({ CATH: {}, Pfam: {}, Rfam: {}, SCOP: {} } as PDBeAPIReturn<'getSiftsMappings'>);
@@ -46,17 +46,10 @@ describe('api', () => {
             { assemblyId: '2', form: 'homo', name: 'tetramer', preferred: true },
         ] as PDBeAPIReturn<'getAssemblies'>);
     });
-    // TODO The API must be broken!!!
-    // Preferred assembly for 1tqn shouldn't be tetramer!!!
-    // Report and possibly fix sample testing data!
 
-    it('getPreferredAssembly', async () => {
-        expect(await API.getPreferredAssembly('1hda')).toEqual({
-            assemblyId: '1', form: 'hetero', name: 'tetramer', preferred: true
-        } as PDBeAPIReturn<'getPreferredAssembly'>);
-        expect(await API.getPreferredAssembly('1tqn')).toEqual({
-            assemblyId: '2', form: 'homo', name: 'tetramer', preferred: true
-        } as PDBeAPIReturn<'getPreferredAssembly'>);
+    it('getPreferredAssemblyId', async () => {
+        expect(await API.getPreferredAssemblyId('1hda')).toEqual('1' as PDBeAPIReturn<'getPreferredAssemblyId'>);
+        expect(await API.getPreferredAssemblyId('1tqn')).toEqual('2' as PDBeAPIReturn<'getPreferredAssemblyId'>);
     });
 
     it('getModifiedResidue', async () => {

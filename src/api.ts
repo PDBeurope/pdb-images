@@ -116,11 +116,11 @@ export class PDBeAPI {
         return assemblies;
     }
 
-    /** Get the preferred assembly for a PDB entry.
-     * If initialized with `offline`, return assembly with ID '1' and all fields filled with '?'. */
-    async getPreferredAssembly(pdbId: string): Promise<AssemblyRecord | undefined> {
+    /** Get the preferred assembly ID for a PDB entry.
+     * If initialized with `offline`, return undefined. */
+    async getPreferredAssemblyId(pdbId: string): Promise<string | undefined> {
         // The preferred assembly is not always 1 (e.g. in 1l7c the pref. ass. is 4)
-        if (this.offline) return { assemblyId: '1', form: '?', preferred: true, name: '?' };
+        if (this.offline) return undefined;
         const assemblies = await this.getAssemblies(pdbId);
         if (assemblies.length === 0) {
             return undefined;
@@ -128,12 +128,12 @@ export class PDBeAPI {
         const preferred = assemblies.filter(ass => ass.preferred);
         if (preferred.length === 0) {
             logger.warn(`PDB entry ${pdbId} has no preferred assembly. Using the first assembly instead.`);
-            return assemblies[0];
+            return assemblies[0].assemblyId;
         }
         if (preferred.length > 1) {
             logger.warn(`PDB entry ${pdbId} has more than one preferred assembly. Only the first one will be used.`);
         }
-        return preferred[0];
+        return preferred[0].assemblyId;
     }
 
     /** Get list of instances of modified residues within a PDB entry. */
@@ -218,7 +218,7 @@ export class PDBeAPI {
     }
 }
 
-export type PDBeAPIMethod = 'pdbeStructureQualityReportPrefix' | 'getEntityNames' | 'getAssemblies' | 'getPreferredAssembly' | 'getModifiedResidue' | 'getSiftsMappings'
+export type PDBeAPIMethod = 'pdbeStructureQualityReportPrefix' | 'getEntityNames' | 'getAssemblies' | 'getPreferredAssemblyId' | 'getModifiedResidue' | 'getSiftsMappings'
 export type PDBeAPIReturn<key extends PDBeAPIMethod> = Awaited<ReturnType<InstanceType<typeof PDBeAPI>[key]>>
 
 

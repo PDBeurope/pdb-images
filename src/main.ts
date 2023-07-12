@@ -121,7 +121,7 @@ export async function main(args: Args) {
         try {
             const saveFunction = makeSaveFunction(plugin, args.output_dir, args, publicUrl);
             const imageGenerator = new ImageGenerator(plugin, saveFunction, api, args.type, args.view);
-            await imageGenerator.processAll(args.entry_id, runtimeUrl, args.mode);
+            await imageGenerator.processAll(args.entry_id, runtimeUrl, args.mode, path.join(args.output_dir, `${args.entry_id}_api_data.json`));
             if (tmpStructureFile) fs.rmSync(tmpStructureFile, { force: true });
         } finally {
             plugin.dispose();
