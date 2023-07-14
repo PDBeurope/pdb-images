@@ -6,6 +6,7 @@ import { Args, ImageType, ImageTypesForModes } from './args';
 import { getLogger } from './helpers/logging';
 import { selectBestChainForDomains, sortDomainsByEntity } from './helpers/sifts';
 import * as Paths from './paths';
+import { safePromise } from './helpers/helpers';
 
 
 const logger = getLogger(module);
@@ -25,14 +26,15 @@ async function getExpectedFilenameStems(args: Pick<Args, 'entry_id' | 'mode' | '
 
 async function getExpectedFilenameStemsForPdbMode(entryId: string, types: Set<ImageType>, view: 'front' | 'all' | 'auto', api: PDBeAPI): Promise<string[]> {
     const result: string[] = [];
-    const data = await promiseAllObj({
-        assemblies: api.getAssemblies(entryId),
-        entities: api.getEntityTypes(entryId),
-        domains: api.getSiftsMappings(entryId),
-        chainCoverages: api.getChainCoverageRatios(entryId),
-        modresRecords: api.getModifiedResidue(entryId),
-        methods: api.getExperimentalMethods(entryId),
-    });
+    const promises = {
+        assemblies: safePromise(() => api.getAssemblies(entryId)),
+        entities: safePromise(() => api.getEntityTypes(entryId)),
+        domains: safePromise(() => api.getSiftsMappings(entryId)),
+        chainCoverages: safePromise(() => api.getChainCoverageRatios(entryId)),
+        modresRecords: safePromise(() => api.getModifiedResidue(entryId)),
+        methods: safePromise(() => api.getExperimentalMethods(entryId)),
+    }; // run all API calls in parallel
+
     if (types.has('entry')) {
         if (view === 'front') {
             result.push(
@@ -51,7 +53,8 @@ async function getExpectedFilenameStemsForPdbMode(entryId: string, types: Set<Im
         }
     }
     if (types.has('assembly')) {
-        for (const assembly of data.assemblies) {
+        const assemblies = await promises.assemblies.result();
+        for (const assembly of assemblies) {
             const assId = assembly.assemblyId;
             if (view === 'front') {
                 result.push(
@@ -71,8 +74,9 @@ async function getExpectedFilenameStemsForPdbMode(entryId: string, types: Set<Im
         }
     }
     if (types.has('entity')) {
-        for (const entityId in data.entities) {
-            const { type, compId } = data.entities[entityId];
+        const entities = await promises.entities.result();
+        for (const entityId in entities) {
+            const { type, compId } = entities[entityId];
             if (type !== 'water') {
                 if (view === 'front') {
                     result.push(
@@ -89,8 +93,10 @@ async function getExpectedFilenameStemsForPdbMode(entryId: string, types: Set<Im
         }
     }
     if (types.has('domain')) {
-        const allDomains = sortDomainsByEntity(data.domains);
-        const selectedDomains = selectBestChainForDomains(allDomains, data.chainCoverages);
+        const domains = await promises.domains.result();
+        const chainCoverages = await promises.chainCoverages.result();
+        const allDomains = sortDomainsByEntity(domains);
+        const selectedDomains = selectBestChainForDomains(allDomains, chainCoverages);
         for (const [source, sourceDoms] of Object.entries(selectedDomains)) {
             for (const [familyId, familyDoms] of Object.entries(sourceDoms)) {
                 for (const [entityId, entityDoms] of Object.entries(familyDoms)) {
@@ -111,8 +117,9 @@ async function getExpectedFilenameStemsForPdbMode(entryId: string, types: Set<Im
         }
     }
     if (types.has('ligand')) {
-        for (const entityId in data.entities) {
-            const { type, compId } = data.entities[entityId];
+        const entities = await promises.entities.result();
+        for (const entityId in entities) {
+            const { type, compId } = entities[entityId];
             if (type === 'bound') {
                 if (view !== 'all') {
                     result.push(
@@ -129,7 +136,9 @@ async function getExpectedFilenameStemsForPdbMode(entryId: string, types: Set<Im
         }
     }
     if (types.has('modres')) {
-        const modresIds = Array.from(new Set(data.modresRecords.map(m => m.compoundId))).sort();
+        console.log('modres');
+        const modresRecords = await promises.modresRecords.result();
+        const modresIds = Array.from(new Set(modresRecords.map(m => m.compoundId))).sort();
         for (const modresId of modresIds) {
             if (view === 'front') {
                 result.push(
@@ -145,7 +154,8 @@ async function getExpectedFilenameStemsForPdbMode(entryId: string, types: Set<Im
         }
     }
     if (types.has('bfactor')) {
-        const isFromDiffraction = data.methods.some(method => method.toLowerCase().includes('diffraction'));
+        const methods = await promises.methods.result();
+        const isFromDiffraction = methods.some(method => method.toLowerCase().includes('diffraction'));
         if (isFromDiffraction) {
             if (view !== 'all') {
                 result.push(
