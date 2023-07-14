@@ -6,7 +6,7 @@
 
 import fs from 'fs';
 import { getLogger } from './helpers/logging';
-import { SafePromise, safePromise } from './helpers/helpers';
+import { safePromise } from './helpers/helpers';
 
 
 const FETCH_RETRY_N_TRIES = 5;
@@ -268,7 +268,9 @@ export class PDBeAPI {
     private async getWithoutCache(url: string): Promise<any> {
         if (this.offline) return {};
         if (url.startsWith('file://')) {
-            const text = fs.readFileSync(url.substring('file://'.length), { encoding: 'utf8' });
+            const filePath = url.substring('file://'.length);
+            if (!fs.existsSync(filePath)) return {};
+            const text = fs.readFileSync(filePath, { encoding: 'utf8' });
             return JSON.parse(text);
         } else {
             const response = this.retry ? await PDBeAPI.fetchWithRetry(url, FETCH_RETRY_N_TRIES, FETCH_RETRY_MAX_WAIT_SECONDS) : await fetch(url);
@@ -356,14 +358,3 @@ interface DomainChunkRecord {
      * from the API before cutting into smaller segments by removing missing residues) */
     segment: number
 }
-
-
-/** Represents results of main API methods */
-export interface ApiData {
-    entityNames: PDBeAPIReturn<'getEntityNames'>,
-    preferredAssemblyId: PDBeAPIReturn<'getPreferredAssemblyId'>,
-    siftsMappings: PDBeAPIReturn<'getSiftsMappings'>,
-    modifiedResidues: PDBeAPIReturn<'getModifiedResidue'>,
-}
-/** Represents promises for results of main API methods */
-export type ApiPromises = { [key in keyof ApiData]: SafePromise<ApiData[key]> }

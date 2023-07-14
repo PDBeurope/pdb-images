@@ -99,7 +99,7 @@ export async function main(args: Args) {
             runtimeUrl = 'file://' + tmpStructureFile;
         }
 
-        const api = new PDBeAPI(args.api_url, args.no_api, args.api_retry);
+        const api = new PDBeAPI(args.api_url, args.no_api || args.mode === 'alphafold', args.api_retry);
         expectedFiles = await getExpectedFiles(args, api);
         fs.writeFileSync(Paths.expectedFilelist(args.output_dir, args.entry_id), expectedFiles.join('\n') + '\n');
         await api.saveCache(Paths.apiDataPath(args.output_dir, args.entry_id));

@@ -13,7 +13,6 @@ const logger = getLogger(module);
 /** Return list of files expected to be created, without suffixes, e.g. '1tqn_deposited_chain_front' */
 async function getExpectedFilenameStems(args: Pick<Args, 'entry_id' | 'mode' | 'type' | 'view'>, api: PDBeAPI): Promise<string[]> {
     const types = new Set(args.type.includes('all') ? ImageTypesForModes[args.mode] : args.type);
-    // TODO load all API endpoints in parallel
     switch (args.mode) {
         case 'pdb':
             return getExpectedFilenameStemsForPdbMode(args.entry_id, types, args.view, api);

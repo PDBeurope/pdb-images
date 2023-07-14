@@ -11,12 +11,12 @@ import { ROTATION_MATRICES, structureLayingTransform } from 'molstar/lib/commonj
 import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context';
 import { Color } from 'molstar/lib/commonjs/mol-util/color';
 
-import { ApiData, ApiPromises, DomainRecord, ModifiedResidueRecord, PDBeAPI, SiftsSource } from './api';
+import { PDBeAPI } from './api';
 import { ImageType, ImageTypes } from './args';
 import { Captions, ImageSpec } from './captions/captions';
 import { adjustCamera, changeCameraRotation, combineRotations, zoomAll } from './helpers/camera';
 import { ANNOTATION_COLORS, ENTITY_COLORS, MODRES_COLORS, assignEntityAndUnitColors, cycleIterator } from './helpers/colors';
-import { getModifiedResidueInfo, safePromise } from './helpers/helpers';
+import { getModifiedResidueInfo } from './helpers/helpers';
 import { getLogger, oneLine } from './helpers/logging';
 import { countDomains, selectBestChainForDomains, sortDomainsByChain, sortDomainsByEntity } from './helpers/sifts';
 import { countChainResidues, getChainInfo, getEntityInfo, getLigandInfo } from './helpers/structure-info';
@@ -72,31 +72,17 @@ export class ImageGenerator {
         const startTime = Date.now();
         let success = false;
         try {
-            const promises: Partial<ApiPromises> = (mode === 'pdb') ? {
-                entityNames: safePromise(() => this.api.getEntityNames(entryId)),
-                preferredAssemblyId: safePromise(() => this.api.getPreferredAssemblyId(entryId)),
-                siftsMappings: safePromise(() => this.api.getSiftsMappings(entryId)),
-                modifiedResidues: safePromise(() => this.api.getModifiedResidue(entryId)),
-            } : {}; // allow async fetching in the meantime
-            // TODO remove this preloading, should be cached
-
             const root = RootNode.create(this.plugin);
             await using(root.makeDownload({ url: inputUrl, isBinary }, entryId), async download => {
                 const cif = await download.makeCif();
                 const traj = await cif.makeTrajectory();
                 await using(traj.makeModel(0), async rawModel => {
                     const model = await rawModel.makeCustomModelProperties(this.api);
-                    const apiData: Partial<ApiData> = {
-                        entityNames: await promises.entityNames?.result(),
-                        preferredAssemblyId: await promises.preferredAssemblyId?.result(),
-                        siftsMappings: await promises.siftsMappings?.result(),
-                        modifiedResidues: await promises.modifiedResidues?.result(),
-                    };
 
                     // Images from assembly structures
                     if (mode === 'pdb' && this.shouldRender('assembly', 'entity', 'modres')) {
                         let assemblies = ModelSymmetry.Provider.get(model.data!)?.assemblies ?? [];
-                        let preferredAssemblyId = apiData.preferredAssemblyId;
+                        let preferredAssemblyId = await this.api.getPreferredAssemblyId(entryId);
                         logger.debug(`Assemblies (${assemblies.length}):`);
                         for (const ass of assemblies) logger.debug('   ', oneLine(ass));
                         logger.debug('Preferred assembly:', preferredAssemblyId);
@@ -112,13 +98,13 @@ export class ImageGenerator {
                         };
                         for (const assembly of assemblies) {
                             const isPreferredAssembly = assembly.id === preferredAssemblyId;
-                            await this.processAssemblyStructure(entryId, model, assembly.id, isPreferredAssembly, apiData);
+                            await this.processAssemblyStructure(entryId, model, assembly.id, isPreferredAssembly);
                         }
                     }
 
                     // Images from deposited model structure
                     if (this.shouldRender('entry', 'validation', 'bfactor', 'ligand', 'domain', 'plddt') || this.failedEntities.length > 0) {
-                        await this.processDepositedStructure(mode, entryId, model, traj, apiData);
+                        await this.processDepositedStructure(mode, entryId, model, traj);
                     }
 
                     if (this.failedEntities.length > 0) {
@@ -135,7 +121,7 @@ export class ImageGenerator {
     }
 
     /** Create requested images which are generated from the deposited model */
-    private async processDepositedStructure(mode: 'pdb' | 'alphafold', entryId: string, model: ModelNode, traj: TrajectoryNode, apiData: Partial<ApiData>) {
+    private async processDepositedStructure(mode: 'pdb' | 'alphafold', entryId: string, model: ModelNode, traj: TrajectoryNode) {
         logger.info('Processing deposited structure');
         await using(model.makeStructure({ type: { name: 'model', params: {} } }), async structure => {
             const group = await structure.makeGroup({ label: 'Whole Entry' }, { state: { isGhost: ALLOW_GHOST_NODES } });
@@ -146,8 +132,7 @@ export class ImageGenerator {
             logger.info('Number of models:', nModels);
             const context = {
                 entryId, assemblyId: undefined, isPreferredAssembly: false, nModels,
-                // entityNames: promises.entityNames ? await promises.entityNames.result() : {},
-                entityNames: apiData.entityNames ?? {},
+                entityNames: await this.api.getEntityNames(entryId),
                 entityInfo: getEntityInfo(structure.data!)
             };
             const colors = assignEntityAndUnitColors(structure.data!);
@@ -215,8 +200,8 @@ export class ImageGenerator {
                 if (this.shouldRender('ligand')) {
                     await this.processLigands(structure, context, colors.entities);
                 }
-                if (this.shouldRender('domain') && apiData.siftsMappings) {
-                    await this.processDomains(structure, apiData.siftsMappings, context);
+                if (this.shouldRender('domain')) {
+                    await this.processDomains(structure, context);
                 }
             }
 
@@ -229,13 +214,12 @@ export class ImageGenerator {
 
     /** Create requested images that are generated from each assembly structure.
      * If `isPreferredAssembly`, also create images that are generated from the preferred assembly. */
-    private async processAssemblyStructure(entryId: string, model: ModelNode, assemblyId: string, isPreferredAssembly: boolean, apiData: Partial<ApiData>) {
+    private async processAssemblyStructure(entryId: string, model: ModelNode, assemblyId: string, isPreferredAssembly: boolean) {
         logger.info(`Processing assembly ${assemblyId}`, isPreferredAssembly ? '(preferred)' : '(non-preferred)');
         await using(model.makeStructure({ type: { name: 'assembly', params: { id: assemblyId } } }), async structure => {
             const context = {
                 entryId, assemblyId, isPreferredAssembly, nModels: 1,
-                // entityNames: promises.entityNames ? await promises.entityNames.result() : {},
-                entityNames: apiData.entityNames ?? {},
+                entityNames: await this.api.getEntityNames(entryId),
                 entityInfo: getEntityInfo(structure.data!)
             };
             const colors = assignEntityAndUnitColors(structure.data!);
@@ -258,9 +242,9 @@ export class ImageGenerator {
                 const summary = await this.processEntities(structure, context, colors.entities, todoEntities);
                 this.failedEntities = summary.failedEntities;
             }
-            if (isPreferredAssembly && this.shouldRender('modres') && apiData.modifiedResidues) {
+            if (isPreferredAssembly && this.shouldRender('modres')) {
                 await visuals.applyToAll(vis => vis.setFaded('size-dependent'));
-                await this.processModifiedResidues(structure, apiData.modifiedResidues, context);
+                await this.processModifiedResidues(structure, context);
             }
         });
     }
@@ -322,7 +306,8 @@ export class ImageGenerator {
     }
 
     /** Create images for SIFTS domains */
-    private async processDomains(structure: StructureNode, domains: { [source in SiftsSource]: { [family: string]: DomainRecord[] } }, context: Captions.StructureContext) {
+    private async processDomains(structure: StructureNode, context: Captions.StructureContext) {
+        const domains = await this.api.getSiftsMappings(context.entryId);
         const chainInfo = getChainInfo(structure.data!.model);
         const chainLengths = countChainResidues(structure.data!.model);
         logger.debug('Chain lengths:', oneLine(chainLengths));
@@ -388,7 +373,8 @@ export class ImageGenerator {
     }
 
     /** Create images for modified residues */
-    private async processModifiedResidues(structure: StructureNode, modifiedResidues: ModifiedResidueRecord[], context: Captions.StructureContext) {
+    private async processModifiedResidues(structure: StructureNode, context: Captions.StructureContext) {
+        const modifiedResidues = await this.api.getModifiedResidue(context.entryId);
         const modresInfo = getModifiedResidueInfo(modifiedResidues);
         logger.debug(`Modified residues (${Object.keys(modresInfo).length}):`);
         for (const modres in modresInfo) logger.debug('   ', modres, oneLine(modresInfo[modres]));
