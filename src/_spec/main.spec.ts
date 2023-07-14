@@ -8,8 +8,9 @@ import { ArgumentParser } from 'argparse';
 import fs from 'fs';
 import path from 'path';
 
+import { Args } from '../args';
 import { loadPngToRaw } from '../image/resize';
-import { Args, VERSION, main, parseArguments } from '../main';
+import { VERSION, main, parseArguments } from '../main';
 import { isBorderBlank, isImageBlank, versionFromPackageJson } from './_utils';
 
 

@@ -15,12 +15,16 @@ describe('api', () => {
     it('noApi', async () => {
         expect(NO_API.pdbeStructureQualityReportPrefix()).toBeUndefined();
         expect(await NO_API.getEntityNames('1hda')).toEqual({} as PDBeAPIReturn<'getEntityNames'>);
+        expect(await NO_API.getEntityTypes('1hda')).toEqual({} as PDBeAPIReturn<'getEntityTypes'>);
         expect(await NO_API.getAssemblies('1hda')).toEqual([] as PDBeAPIReturn<'getAssemblies'>);
         expect(await NO_API.getPreferredAssemblyId('1hda'))
             .toEqual(undefined as PDBeAPIReturn<'getPreferredAssemblyId'>);
         expect(await NO_API.getModifiedResidue('1hda')).toEqual([] as PDBeAPIReturn<'getModifiedResidue'>);
         expect(await NO_API.getSiftsMappings('1hda'))
             .toEqual({ CATH: {}, Pfam: {}, Rfam: {}, SCOP: {} } as PDBeAPIReturn<'getSiftsMappings'>);
+        expect(await NO_API.getExperimentalMethods('1hda')).toEqual([] as PDBeAPIReturn<'getExperimentalMethods'>);
+        expect(await NO_API.getChainCoverages('1hda')).toEqual({} as PDBeAPIReturn<'getChainCoverages'>);
+        expect(await NO_API.getChainCoverageRatios('1hda')).toEqual({} as PDBeAPIReturn<'getChainCoverageRatios'>);
     });
 
     it('pdbeStructureQualityReportPrefix', async () => {
@@ -35,6 +39,15 @@ describe('api', () => {
             '3': ['PROTOPORPHYRIN IX CONTAINING FE'],
             '4': ['water'],
         } as PDBeAPIReturn<'getEntityNames'>);
+    });
+
+    it('getEntityTypes', async () => {
+        expect(await API.getEntityTypes('1hda')).toEqual({
+            '1': { type: 'polypeptide(L)' },
+            '2': { type: 'polypeptide(L)' },
+            '3': { type: 'bound', compId: 'HEM' },
+            '4': { type: 'water', compId: 'HOH' },
+        } as PDBeAPIReturn<'getEntityTypes'>);
     });
 
     it('getAssemblies', async () => {
@@ -155,5 +168,20 @@ describe('api', () => {
             },
             SCOP: {}
         } as PDBeAPIReturn<'getSiftsMappings'>);
+    });
+
+    it('getExperimentalMethods', async () => {
+        expect(await API.getExperimentalMethods('1hda')).toEqual(['X-ray diffraction'] as PDBeAPIReturn<'getExperimentalMethods'>);
+        expect(await API.getExperimentalMethods('176d')).toEqual(['Solution NMR'] as PDBeAPIReturn<'getExperimentalMethods'>);
+    });
+
+    it('getChainCoverages', async () => {
+        expect(await API.getChainCoverages('1hda')).toEqual({ 'A': 141, 'B': 145, 'C': 103, 'D': 145 } as PDBeAPIReturn<'getChainCoverages'>);
+        expect(await API.getChainCoverages('1tqn')).toEqual({ 'A': 468 } as PDBeAPIReturn<'getChainCoverages'>);
+    });
+
+    it('getChainCoverageRatios', async () => {
+        expect(await API.getChainCoverageRatios('1hda')).toEqual({ 'A': 1, 'B': 1, 'C': 1, 'D': 1 } as PDBeAPIReturn<'getChainCoverageRatios'>);
+        expect(await API.getChainCoverageRatios('1tqn')).toEqual({ 'A': 0.962 } as PDBeAPIReturn<'getChainCoverageRatios'>);
     });
 });

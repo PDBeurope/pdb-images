@@ -8,9 +8,9 @@ import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context'; // this
 
 import { PluginStateSnapshotManager } from 'molstar/lib/commonjs/mol-plugin-state/manager/snapshots';
 import { PDBeAPI } from '../api';
+import { ImageType } from '../args';
 import { ImageSpec } from '../captions/captions';
 import { ImageGenerator } from '../image-generator';
-import { ImageType } from '../image-generator';
 import { TestingPdb, getTestingHeadlessPlugin } from './_utils';
 
 
@@ -34,7 +34,7 @@ async function generateStates(pdbId: TestingPdb, imageTypes: ImageType[], views:
 }
 
 function getVisualNodes(state: PluginStateSnapshotManager.StateSnapshot) {
-    const result = [];
+    const result: any[] = [];
     for (const entry of state.entries) {
         if (!entry.snapshot.data) continue;
         for (const transform of entry.snapshot.data.tree.transforms) {

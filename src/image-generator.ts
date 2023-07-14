@@ -4,7 +4,6 @@
  * @author Adam Midlik <midlik@gmail.com>
  */
 
-import fs from 'fs';
 import { Mat3 } from 'molstar/lib/commonjs/mol-math/linear-algebra';
 import { ModelSymmetry } from 'molstar/lib/commonjs/mol-model-formats/structure/property/symmetry';
 import { Model } from 'molstar/lib/commonjs/mol-model/structure';
@@ -12,11 +11,12 @@ import { ROTATION_MATRICES, structureLayingTransform } from 'molstar/lib/commonj
 import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context';
 import { Color } from 'molstar/lib/commonjs/mol-util/color';
 
-import { DomainRecord, ModifiedResidueRecord, PDBeAPI, PDBeAPIReturn, SiftsSource } from './api';
+import { ApiData, ApiPromises, DomainRecord, ModifiedResidueRecord, PDBeAPI, SiftsSource } from './api';
+import { ImageType, ImageTypes } from './args';
 import { Captions, ImageSpec } from './captions/captions';
 import { adjustCamera, changeCameraRotation, combineRotations, zoomAll } from './helpers/camera';
 import { ANNOTATION_COLORS, ENTITY_COLORS, MODRES_COLORS, assignEntityAndUnitColors, cycleIterator } from './helpers/colors';
-import { SafePromise, getModifiedResidueInfo, safePromise } from './helpers/helpers';
+import { getModifiedResidueInfo, safePromise } from './helpers/helpers';
 import { getLogger, oneLine } from './helpers/logging';
 import { countDomains, selectBestChainForDomains, sortDomainsByChain, sortDomainsByEntity } from './helpers/sifts';
 import { countChainResidues, getChainInfo, getEntityInfo, getLigandInfo } from './helpers/structure-info';
@@ -28,20 +28,6 @@ const logger = getLogger(module);
 
 const ALLOW_GHOST_NODES = true; // just for debugging, should be `true` in production
 const ALLOW_COLLAPSED_NODES = true; // just for debugging, should be `true` in production
-
-export const Modes = ['pdb', 'alphafold'] as const;
-export type Mode = typeof Modes[number]
-
-export const ImageTypes = ['entry', 'assembly', 'entity', 'domain', 'ligand', 'modres', 'bfactor', 'validation', 'plddt', 'all'] as const;
-export type ImageType = typeof ImageTypes[number]
-
-interface ApiData {
-    entityNames: PDBeAPIReturn<'getEntityNames'>,
-    preferredAssemblyId: PDBeAPIReturn<'getPreferredAssemblyId'>,
-    siftsMappings: PDBeAPIReturn<'getSiftsMappings'>,
-    modifiedResidues: PDBeAPIReturn<'getModifiedResidue'>,
-}
-type ApiPromises = { [key in keyof ApiData]: SafePromise<ApiData[key]> }
 
 
 /** Class for generating all possible images of an entry */
@@ -78,7 +64,7 @@ export class ImageGenerator {
     }
 
     /** Create all requested images for an entry */
-    async processAll(entryId: string, inputUrl: string, mode: 'pdb' | 'alphafold', apiDataOutputFile?: string) {
+    async processAll(entryId: string, inputUrl: string, mode: 'pdb' | 'alphafold') {
         logger.info('Processing', entryId, 'from', inputUrl);
         const isBinary = inputUrl.endsWith('.bcif');
         logger.debug('Assuming input is', isBinary ? 'binary CIF' : 'mmCIF');
@@ -92,6 +78,7 @@ export class ImageGenerator {
                 siftsMappings: safePromise(() => this.api.getSiftsMappings(entryId)),
                 modifiedResidues: safePromise(() => this.api.getModifiedResidue(entryId)),
             } : {}; // allow async fetching in the meantime
+            // TODO remove this preloading, should be cached
 
             const root = RootNode.create(this.plugin);
             await using(root.makeDownload({ url: inputUrl, isBinary }, entryId), async download => {
@@ -105,9 +92,6 @@ export class ImageGenerator {
                         siftsMappings: await promises.siftsMappings?.result(),
                         modifiedResidues: await promises.modifiedResidues?.result(),
                     };
-                    if (apiDataOutputFile) {
-                        fs.writeFileSync(apiDataOutputFile, JSON.stringify(apiData, undefined, 2), { encoding: 'utf8' });
-                    }
 
                     // Images from assembly structures
                     if (mode === 'pdb' && this.shouldRender('assembly', 'entity', 'modres')) {

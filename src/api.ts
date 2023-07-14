@@ -6,7 +6,7 @@
 
 import fs from 'fs';
 import { getLogger } from './helpers/logging';
-import { safePromise } from './helpers/helpers';
+import { SafePromise, safePromise } from './helpers/helpers';
 
 
 const FETCH_RETRY_N_TRIES = 5;
@@ -22,6 +22,8 @@ export class PDBeAPI {
     public readonly offline: boolean;
     /** If `true`, retry any failed API call. */
     public readonly retry: boolean;
+    /** Cache for currently running or resolved promises */
+    private readonly cache: { [url: string]: Promise<any> } = {};
 
     /** Create a client accessing API at `baseUrl` (like 'https://www.ebi.ac.uk/pdbe/api').
      * If `offline`, create a mock client which returns correct types but without any specific data. */
@@ -29,62 +31,6 @@ export class PDBeAPI {
         this.baseUrl = (baseUrl[baseUrl.length - 1] === '/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
         this.offline = offline;
         this.retry = retry;
-    }
-
-    /** Try to fetch `url`, return object with response if successful or with error if threw. */
-    private static async tryFetch(url: string) {
-        try {
-            const response = await fetch(url);
-            return { response: response, error: undefined };
-        } catch (error) {
-            return { response: undefined, error: error };
-        }
-    }
-
-    /** Try to fetch `url` up to `nTries` times.
-     * Wait random time (up to `maxWaitSeconds` seconds) before each retry.
-     * Return the response of first successful try (i.e. returns with status code other than 5xx (Server error)),
-     * or the response of the last try (regardless of status code) or throw if the last try threw. */
-    private static async fetchWithRetry(url: string, nTries: number, maxWaitSeconds: number): Promise<Response> {
-        if (nTries < 1) throw new Error(`Invalid value for 'nTries', must be at least 1`);
-        for (let i = 1; i <= nTries; i++) {
-            const { response, error } = await PDBeAPI.tryFetch(url);
-            const success = response && !(response.status >= 500 && response.status <= 599);
-            if (success) {
-                if (i > 1) logger.debug(`Succeeded to fetch ${url}, try ${i}/${nTries}`);
-                return response;
-            } else {
-                const reason = response ? `status code ${response.status}` : `threw error ${error}`;
-                logger.debug(`Failed to fetch ${url}, try ${i}/${nTries}, ${reason}`);
-                if (i === nTries) {
-                    logger.error(`Failed to fetch ${url} after trying ${nTries} times`);
-                    if (response) return response;
-                    else throw error;
-                }
-                if (maxWaitSeconds > 0) {
-                    const waitSeconds = maxWaitSeconds * Math.random();
-                    logger.debug(`Waiting ${Math.round(waitSeconds)} seconds before retry`);
-                    await new Promise(resolve => setTimeout(resolve, 1000 * waitSeconds));
-                }
-            }
-        }
-        throw new Error('AssertionError');
-    }
-
-    /** Fetch contents of `url` ('http://...', 'https://...', 'file://...')
-     * and return as parsed JSON. */
-    private async get(url: string): Promise<any> {
-        if (this.offline) return {};
-        if (url.startsWith('file://')) {
-            const text = fs.readFileSync(url.substring('file://'.length), { encoding: 'utf8' });
-            return JSON.parse(text);
-        } else {
-            const response = this.retry ? await PDBeAPI.fetchWithRetry(url, FETCH_RETRY_N_TRIES, FETCH_RETRY_MAX_WAIT_SECONDS) : await fetch(url);
-            if (response.status === 404) return {}; // PDBe API returns 404 in some cases (e.g. when there are no modified residues)
-            if (!response.ok) throw new Error(`API call failed with code ${response.status} (${url})`);
-            const text = await response.text();
-            return JSON.parse(text);
-        }
     }
 
     /** Get names of entities within a PDB entry. */
@@ -96,6 +42,20 @@ export class PDBeAPI {
             names[record.entity_id] = record.molecule_name ?? [];
         }
         return names;
+    }
+
+    /** Get type and residue code (chem_comp_id, when it makes sense) of entities within a PDB entry. */
+    async getEntityTypes(pdbId: string): Promise<{ [entityId: number]: { type: string, compId?: string } }> {
+        const url = `${this.baseUrl}/pdb/entry/molecules/${pdbId}`;
+        const json = await this.get(url);
+        const result: { [entityId: number]: { type: string, compId?: string } } = {};
+        for (const record of json[pdbId] ?? []) {
+            result[record.entity_id] = {
+                type: record.molecule_type,
+                compId: record.chem_comp_ids?.[0],
+            };
+        }
+        return result;
     }
 
     /** Get list of assemblies for a PDB entry. */
@@ -117,7 +77,7 @@ export class PDBeAPI {
     }
 
     /** Get the preferred assembly ID for a PDB entry.
-     * If initialized with `offline`, return undefined. */
+     * If initialized with `offline`, return `undefined`. */
     async getPreferredAssemblyId(pdbId: string): Promise<string | undefined> {
         // The preferred assembly is not always 1 (e.g. in 1l7c the pref. ass. is 4)
         if (this.offline) return undefined;
@@ -210,15 +170,134 @@ export class PDBeAPI {
         return Object.values(result).sort((a, b) => a.id < b.id ? -1 : 1);
     }
 
+    /** Get list of experimental methods for a PDB entry. */
+    async getExperimentalMethods(pdbId: string): Promise<string[]> {
+        const url = `${this.baseUrl}/pdb/entry/summary/${pdbId}`;
+        const json = await this.get(url);
+        const methods: string[] = [];
+        for (const record of json[pdbId] ?? []) {
+            for (const method of record.experimental_method ?? []) {
+                methods.push(method);
+            }
+        } return methods;
+    }
+
+    /** Get absolute number of modelled residues in each chain.
+     * Currently does not work because the API sucks (see 1bvy chain C [auth B]) */
+    async getChainCoverages(pdbId: string): Promise<{ [chainId: string]: number }> {
+        const url = `${this.baseUrl}/pdb/entry/polymer_coverage/${pdbId}`;
+        const json = await this.get(url);
+        const coverages: { [chainId: string]: number } = {};
+        for (const entity of json[pdbId]?.molecules ?? []) {
+            for (const chain of entity.chains ?? []) {
+                const chainId = chain.struct_asym_id;
+                coverages[chainId] ??= 0;
+                for (const range of chain.observed ?? []) {
+                    const length = range.end.residue_number - range.start.residue_number + 1;
+                    coverages[chainId] += length;
+                }
+            }
+        }
+        return coverages;
+    }
+
+    /** Get relative ratio (0-1) of modelled residues in each chain */
+    async getChainCoverageRatios(pdbId: string): Promise<{ [chainId: string]: number }> {
+        const url = `${this.baseUrl}/pdb/entry/observed_residues_ratio/${pdbId}`;
+        const json = await this.get(url);
+        const coverages: { [chainId: string]: number } = {};
+        for (const chains of Object.values(json[pdbId] ?? {})) {
+            for (const chain of chains as any[]) {
+                const chainId = chain.struct_asym_id;
+                coverages[chainId] = chain.observed_ratio;
+            }
+        }
+        return coverages;
+    }
+
     /** Get a URL prefix (without the PDBID argument) for PDBe structure quality report,
      * or `undefined` if initialized with `offline`. */
     pdbeStructureQualityReportPrefix(): string | undefined {
         if (this.offline) return undefined;
         else return `${this.baseUrl}/validation/residuewise_outlier_summary/entry/`;
     }
+
+
+    /** Try to fetch `url`, return object with response if successful or with error if threw. */
+    private static async tryFetch(url: string) {
+        try {
+            const response = await fetch(url);
+            return { response: response, error: undefined };
+        } catch (error) {
+            return { response: undefined, error: error };
+        }
+    }
+
+    /** Try to fetch `url` up to `nTries` times.
+     * Wait random time (up to `maxWaitSeconds` seconds) before each retry.
+     * Return the response of first successful try (i.e. returns with status code other than 5xx (Server error)),
+     * or the response of the last try (regardless of status code) or throw if the last try threw. */
+    private static async fetchWithRetry(url: string, nTries: number, maxWaitSeconds: number): Promise<Response> {
+        if (nTries < 1) throw new Error(`Invalid value for 'nTries', must be at least 1`);
+        for (let i = 1; i <= nTries; i++) {
+            const { response, error } = await PDBeAPI.tryFetch(url);
+            const success = response && !(response.status >= 500 && response.status <= 599);
+            if (success) {
+                if (i > 1) logger.debug(`Succeeded to fetch ${url}, try ${i}/${nTries}`);
+                return response;
+            } else {
+                const reason = response ? `status code ${response.status}` : `threw error ${error}`;
+                logger.debug(`Failed to fetch ${url}, try ${i}/${nTries}, ${reason}`);
+                if (i === nTries) {
+                    logger.error(`Failed to fetch ${url} after trying ${nTries} times`);
+                    if (response) return response;
+                    else throw error;
+                }
+                if (maxWaitSeconds > 0) {
+                    const waitSeconds = maxWaitSeconds * Math.random();
+                    logger.debug(`Waiting ${Math.round(waitSeconds)} seconds before retry`);
+                    await new Promise(resolve => setTimeout(resolve, 1000 * waitSeconds));
+                }
+            }
+        }
+        throw new Error('AssertionError');
+    }
+
+    /** Fetch contents of `url` ('http://...', 'https://...', 'file://...')
+     * and return as parsed JSON. */
+    private async getWithoutCache(url: string): Promise<any> {
+        if (this.offline) return {};
+        if (url.startsWith('file://')) {
+            const text = fs.readFileSync(url.substring('file://'.length), { encoding: 'utf8' });
+            return JSON.parse(text);
+        } else {
+            const response = this.retry ? await PDBeAPI.fetchWithRetry(url, FETCH_RETRY_N_TRIES, FETCH_RETRY_MAX_WAIT_SECONDS) : await fetch(url);
+            if (response.status === 404) return {}; // PDBe API returns 404 in some cases (e.g. when there are no modified residues)
+            if (!response.ok) throw new Error(`API call failed with code ${response.status} (${url})`);
+            const text = await response.text();
+            return JSON.parse(text);
+        }
+    }
+
+    /** Fetch contents of `url` ('http://...', 'https://...', 'file://...')
+     * and return as parsed JSON.
+     * Use cache if the `url` has been fetched already (or fetching has started). */
+    private async get(url: string): Promise<any> {
+        this.cache[url] ??= this.getWithoutCache(url);
+        return await this.cache[url];
+    }
+
+    /** Save current contents of the cache into a file */
+    async saveCache(file: string) {
+        const data: { [key: string]: any } = {};
+        for (const key in this.cache) {
+            data[key] = await this.cache[key];
+        }
+        fs.writeFileSync(file, JSON.stringify(data, undefined, 2), { encoding: 'utf8' });
+    }
 }
 
-export type PDBeAPIMethod = 'pdbeStructureQualityReportPrefix' | 'getEntityNames' | 'getAssemblies' | 'getPreferredAssemblyId' | 'getModifiedResidue' | 'getSiftsMappings'
+export type PDBeAPIMethod = 'pdbeStructureQualityReportPrefix' | 'getEntityNames' | 'getEntityTypes' | 'getAssemblies' | 'getPreferredAssemblyId' | 'getModifiedResidue' | 'getSiftsMappings' | 'getExperimentalMethods' | 'getChainCoverages' | 'getChainCoverageRatios'
 export type PDBeAPIReturn<key extends PDBeAPIMethod> = Awaited<ReturnType<InstanceType<typeof PDBeAPI>[key]>>
 
 
@@ -277,3 +356,14 @@ interface DomainChunkRecord {
      * from the API before cutting into smaller segments by removing missing residues) */
     segment: number
 }
+
+
+/** Represents results of main API methods */
+export interface ApiData {
+    entityNames: PDBeAPIReturn<'getEntityNames'>,
+    preferredAssemblyId: PDBeAPIReturn<'getPreferredAssemblyId'>,
+    siftsMappings: PDBeAPIReturn<'getSiftsMappings'>,
+    modifiedResidues: PDBeAPIReturn<'getModifiedResidue'>,
+}
+/** Represents promises for results of main API methods */
+export type ApiPromises = { [key in keyof ApiData]: SafePromise<ApiData[key]> }

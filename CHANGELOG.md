@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added ball-and-stick visual for non-standard residues (so far without element colors)
 - Opacity in entity images is dependent on structure size
 - Save _api_data.json
+- Create _expected_files.txt and check for missing files after run
 
 ## [1.0.0] - 2023-06-20
 
