@@ -136,7 +136,6 @@ async function getExpectedFilenameStemsForPdbMode(entryId: string, types: Set<Im
         }
     }
     if (types.has('modres')) {
-        console.log('modres');
         const modresRecords = await promises.modresRecords.result();
         const modresIds = Array.from(new Set(modresRecords.map(m => m.compoundId))).sort();
         for (const modresId of modresIds) {

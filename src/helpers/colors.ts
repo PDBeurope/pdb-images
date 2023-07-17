@@ -100,6 +100,12 @@ export function assignEntityAndUnitColors(structure: Structure) {
     return { entities: entityColors, units: unitColors };
 }
 
+/** Generate lighter or darker variant of colors (how much lighter or darker will depend quasi-randomly on integer `i`; i=0 means original colors). */
+export function lightnessVariant(colors: Color[], i: number): Color[] {
+    if (i === 0) return [...colors];
+    return colors.map(c => SisterColors.getSisterColor(c, i, SisterColors.LUMINOSITY_SISTER_COLOR_PARAMS));
+}
+
 /** Convert an array of ColorListEntries into Colors. */
 function colorArray(colors: ColorListEntry[]): Color[] {
     return colors.map(entry => (typeof entry === 'number') ? entry : entry[0]);
@@ -188,11 +194,20 @@ namespace PslColors {
 
 
 namespace SisterColors {
-    const DEFAULT_SISTER_COLOR_PARAMS = {
+    export const DEFAULT_SISTER_COLOR_PARAMS = {
         hueRadius: 90,
         satRadius: 0.3,
         satMin: 0.2,
         satMax: 1.0,
+        lumRadius: 0.25,
+        lumMin: 0.1,
+        lumMax: 0.9,
+    };
+    export const LUMINOSITY_SISTER_COLOR_PARAMS = {
+        hueRadius: 0,
+        satRadius: 0,
+        satMin: 0,
+        satMax: 1,
         lumRadius: 0.25,
         lumMin: 0.1,
         lumMax: 0.9,

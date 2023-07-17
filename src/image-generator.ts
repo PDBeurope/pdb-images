@@ -15,7 +15,7 @@ import { PDBeAPI } from './api';
 import { ImageType, ImageTypes } from './args';
 import { Captions, ImageSpec } from './captions/captions';
 import { adjustCamera, changeCameraRotation, combineRotations, zoomAll } from './helpers/camera';
-import { ANNOTATION_COLORS, ENTITY_COLORS, MODRES_COLORS, assignEntityAndUnitColors, cycleIterator } from './helpers/colors';
+import { ANNOTATION_COLORS, ENTITY_COLORS, MODRES_COLORS, assignEntityAndUnitColors, cycleIterator, lightnessVariant } from './helpers/colors';
 import { getModifiedResidueInfo } from './helpers/helpers';
 import { getLogger, oneLine } from './helpers/logging';
 import { countDomains, selectBestChainForDomains, sortDomainsByChain, sortDomainsByEntity } from './helpers/sifts';
@@ -159,6 +159,7 @@ export class ImageGenerator {
                         await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'entities', view }));
                     } else {
                         model.setCollapsed(ALLOW_COLLAPSED_NODES);
+                        const visualsByModel = [visuals];
                         await using(traj.makeGroup({ label: 'Other models' }, { state: { isGhost: ALLOW_GHOST_NODES } }), async group => {
                             const allVisuals: (VisualNode | undefined)[] = Object.values(visuals.nodes);
                             for (let iModel = 1; iModel < nModels; iModel++) {
@@ -168,12 +169,20 @@ export class ImageGenerator {
                                 const otherVisuals = await otherComponents.makeStandardVisuals(this.options);
                                 otherModel.setCollapsed(ALLOW_COLLAPSED_NODES);
                                 allVisuals.push(...Object.values(otherVisuals.nodes));
+                                visualsByModel.push(otherVisuals);
                             }
                             this.zoomAll(); // zoom whole ensemble (needed e.g. for 3gaw)
-                            for (const vis of allVisuals) await vis?.setColorByChainInstance({ colorList: colors.units, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') });
+                            for (let i = 0; i < visualsByModel.length; i++) {
+                                const unitColors = lightnessVariant(colors.units, i);
+                                const entityColors = lightnessVariant(colors.entities, i);
+                                await visualsByModel[i].applyToAll(vis => vis.setColorByChainInstance({ colorList: unitColors, entityColorList: entityColors, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') }));
+                            }
                             await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'chains', view }));
 
-                            for (const vis of allVisuals) await vis?.setColorByEntity({ colorList: colors.entities, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') });
+                            for (let i = 0; i < visualsByModel.length; i++) {
+                                const entityColors = lightnessVariant(colors.entities, i);
+                                await visualsByModel[i].applyToAll(vis => vis.setColorByEntity({ colorList: entityColors, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') }));
+                            }
                             await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'entities', view }));
                         });
                         this.zoomAll(); // zoom back to model 1
