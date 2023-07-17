@@ -55,10 +55,6 @@ const HIGHTLIGHT_STICK_SIZE_FACTOR = 0.75;
 const ENVIRONMENT_STICK_SIZE_FACTOR = 0.11;
 const STICK_SIZE_ASPECT_RATIO = 0.5;
 
-/** Set true to allow any quality level for visuals (including 'lowest', which is really ugly).
- * Set false to allow only 'lower' and better. */
-const ALLOW_LOWEST_QUALITY = false;
-
 
 export type StructureObjSelector = StateObjectSelector<PluginStateObject.Molecule.Structure, any>
 
@@ -339,35 +335,35 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
     }
 
     /** Create a visual node (3D representation) with this node as parent */
-    async makeVisual(params: VisualParams, tags?: string[]): Promise<VisualNode> {
+    async makeVisual(params: VisualParams, options: { allowLowestQuality?: boolean }, tags?: string[]): Promise<VisualNode> {
         const ref = this.childRef(params.type.name);
-        params.type.params.quality ??= decideVisualQuality(this.data);
+        params.type.params.quality ??= decideVisualQuality(this.data, options.allowLowestQuality ? 'lowest' : 'lower');
         const visual = await this.state.build().to(this.node).apply(StructureRepresentation3D, params, { ref, tags }).commit();
         return new VisualNode(visual);
     }
     /** Create a cartoon visual node with this node as parent */
-    async makeCartoon(tags?: string[]): Promise<VisualNode> {
+    async makeCartoon(options: { allowLowestQuality?: boolean }, tags?: string[]): Promise<VisualNode> {
         return await this.makeVisual({
             type: { name: 'cartoon', params: { alpha: 1 } },
             colorTheme: { name: 'unit-index', params: { palette: paletteParam() } },
             sizeTheme: { name: 'uniform', params: { value: 1 } },
-        }, tags);
+        }, options, tags);
     }
     /** Create a ball-and-stick visual node with this node as parent */
-    async makeBallsAndSticks(tags?: string[]): Promise<VisualNode> {
+    async makeBallsAndSticks(options: { showHydrogens?: boolean, allowLowestQuality?: boolean }, tags?: string[]): Promise<VisualNode> {
         return await this.makeVisual({
-            type: { name: 'ball-and-stick', params: { sizeFactor: STICK_SIZE_FACTOR, sizeAspectRatio: STICK_SIZE_ASPECT_RATIO } },
+            type: { name: 'ball-and-stick', params: { sizeFactor: STICK_SIZE_FACTOR, sizeAspectRatio: STICK_SIZE_ASPECT_RATIO, ignoreHydrogens: !options.showHydrogens } },
             colorTheme: { name: 'element-symbol', params: { carbonColor: { name: 'element-symbol', params: {} } } }, // in original: carbonColor: chain-id
             sizeTheme: { name: 'physical', params: {} },
-        }, tags);
+        }, options, tags);
     }
     /** Create a carbohydrate visual (3D-SNFG) node with this node as parent */
-    async makeCarbohydrate(tags?: string[]): Promise<VisualNode> {
+    async makeCarbohydrate(options: { allowLowestQuality?: boolean }, tags?: string[]): Promise<VisualNode> {
         return await this.makeVisual({
             type: { name: 'carbohydrate', params: {} },
             colorTheme: { name: 'carbohydrate-symbol', params: {} },
             sizeTheme: { name: 'uniform', params: { value: 1 } },
-        }, tags);
+        }, options, tags);
     }
 }
 
@@ -553,14 +549,14 @@ abstract class NodeCollection<KeyType extends string, NodeType extends Node> {
 /** Collection of nodes for standard structure components (polymer, ligand...) */
 export class StandardComponents extends NodeCollection<StandardComponentType, StructureNode> {
     /** Create visuals like polymer cartoon, ligand balls-and-sticks etc., for a structure or its part */
-    async makeStandardVisuals(): Promise<StandardVisuals> {
-        const polymerCartoon = await this.nodes.polymer?.makeCartoon(['polymerCartoon']);
-        const branchedCarbohydrate = await this.nodes.branched?.makeCarbohydrate(['branchedCarbohydrate']);
-        const branchedSticks = await this.nodes.branched?.makeBallsAndSticks(['branchedSticks']);
+    async makeStandardVisuals(options: { showHydrogens?: boolean, showBranchedSticks?: boolean, allowLowestQuality?: boolean }): Promise<StandardVisuals> {
+        const polymerCartoon = await this.nodes.polymer?.makeCartoon(options, ['polymerCartoon']);
+        const branchedCarbohydrate = await this.nodes.branched?.makeCarbohydrate(options, ['branchedCarbohydrate']);
+        const branchedSticks = options.showBranchedSticks ? await this.nodes.branched?.makeBallsAndSticks(options, ['branchedSticks']) : undefined;
         await branchedSticks?.setOpacity(BRANCHED_STICKS_OPACITY);
-        const ligandSticks = await this.nodes.ligand?.makeBallsAndSticks(['ligandSticks']);
-        const ionSticks = await this.nodes.ion?.makeBallsAndSticks(['ionSticks']);
-        const nonstandardSticks = await this.nodes.nonstandard?.makeBallsAndSticks(['nonstandardSticks']);
+        const ligandSticks = await this.nodes.ligand?.makeBallsAndSticks(options, ['ligandSticks']);
+        const ionSticks = await this.nodes.ion?.makeBallsAndSticks(options, ['ionSticks']);
+        const nonstandardSticks = await this.nodes.nonstandard?.makeBallsAndSticks(options, ['nonstandardSticks']);
         return new StandardVisuals({
             polymerCartoon,
             branchedCarbohydrate,
@@ -575,14 +571,14 @@ export class StandardComponents extends NodeCollection<StandardComponentType, St
 /** Collection of nodes for structure components for ligand visualization (ligand, environment, wider enviroment...) */
 export class LigandEnvironmentComponents extends NodeCollection<LigEnvComponentType, StructureNode> {
     /** Create visuals like ligand balls-and-sticks, wider enviroment cartoon... */
-    async makeLigEnvVisuals(entityColors?: Color[]): Promise<LigandEnvironmentVisuals> {
-        const ligandSticks = await this.nodes.ligand?.makeBallsAndSticks(['ligandSticks']);
-        await ligandSticks?.setColorByEntity({ colorList: entityColors ?? ENTITY_COLORS });
-        const environmentSticks = await this.nodes.environment?.makeBallsAndSticks(['environmentSticks']);
+    async makeLigEnvVisuals(options: { showHydrogens?: boolean, allowLowestQuality?: boolean, entityColors?: Color[] }): Promise<LigandEnvironmentVisuals> {
+        const ligandSticks = await this.nodes.ligand?.makeBallsAndSticks(options, ['ligandSticks']);
+        await ligandSticks?.setColorByEntity({ colorList: options.entityColors ?? ENTITY_COLORS });
+        const environmentSticks = await this.nodes.environment?.makeBallsAndSticks(options, ['environmentSticks']);
         await environmentSticks?.setThinBallsAndSticks(ENVIRONMENT_STICK_SIZE_FACTOR);
-        const linkageSticks = await this.nodes.linkage?.makeBallsAndSticks(['linkageSticks']);
+        const linkageSticks = await this.nodes.linkage?.makeBallsAndSticks(options, ['linkageSticks']);
         await linkageSticks?.setThinBallsAndSticks(ENVIRONMENT_STICK_SIZE_FACTOR);
-        const wideEnvironmentCartoon = await this.nodes.wideEnvironment?.makeCartoon(['wideEnvironmentCartoon']);
+        const wideEnvironmentCartoon = await this.nodes.wideEnvironment?.makeCartoon(options, ['wideEnvironmentCartoon']);
         await wideEnvironmentCartoon?.setFaded('extra');
 
         return new LigandEnvironmentVisuals({
@@ -606,9 +602,9 @@ export class LigandEnvironmentVisuals extends NodeCollection<LigEnvVisualType, V
 
 /** Decide quality (e.g. 'medium', 'low, 'lowest'...) based on the size of the structure itself (i.e. the visualized part),
  * not based on its root (i.e. the whole model) as 'auto' does */
-function decideVisualQuality(structure: Structure | undefined) {
+function decideVisualQuality(structure: Structure | undefined, minimumQuality: 'lower' | 'lowest') {
     if (structure) {
-        const thresholds = ALLOW_LOWEST_QUALITY ? {} : { lowestElementCount: Number.POSITIVE_INFINITY };
+        const thresholds = (minimumQuality === 'lower') ? { lowestElementCount: Number.POSITIVE_INFINITY } : {};
         return getStructureQuality(structure, thresholds);
     } else {
         return 'auto';

@@ -30,6 +30,16 @@ const ALLOW_GHOST_NODES = true; // just for debugging, should be `true` in produ
 const ALLOW_COLLAPSED_NODES = true; // just for debugging, should be `true` in production
 
 
+/** Options for modifying visualization style */
+export interface ImageGeneratorOptions {
+    /** Set `true` to show hydrogen atoms in ball-and-stick visuals, `false` to always ignore them. */
+    showHydrogens?: boolean,
+    /** Set `true` to show semi-transparent ball-and-stick visuals for branched entities (i.e. carbohydrates) in addition to the default 3D-SNFG visuals. */
+    showBranchedSticks?: boolean,
+    /** Set `true` to allow any quality level for visuals (including 'lowest', which is really ugly). Set `false` to allow only 'lower' and better. */
+    allowLowestQuality?: boolean,
+}
+
 /** Class for generating all possible images of an entry */
 export class ImageGenerator {
     /** Rotation matrix to use for currently created scenes */
@@ -50,6 +60,7 @@ export class ImageGenerator {
         imageTypes: ImageType[] = ['all'],
         /** 'front' is to render only front view; 'all' is to render front, side, and top view; 'auto' is to render all three views only for certain image types */
         public views: 'front' | 'all' | 'auto' = 'auto',
+        public options: ImageGeneratorOptions = {},
     ) {
         if (imageTypes.includes('all')) {
             this.imageTypes = new Set(ImageTypes);
@@ -126,7 +137,7 @@ export class ImageGenerator {
         await using(model.makeStructure({ type: { name: 'model', params: {} } }), async structure => {
             const group = await structure.makeGroup({ label: 'Whole Entry' }, { state: { isGhost: ALLOW_GHOST_NODES } });
             const components = await group.makeStandardComponents(ALLOW_COLLAPSED_NODES);
-            const visuals = await components.makeStandardVisuals();
+            const visuals = await components.makeStandardVisuals(this.options);
             this.orientAndZoomAll(structure);
             const nModels = traj.data?.frameCount ?? 1;
             logger.info('Number of models:', nModels);
@@ -154,7 +165,7 @@ export class ImageGenerator {
                                 const otherModel = await group.makeModel(iModel);
                                 const otherStructure = await otherModel.makeStructure({ type: { name: 'model', params: {} } });
                                 const otherComponents = await otherStructure.makeStandardComponents(ALLOW_COLLAPSED_NODES);
-                                const otherVisuals = await otherComponents.makeStandardVisuals();
+                                const otherVisuals = await otherComponents.makeStandardVisuals(this.options);
                                 otherModel.setCollapsed(ALLOW_COLLAPSED_NODES);
                                 allVisuals.push(...Object.values(otherVisuals.nodes));
                             }
@@ -225,7 +236,7 @@ export class ImageGenerator {
             const colors = assignEntityAndUnitColors(structure.data!);
             const group = await structure.makeGroup({ label: 'Whole Assembly' }, { state: { isGhost: ALLOW_GHOST_NODES } });
             const components = await group.makeStandardComponents(ALLOW_COLLAPSED_NODES);
-            const visuals = await components.makeStandardVisuals();
+            const visuals = await components.makeStandardVisuals(this.options);
             this.orientAndZoomAll(structure);
             if (this.shouldRender('assembly')) {
                 await visuals.applyToAll(vis => vis.setColorByChainInstance({ colorList: colors.units, entityColorList: colors.entities, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') }));
@@ -263,7 +274,7 @@ export class ImageGenerator {
                 if (!entityStruct) continue;
                 const entityColor = colors[entityInfo[entityId].index % colors.length];
                 const components = await entityStruct.makeStandardComponents(ALLOW_COLLAPSED_NODES);
-                const visuals = await components.makeStandardVisuals();
+                const visuals = await components.makeStandardVisuals(this.options);
                 await visuals.applyToAll(vis => vis.setHighlight(entityColor));
                 entityStruct.setVisible(false);
                 entityStruct.setCollapsed(ALLOW_COLLAPSED_NODES);
@@ -298,7 +309,7 @@ export class ImageGenerator {
         for (const lig in ligandInfo) logger.debug('   ', lig, oneLine(ligandInfo[lig]));
         for (const info of Object.values(ligandInfo)) {
             await using(structure.makeLigEnvComponents(info, ALLOW_COLLAPSED_NODES), async components => {
-                const visuals = await components.makeLigEnvVisuals(entityColors);
+                const visuals = await components.makeLigEnvVisuals({ ...this.options, entityColors });
                 this.orientAndZoomAll(components.nodes.ligand!);
                 await this.saveViews('front', view => Captions.forLigandEnvironment({ ...context, view, ligandInfo: info }));
             });
@@ -339,7 +350,7 @@ export class ImageGenerator {
                 if (!chain) return;
                 const entityId = chainInfo[chainId].entityId;
                 const components = await chain.makeStandardComponents(ALLOW_COLLAPSED_NODES);
-                const visuals = await components.makeStandardVisuals();
+                const visuals = await components.makeStandardVisuals(this.options);
                 chain.setCollapsed(ALLOW_COLLAPSED_NODES);
                 this.orientAndZoomAll(chain);
                 await visuals.applyToAll(vis => vis.setFaded('normal'));
@@ -360,7 +371,7 @@ export class ImageGenerator {
                             const outOfRangeCopies = shownCopies - Object.keys(domainStructures).length; // this will be >0 when a domain is out of observed residue ranges (e.g. 8eiu chain KA [auth h] Pfam PF03948)
                             for (const domainStruct of Object.values(domainStructures)) {
                                 const components = await domainStruct.makeStandardComponents(ALLOW_COLLAPSED_NODES);
-                                const visuals = await components.makeStandardVisuals();
+                                const visuals = await components.makeStandardVisuals(this.options);
                                 const color = colorsIterator.next().value!; // same color for all visual of the domain
                                 await visuals.applyToAll(vis => vis.setColorUniform(color, { ignoreElementColors: true }));
                             }
@@ -389,7 +400,7 @@ export class ImageGenerator {
         await using(structure.makeGroup({ label: 'Modified Residues' }), async group => {
             const modresStructures = await group.makeSubstructures(setDefinitions);
             for (const struct of Object.values(modresStructures)) {
-                const visual = await struct.makeBallsAndSticks(['modresSticks']);
+                const visual = await struct.makeBallsAndSticks(this.options, ['modresSticks']);
                 await visual.setHighlight(colorsIterator.next().value!);
                 struct.setCollapsed(ALLOW_COLLAPSED_NODES);
                 struct.setVisible(false);

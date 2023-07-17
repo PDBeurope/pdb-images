@@ -244,7 +244,7 @@ describe('visuals', () => {
             const traj = await cif.makeTrajectory();
             const model = await traj.makeModel(0);
             const struct = await model.makeStructure({ type: { name: 'model', params: {} } });
-            const visual = await struct.makeCarbohydrate();
+            const visual = await struct.makeCarbohydrate({});
 
             expect(getTransformerTypes(plugin)).toContain('ms-plugin.structure-representation-3d');
             const realParams = getCells(plugin, 'ms-plugin.structure-representation-3d')[0].transform.params;
@@ -265,7 +265,12 @@ describe('visuals', () => {
             const struct = await model.makeStructure({ type: { name: 'model', params: {} } });
 
             const stdComps = await struct.makeStandardComponents();
-            await using(stdComps.makeStandardVisuals(), visuals => {
+            await using(stdComps.makeStandardVisuals({}), visuals => {
+                expect(getTransformerTypes(plugin)).toContain('ms-plugin.structure-representation-3d');
+                expect(getCells(plugin, 'ms-plugin.structure-representation-3d').map(c => c.params?.values.type.name))
+                    .toEqual(['cartoon', 'carbohydrate', 'ball-and-stick']);
+            });
+            await using(stdComps.makeStandardVisuals({ showBranchedSticks: true }), visuals => {
                 expect(getTransformerTypes(plugin)).toContain('ms-plugin.structure-representation-3d');
                 expect(getCells(plugin, 'ms-plugin.structure-representation-3d').map(c => c.params?.values.type.name))
                     .toEqual(['cartoon', 'carbohydrate', 'ball-and-stick', 'ball-and-stick']);
@@ -287,7 +292,7 @@ describe('visuals', () => {
             const struct = await model.makeStructure({ type: { name: 'model', params: {} } });
 
             const ligEnvComps = await struct.makeLigEnvComponents({ compId: 'HEM', chainId: 'E', authChainId: 'A', entityId: '2', description: 'Heme', nInstancesInEntry: 4 });
-            await using(ligEnvComps.makeLigEnvVisuals(), visuals => {
+            await using(ligEnvComps.makeLigEnvVisuals({}), visuals => {
                 expect(getTransformerTypes(plugin)).toContain('ms-plugin.structure-representation-3d');
                 expect(getCells(plugin, 'ms-plugin.structure-representation-3d').map(c => c.params?.values.type.name))
                     .toEqual(['ball-and-stick', 'ball-and-stick', 'ball-and-stick', 'cartoon']);
@@ -308,7 +313,7 @@ describe('visuals', () => {
             const model = await traj.makeModel(0);
             const customModel = await model.makeCustomModelProperties(new PDBeAPI('file://./test_data/api'));
             const struct = await customModel.makeStructure({ type: { name: 'model', params: {} } });
-            const visual = await struct.makeCartoon();
+            const visual = await struct.makeCartoon({});
             expect(getTransformerTypes(plugin)).toContain('ms-plugin.structure-representation-3d');
             let realParams;
             realParams = getCells(plugin, 'ms-plugin.structure-representation-3d')[0].transform.params;
@@ -371,7 +376,7 @@ describe('visuals', () => {
             const model = await traj.makeModel(0);
             const customModel = await model.makeCustomModelProperties(new PDBeAPI('file://./test_data/api'));
             const struct = await customModel.makeStructure({ type: { name: 'model', params: {} } });
-            const visual = await struct.makeCartoon();
+            const visual = await struct.makeCartoon({});
             expect(getTransformerTypes(plugin)).toContain('ms-plugin.structure-representation-3d');
             let realParams;
             realParams = getCells(plugin, 'ms-plugin.structure-representation-3d')[0].transform.params;

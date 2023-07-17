@@ -82,6 +82,9 @@ pdbe-images 1hda data/output_1hda/ \
     --view front \
     --opaque-background \
     --no-axes \
+    --show-hydrogens \
+    --show-branched-sticks \
+    --allow-lowest-quality \
     --date 2023-04-20 \
     --clear \
     --log DEBUG
