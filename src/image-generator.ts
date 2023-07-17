@@ -170,10 +170,10 @@ export class ImageGenerator {
                                 allVisuals.push(...Object.values(otherVisuals.nodes));
                             }
                             this.zoomAll(); // zoom whole ensemble (needed e.g. for 3gaw)
-                            for (const vis of allVisuals) await vis?.setColorByChainInstance({ ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') });
+                            for (const vis of allVisuals) await vis?.setColorByChainInstance({ colorList: colors.units, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') });
                             await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'chains', view }));
 
-                            for (const vis of allVisuals) await vis?.setColorByEntity({ ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') });
+                            for (const vis of allVisuals) await vis?.setColorByEntity({ colorList: colors.entities, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') });
                             await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'entities', view }));
                         });
                         this.zoomAll(); // zoom back to model 1
