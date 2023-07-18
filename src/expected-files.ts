@@ -30,7 +30,7 @@ async function getExpectedFilenameStemsForPdbMode(entryId: string, types: Set<Im
         assemblies: safePromise(() => api.getAssemblies(entryId)),
         entities: safePromise(() => api.getEntityTypes(entryId)),
         domains: safePromise(() => api.getSiftsMappings(entryId)),
-        chainCoverages: safePromise(() => api.getChainCoverageRatios(entryId)),
+        chainCoverages: safePromise(() => api.getChainCoverages(entryId)),
         modresRecords: safePromise(() => api.getModifiedResidue(entryId)),
         methods: safePromise(() => api.getExperimentalMethods(entryId)),
     }; // run all API calls in parallel

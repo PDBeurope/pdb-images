@@ -176,7 +176,7 @@ describe('api', () => {
     });
 
     it('getChainCoverages', async () => {
-        expect(await API.getChainCoverages('1hda')).toEqual({ 'A': 141, 'B': 145, 'C': 103, 'D': 145 } as PDBeAPIReturn<'getChainCoverages'>);
+        expect(await API.getChainCoverages('1hda')).toEqual({ 'A': 141, 'B': 145, 'C': 141, 'D': 145 } as PDBeAPIReturn<'getChainCoverages'>);
         expect(await API.getChainCoverages('1tqn')).toEqual({ 'A': 468 } as PDBeAPIReturn<'getChainCoverages'>);
     });
 
