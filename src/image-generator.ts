@@ -36,6 +36,8 @@ export interface ImageGeneratorOptions {
     showHydrogens?: boolean,
     /** Set `true` to show semi-transparent ball-and-stick visuals for branched entities (i.e. carbohydrates) in addition to the default 3D-SNFG visuals. */
     showBranchedSticks?: boolean,
+    /** Set `true` to show individual models within an ensemble in different shades of the base color (lighter and darker). */
+    ensembleShades?: boolean,
     /** Set `true` to allow any quality level for visuals (including 'lowest', which is really ugly). Set `false` to allow only 'lower' and better. */
     allowLowestQuality?: boolean,
 }
@@ -173,14 +175,14 @@ export class ImageGenerator {
                             }
                             this.zoomAll(); // zoom whole ensemble (needed e.g. for 3gaw)
                             for (let i = 0; i < visualsByModel.length; i++) {
-                                const unitColors = lightnessVariant(colors.units, i);
-                                const entityColors = lightnessVariant(colors.entities, i);
+                                const unitColors = this.options.ensembleShades ? lightnessVariant(colors.units, i) : colors.units;
+                                const entityColors = this.options.ensembleShades ? lightnessVariant(colors.entities, i) : colors.entities;
                                 await visualsByModel[i].applyToAll(vis => vis.setColorByChainInstance({ colorList: unitColors, entityColorList: entityColors, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') }));
                             }
                             await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'chains', view }));
 
                             for (let i = 0; i < visualsByModel.length; i++) {
-                                const entityColors = lightnessVariant(colors.entities, i);
+                                const entityColors = this.options.ensembleShades ? lightnessVariant(colors.entities, i) : colors.entities;
                                 await visualsByModel[i].applyToAll(vis => vis.setColorByEntity({ colorList: entityColors, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') }));
                             }
                             await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'entities', view }));

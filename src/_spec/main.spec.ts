@@ -104,6 +104,7 @@ describe('args', () => {
                 no_axes: false,
                 show_hydrogens: false,
                 show_branched_sticks: false,
+                ensemble_shades: false,
                 allow_lowest_quality: false,
                 date: undefined,
                 clear: false,
@@ -124,8 +125,8 @@ describe('args', () => {
             process.argv = 'node index.js 1ad5 /data/1ad5 --input http://smelly_cat.cif \
                 --input-public http://very_public_server.com/smelly_cat.cif --mode alphafold \
                 --api-url https://smelly_api.com --api-retry --no-api --size 500x500 300x200 --view front --render-each-size \
-                --type entry assembly plddt --opaque-background --no-axes --show-hydrogens --show-branched-sticks --allow-lowest-quality \
-                --date 2023/04/20 --clear --log DEBUG \
+                --type entry assembly plddt --opaque-background --no-axes --show-hydrogens --show-branched-sticks --ensemble-shades \
+                --allow-lowest-quality --date 2023/04/20 --clear --log DEBUG \
                 '.trim().split(/\s+/);
             const expectedArgs: Args = {
                 entry_id: '1ad5',
@@ -144,6 +145,7 @@ describe('args', () => {
                 no_axes: true,
                 show_hydrogens: true,
                 show_branched_sticks: true,
+                ensemble_shades: true,
                 allow_lowest_quality: true,
                 date: '2023/04/20',
                 clear: true,
@@ -181,6 +183,7 @@ describe('main', () => {
             no_axes: false,
             show_hydrogens: false,
             show_branched_sticks: false,
+            ensemble_shades: false,
             allow_lowest_quality: false,
             date: undefined,
             clear: true,
@@ -239,6 +242,7 @@ describe('main', () => {
             no_axes: false,
             show_hydrogens: false,
             show_branched_sticks: false,
+            ensemble_shades: false,
             allow_lowest_quality: false,
             date: undefined,
             clear: true,

@@ -208,7 +208,7 @@ namespace SisterColors {
         satRadius: 0,
         satMin: 0,
         satMax: 1,
-        lumRadius: 0.25,
+        lumRadius: 0.3,
         lumMin: 0.1,
         lumMax: 0.9,
     };

@@ -61,6 +61,7 @@ export function parseArguments(): Args {
     parser.add_argument('--no-axes', { action: 'store_true', help: 'Do not render axis indicators aka PCA arrows (default: render axes when rendering the same scene from multiple view angles (front, side, top)).' });
     parser.add_argument('--show-hydrogens', { action: 'store_true', help: 'Show hydrogen atoms in ball-and-stick visuals (default: always ignore hydrogen atoms).' });
     parser.add_argument('--show-branched-sticks', { action: 'store_true', help: 'Show semi-transparent ball-and-stick visuals for branched entities (i.e. carbohydrates) in addition to the default 3D-SNFG visuals.' });
+    parser.add_argument('--ensemble-shades', { action: 'store_true', help: 'Show semi-transparent ball-and-stick visuals for branched entities (i.e. carbohydrates) in addition to the default 3D-SNFG visuals.' });
     parser.add_argument('--allow-lowest-quality', { action: 'store_true', help: "Allow any quality level for visuals, including 'lowest', which is really ugly (default: allow only 'lower' quality level and better)." });
     parser.add_argument('--date', { help: `Date to use as "last_modification" in the caption JSON (default: today's date formatted as YYYY-MM-DD).` });
     parser.add_argument('--clear', { action: 'store_true', help: 'Remove all contents of the output directory before running.' });
@@ -110,7 +111,7 @@ export async function main(args: Args) {
         const plugin = await createHeadlessPlugin(args);
         try {
             const saveFunction = makeSaveFunction(plugin, args.output_dir, args, publicUrl);
-            const options: ImageGeneratorOptions = { showHydrogens: args.show_hydrogens, showBranchedSticks: args.show_branched_sticks, allowLowestQuality: args.allow_lowest_quality };
+            const options: ImageGeneratorOptions = { showHydrogens: args.show_hydrogens, showBranchedSticks: args.show_branched_sticks, ensembleShades: args.ensemble_shades, allowLowestQuality: args.allow_lowest_quality };
             const imageGenerator = new ImageGenerator(plugin, saveFunction, api, args.type, args.view, options);
             await imageGenerator.processAll(args.entry_id, runtimeUrl, args.mode);
             if (tmpStructureFile) fs.rmSync(tmpStructureFile, { force: true });

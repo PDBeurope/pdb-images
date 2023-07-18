@@ -42,6 +42,7 @@ export interface Args {
     no_axes: boolean,
     show_hydrogens: boolean,
     show_branched_sticks: boolean,
+    ensemble_shades: boolean,
     allow_lowest_quality: boolean,
     date: string | undefined,
     clear: boolean,

@@ -84,6 +84,7 @@ pdbe-images 1hda data/output_1hda/ \
     --no-axes \
     --show-hydrogens \
     --show-branched-sticks \
+    --ensemble-shades \
     --allow-lowest-quality \
     --date 2023-04-20 \
     --clear \
