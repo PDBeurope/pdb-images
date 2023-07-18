@@ -61,7 +61,7 @@ export function parseArguments(): Args {
     parser.add_argument('--no-axes', { action: 'store_true', help: 'Do not render axis indicators aka PCA arrows (default: render axes when rendering the same scene from multiple view angles (front, side, top)).' });
     parser.add_argument('--show-hydrogens', { action: 'store_true', help: 'Show hydrogen atoms in ball-and-stick visuals (default: always ignore hydrogen atoms).' });
     parser.add_argument('--show-branched-sticks', { action: 'store_true', help: 'Show semi-transparent ball-and-stick visuals for branched entities (i.e. carbohydrates) in addition to the default 3D-SNFG visuals.' });
-    parser.add_argument('--ensemble-shades', { action: 'store_true', help: 'Show semi-transparent ball-and-stick visuals for branched entities (i.e. carbohydrates) in addition to the default 3D-SNFG visuals.' });
+    parser.add_argument('--ensemble-shades', { action: 'store_true', help: 'Show individual models within an ensemble in different shades of the base color (lighter and darker), default: use the same colors for all models.' });
     parser.add_argument('--allow-lowest-quality', { action: 'store_true', help: "Allow any quality level for visuals, including 'lowest', which is really ugly (default: allow only 'lower' quality level and better)." });
     parser.add_argument('--date', { help: `Date to use as "last_modification" in the caption JSON (default: today's date formatted as YYYY-MM-DD).` });
     parser.add_argument('--clear', { action: 'store_true', help: 'Remove all contents of the output directory before running.' });
