@@ -87,7 +87,7 @@ export async function main(args: Args) {
     fs.mkdirSync(args.output_dir, { recursive: true });
     if (args.clear) {
         for (const file of fs.readdirSync(args.output_dir)) {
-            fs.rmSync(path.join(args.output_dir, file));
+            fs.rmSync(path.join(args.output_dir, file), { recursive: true });
         }
     }
 
