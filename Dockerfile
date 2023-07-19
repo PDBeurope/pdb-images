@@ -7,14 +7,21 @@ RUN apt-get install -y nodejs
 # Extra packages are needed to build `gl` library on arm64 architecture (not needed on amd64 aka x86_64):
 RUN test "$(arch)" = "x86_64" || apt-get install -y python-is-python3 pkg-config build-essential libxi-dev libglew-dev
 
-RUN mkdir -p /pdbe-images
-WORKDIR /pdbe-images
+RUN mkdir -p /pdb-images
+WORKDIR /pdb-images
 
-RUN npm install -g pdbe-images
+COPY package.json ./
+RUN npm install
+
+COPY src ./src
+COPY tsconfig.json ./
+RUN npm run build
+
+RUN npm install -g .
 
 RUN mkdir -p /xvfb
 ENV XVFB_DIR="/xvfb"
 
 COPY docker ./docker
 
-ENTRYPOINT ["bash", "/pdbe-images/docker/entrypoint.sh"]
+ENTRYPOINT ["bash", "/pdb-images/docker/entrypoint.sh"]

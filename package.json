@@ -1,5 +1,5 @@
 {
-  "name": "pdbe-images",
+  "name": "pdb-images",
   "version": "1.0.0",
   "description": "Generates images from mmCIF/BCIF files",
   "scripts": {
@@ -14,11 +14,11 @@
   ],
   "directories.lib": "lib/",
   "bin":{
-    "pdbe-images": "./lib/cli/pdbe-images.js"
+    "pdb-images": "./lib/cli/pdb-images.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/PDBeurope/pdbe-images.git"
+    "url": "git+https://github.com/PDBeurope/pdb-images.git"
   },
   "keywords": [
     "macromolecules",
@@ -28,9 +28,9 @@
   "author": "Adam Midlik",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/PDBeurope/pdbe-images/issues"
+    "url": "https://github.com/PDBeurope/pdb-images/issues"
   },
-  "homepage": "https://github.com/PDBeurope/pdbe-images#readme",
+  "homepage": "https://github.com/PDBeurope/pdb-images#readme",
   "devDependencies": {
     "@types/gl": "^6.0.2",
     "@types/jest": "^29.5.0",

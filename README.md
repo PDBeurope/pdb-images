@@ -1,6 +1,6 @@
-# PDBeImages
+# PDBImages
 
-**PDBeImages** is a command line tool for generating images of macromolecular structures from mmCIF or binary CIF structure files based on Mol*.
+**PDBImages** is a command line tool for generating images of macromolecular structures from mmCIF or binary CIF structure files based on Mol*.
 
 
 ## Development
@@ -35,41 +35,41 @@ npm run jest
 
 ## Including as dependency
 
-**PDBeImages** is available in the NPM registry. You can add it as a dependency to your own package:
+**PDBImages** is available in the NPM registry. You can add it as a dependency to your own package:
 
 ```sh
-npm install pdbe-images
+npm install pdb-images
 ```
 
 ## Installing as CLI tool
 
-**PDBeImages** is available in the NPM registry. You can install it globally on your machine:
+**PDBImages** is available in the NPM registry. You can install it globally on your machine:
 
 ```sh
-npm install -g pdbe-images
+npm install -g pdb-images
 ```
 
 
 ## Usage
 
-NOTE: The following examples assume you installed PDBeImages globally with `npm install -g pdbe-images`. If you installed locally in the current directory (`npm install pdbe-images`), use `npx pdbe-images` instead of `pdbe-images`. If you cloned the git repository and built it, use `node ./lib/cli/pdbe-images.js` instead of `pdbe-images`.
+NOTE: The following examples assume you installed PDBImages globally with `npm install -g pdb-images`. If you installed locally in the current directory (`npm install pdb-images`), use `npx pdb-images` instead of `pdb-images`. If you cloned the git repository and built it, use `node ./lib/cli/pdb-images.js` instead of `pdb-images`.
 
 Print help:
 
 ```sh
-pdbe-images --help
+pdb-images --help
 ```
 
 Generate all images for PDB entry `1ad5` and save in directory `data/output_1ad5/`, with default settings:
 
 ```sh
-pdbe-images 1ad5 data/output_1ad5/
+pdb-images 1ad5 data/output_1ad5/
 ```
 
 Another example, with all command line arguments given:
 
 ```sh
-pdbe-images 1hda data/output_1hda/ \
+pdb-images 1hda data/output_1hda/ \
     --input test_data/structures/1hda.cif \
     --input-public https://www.ebi.ac.uk/pdbe/entry-files/download/1hda.bcif \
     --mode pdb \
@@ -112,7 +112,7 @@ If the output directory contains older files from previous runs, these will also
 
 ### Generated image types
 
-**PDBeImages** generates many types of images. By default, it will create all image types that make sense for the selected mode (`pdb`/`alphafold`) and entry. Alternatively, the user can select a subset of image types by the option `--type`. These are all the available types:
+**PDBImages** generates many types of images. By default, it will create all image types that make sense for the selected mode (`pdb`/`alphafold`) and entry. Alternatively, the user can select a subset of image types by the option `--type`. These are all the available types:
 
 * `entry` – Create images of the whole deposited structure, colored by chains and colored by entities (i.e. chemically distinct molecules).
   * –> `{pdb}_deposited_chain_{view}_image-{size}.png`
@@ -141,20 +141,20 @@ By default, some image types are rendered in three views (front, side, top view)
 
 ## Run in Docker
 
-NOTE: Docker image for PDBeImages uses Xvfb, which results in much worse performance compared to running it directly on a machine with GPU (see FAQ).
+NOTE: Docker image for PDBImages uses Xvfb, which results in much worse performance compared to running it directly on a machine with GPU (see FAQ).
 
 ### Get image from repository and run
 
 ```sh
-docker run -v ~/data/output_1ad5:/out midlik/pdbe-images:amd64 1ad5 /out
+docker run -v ~/data/output_1ad5:/out midlik/pdb-images 1ad5 /out
 ```
 
 ### Build and run
 
 ```sh
-docker build . -t pdbe-images                         # if you run it on the same architecture as build
-docker build . -t pdbe-images --platform linux/amd64  # if you need it for a different architecture
-docker run -v ~/data/output_1ad5:/out pdbe-images 1ad5 /out
+docker build . -t pdb-images                         # if you run it on the same architecture as build
+docker build . -t pdb-images --platform linux/amd64  # if you need it for a different architecture
+docker run -v ~/data/output_1ad5:/out pdb-images 1ad5 /out
 ```
 
 (Add `-f Dockerfile-dev` to the build command if you want to build the current state of the project in Docker instead of using NPM package.)
@@ -162,8 +162,8 @@ docker run -v ~/data/output_1ad5:/out pdbe-images 1ad5 /out
 ### Run in Singularity
 
 ```sh
-singularity build ./pdbe-images docker://midlik/pdbe-images:amd64
-singularity run --env XVFB_DIR=~/data/xvfb ./pdbe-images 1ad5 ~/data/output_1ad5
+singularity build ./pdb-images docker://midlik/pdb-images
+singularity run --env XVFB_DIR=~/data/xvfb ./pdb-images 1ad5 ~/data/output_1ad5
 ```
 
 It is important to set `XVFB_DIR` variable to an existing mounted directory (use `--bind` if paths are not mounted automatically). When running multiple jobs in parallel, set a separate `XVFB_DIR` for each job.
@@ -188,7 +188,7 @@ It is important to set `XVFB_DIR` variable to an existing mounted directory (use
   
   or follow instructions here: <https://www.npmjs.com/package/gl#system-dependencies>
 
-- Installation completed successfully and running `pdbe-images --help` works fine, but trying to run image generation gives an error like this:
+- Installation completed successfully and running `pdb-images --help` works fine, but trying to run image generation gives an error like this:
 
   ```
           var ext = gl.getExtension('ANGLE_instanced_arrays');
@@ -201,9 +201,9 @@ It is important to set `XVFB_DIR` variable to an existing mounted directory (use
   
   ```sh
   sudo apt-get install xvfb
-  xvfb-run --auto-servernum pdbe-images 1ad5 data/output_1ad5/
+  xvfb-run --auto-servernum pdb-images 1ad5 data/output_1ad5/
   ```
   
   This approach is used for the GitHub testing workflow (`sudo apt-get install xvfb && xvfb-run --auto-servernum npm run jest`). It is also used in the enclosed Dockerfile.
   
-  The downside of this approach is that `Xvfb` is a purely software implementation and cannot use GPU (this information cannot be found in any official source but a bunch of people on StackOverflow say so), thus not allowing the full performance potential of PDBeImages.
+  The downside of this approach is that `Xvfb` is a purely software implementation and cannot use GPU (this information cannot be found in any official source but a bunch of people on StackOverflow say so), thus not allowing the full performance potential of PDBImages.
