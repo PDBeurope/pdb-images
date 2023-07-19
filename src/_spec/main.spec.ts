@@ -49,12 +49,6 @@ const EXPECTED_FILENAMES_AF_Q8Q3K0 = [
 ].sort();
 
 
-describe('fail', () => {
-    it('always fail this test', () => {
-        expect(1).toEqual(2);
-    });
-});
-
 describe('version', () => {
     it('version agrees with package.json', () => {
         expect(VERSION).toEqual(versionFromPackageJson());
