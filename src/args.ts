@@ -7,9 +7,9 @@
 import { LogLevel } from './helpers/logging';
 
 
-/** Modes of operation of PDBeImages */
+/** Modes of operation of PDBImages */
 export const Modes = ['pdb', 'alphafold'] as const;
-/** Modes of operation of PDBeImages */
+/** Modes of operation of PDBImages */
 export type Mode = typeof Modes[number]
 
 /** Types of images that can be generated */
