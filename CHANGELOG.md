@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hide hydrogens and branched entity balls-and-sticks by default, new args --show-hydrogens --show-branched-sticks --ensemble-shades --allow-lowest-quality
 - Fixed color assignment for ensembles
 
+## [2.0.0] - 2023-07-19
+
+- Renamed this package to `pdb-images`
 
 ## [1.0.0] - 2023-06-20
 

@@ -28,7 +28,7 @@ import * as Paths from './paths';
 import { makeSaveFunction } from './save';
 
 
-export const VERSION = '1.0.0';
+export const VERSION = '2.0.0';
 setFSModule(fs); // this is needed to make `fetch` work in MolStar
 const logger = getLogger(module);
 
@@ -43,7 +43,7 @@ const DEFAULT_IMAGE_SIZE = '800x800';
 
 /** Return parsed command line arguments for `main` */
 export function parseArguments(): Args {
-    const parser = new ArgumentParser({ description: 'PDBeImages, a CLI tool for generating images of macromolecular models.' });
+    const parser = new ArgumentParser({ description: 'PDBImages, a CLI tool for generating images of macromolecular models.' });
     parser.add_argument('-v', '--version', { action: 'version', version: VERSION, help: 'Print version info and exit.' });
     parser.add_argument('entry_id', { help: 'Entry identifier (PDB ID or AlphaFoldDB ID).' });
     parser.add_argument('output_dir', { help: 'Output directory.' });
