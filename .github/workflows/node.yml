@@ -2,9 +2,7 @@ name: Build
 
 on:
   push:
-    branches: [ main ]
   pull_request:
-    branches: [ main ]
 
 jobs:
   build:
@@ -28,8 +26,15 @@ jobs:
         name: build-artifact
         path: lib/
 
+  valid_tag:
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check that the tag follows semantic versioning (must not start with "v")
+      run: echo ${{ github.ref_name }} | egrep '^[0-9]+\.[0-9]+\.[0-9]+\S*$'
+
   npm_publish:
-    needs: build
+    needs: [build, valid_tag]
     runs-on: ubuntu-latest
     steps:
         - uses: actions/checkout@v3
@@ -49,7 +54,7 @@ jobs:
             NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   docker_build_and_push_to_dockerhub:
-    needs: build
+    needs: [build, valid_tag]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -68,15 +73,12 @@ jobs:
         with:
           push: true
           platforms: linux/amd64,linux/arm/v7,linux/arm64/v8
-          # tags: |
-          #   ${{ secrets.DOCKER_USERNAME }}/pdb-images:${{ github.ref_name }}
-          #   ${{ secrets.DOCKER_USERNAME }}/pdb-images:latest
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/pdb-images:2.0.0
+            ${{ secrets.DOCKER_USERNAME }}/pdb-images:${{ github.ref_name }}
             ${{ secrets.DOCKER_USERNAME }}/pdb-images:latest
 
   docker_build_and_push_to_gitlab:
-    needs: build
+    needs: [build, valid_tag]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

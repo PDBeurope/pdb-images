@@ -33,6 +33,19 @@ npm run lint
 npm run jest
 ```
 
+### Release
+
+To release a new version of this package:
+
+* Change version in `package.json`
+* Change version in `src/main.ts` (`export const VERSION = ...`)
+* Run tests (will check if the versions match)
+* Commit and push to `main` branch
+* Create a git tag using semantic versioning (e.g. `2.0.0`); do not start the tag with "v" (e.g. `v2.0.0`)
+* GitHub workflow will automatically publish NPM package (https://www.npmjs.com/package/pdb-images)
+* GitHub workflow will automatically publish Docker images (https://hub.docker.com/r/pdbegroup/pdb-images and dockerhub.ebi.ac.uk/pdbe/packages/pdb-images)
+
+
 ## Including as dependency
 
 **PDBImages** is available in the NPM registry. You can add it as a dependency to your own package:
@@ -40,6 +53,7 @@ npm run jest
 ```sh
 npm install pdb-images
 ```
+
 
 ## Installing as CLI tool
 
@@ -146,7 +160,7 @@ NOTE: Docker image for PDBImages uses Xvfb, which results in much worse performa
 ### Get image from repository and run
 
 ```sh
-docker run -v ~/data/output_1ad5:/out midlik/pdb-images 1ad5 /out
+docker run -v ~/data/output_1ad5:/out pdbegroup/pdb-images 1ad5 /out
 ```
 
 ### Build and run
@@ -162,7 +176,7 @@ docker run -v ~/data/output_1ad5:/out pdb-images 1ad5 /out
 ### Run in Singularity
 
 ```sh
-singularity build ./pdb-images docker://midlik/pdb-images
+singularity build ./pdb-images docker://pdbegroup/pdb-images
 singularity run --env XVFB_DIR=~/data/xvfb ./pdb-images 1ad5 ~/data/output_1ad5
 ```
 
