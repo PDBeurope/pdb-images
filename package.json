@@ -50,7 +50,7 @@
   "dependencies": {
     "gl": "^6.0.2",
     "log4js": "^6.9.1",
-    "molstar": "^3.34.0",
+    "molstar": "^3.38.0",
     "pngjs": "^6.0.0",
     "tslib": "^2.5.0"
   }
