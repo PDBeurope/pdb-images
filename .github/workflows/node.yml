@@ -1,6 +1,8 @@
 name: Build
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
 
 jobs:
   build:
@@ -24,69 +26,69 @@ jobs:
         name: build-artifact
         path: lib/
 
-  valid_tag:
-    if: github.ref_type == 'tag'
-    runs-on: ubuntu-latest
-    steps:
-    - name: Check that the tag follows semantic versioning (must not start with "v")
-      run: echo ${{ github.ref_name }} | egrep '^[0-9]+\.[0-9]+\.[0-9]+\S*$'
+  # valid_tag:
+  #   if: github.ref_type == 'tag'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Check that the tag follows semantic versioning (must not start with "v")
+  #     run: echo ${{ github.ref_name }} | egrep '^[0-9]+\.[0-9]+\.[0-9]+\S*$'
 
-  npm_publish:
-    needs: [build, valid_tag]
-    runs-on: ubuntu-latest
-    steps:
-        - uses: actions/checkout@v3
-        - uses: actions/setup-node@v3
-          with:
-            node-version: 18
-            registry-url: https://registry.npmjs.org/
-        - run: npm ci
-        - name: Download Build Artifact
-          uses: actions/download-artifact@v3
-          with:
-            name: build-artifact
-            path: lib/
-        - name: NPM Publish
-          run: npm publish
-          env:
-            NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  # npm_publish:
+  #   needs: [build, valid_tag]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #       - uses: actions/checkout@v3
+  #       - uses: actions/setup-node@v3
+  #         with:
+  #           node-version: 18
+  #           registry-url: https://registry.npmjs.org/
+  #       - run: npm ci
+  #       - name: Download Build Artifact
+  #         uses: actions/download-artifact@v3
+  #         with:
+  #           name: build-artifact
+  #           path: lib/
+  #       - name: NPM Publish
+  #         run: npm publish
+  #         env:
+  #           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  docker_build_and_push_to_dockerhub:
-    needs: [build, valid_tag]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          push: true
-          platforms: linux/amd64,linux/arm/v7,linux/arm64/v8
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/pdb-images:${{ github.ref_name }}
-            ${{ secrets.DOCKER_USERNAME }}/pdb-images:latest
+  # docker_build_and_push_to_dockerhub:
+  #   needs: [build, valid_tag]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+  #     - name: Set up QEMU
+  #       uses: docker/setup-qemu-action@v2
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v2
+  #     - name: Login to DockerHub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKER_USERNAME }}
+  #         password: ${{ secrets.DOCKER_PASSWORD }}
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v2
+  #       with:
+  #         push: true
+  #         platforms: linux/amd64,linux/arm/v7,linux/arm64/v8
+  #         tags: |
+  #           ${{ secrets.DOCKER_USERNAME }}/pdb-images:${{ github.ref_name }}
+  #           ${{ secrets.DOCKER_USERNAME }}/pdb-images:latest
 
-  docker_build_and_push_to_gitlab:
-    needs: [build, valid_tag]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  # docker_build_and_push_to_gitlab:
+  #   needs: [build, valid_tag]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-      - name: Login to GitLab Container Registry
-        run: echo ${{ secrets.REGISTRY_PASSWORD }} | docker login -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin ${{ vars.REGISTRY_URL }}
+  #     - name: Login to GitLab Container Registry
+  #       run: echo ${{ secrets.REGISTRY_PASSWORD }} | docker login -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin ${{ vars.REGISTRY_URL }}
 
-      - name: Build and tag Docker image
-        run: docker build -t ${{ vars.REGISTRY_URL }}/${{ secrets.REGISTRY_USERNAME }}/packages/pdb-images:latest .
+  #     - name: Build and tag Docker image
+  #       run: docker build -t ${{ vars.REGISTRY_URL }}/${{ secrets.REGISTRY_USERNAME }}/packages/pdb-images:latest .
 
-      - name: Push Docker image to GitLab Container Registry
-        run: docker push ${{ vars.REGISTRY_URL }}/${{ secrets.REGISTRY_USERNAME }}/packages/pdb-images:latest
+  #     - name: Push Docker image to GitLab Container Registry
+  #       run: docker push ${{ vars.REGISTRY_URL }}/${{ secrets.REGISTRY_USERNAME }}/packages/pdb-images:latest
