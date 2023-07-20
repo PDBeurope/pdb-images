@@ -48,8 +48,8 @@ jobs:
           env:
             NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  docker_build_and_push:
-    # needs: build
+  docker_build_and_push_to_dockerhub:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -68,9 +68,14 @@ jobs:
         with:
           push: true
           platforms: linux/amd64,linux/arm/v7,linux/arm64/v8
-          tags: ${{ secrets.DOCKER_USERNAME }}/pdb-images:latest
+          # tags: |
+          #   ${{ secrets.DOCKER_USERNAME }}/pdb-images:${{ github.ref_name }}
+          #   ${{ secrets.DOCKER_USERNAME }}/pdb-images:latest
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/pdb-images:2.0.0
+            ${{ secrets.DOCKER_USERNAME }}/pdb-images:latest
 
-  gitlab_build_and_push:
+  docker_build_and_push_to_gitlab:
     needs: build
     runs-on: ubuntu-latest
     steps:
