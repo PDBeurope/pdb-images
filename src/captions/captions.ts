@@ -176,7 +176,7 @@ export namespace Captions {
         description.push('The deposited structure of PDB entry', B_, entryId, _B,
             'contains', countNoun(totalCopies, 'cop|y|ies'), 'of', source, 'domain', B_, familyId, `(${familyName})`, _B, 'in', B_, name, _B, '.',
             'Showing', countNoun(shownCopies, 'cop|y|ies'), 'in chain', B_, chainLabel(chainId, authChainId), _B,
-            (outOfRangeCopies > 0 ? (shownCopies > 1 ? '(some of the domains are out of the observed residue ranges!)' : '(this domain is out of the observed residue ranges!)') : ''),
+            (outOfRangeCopies > 0 ? (outOfRangeCopies < shownCopies ? '(some of the copies are out of the observed residue ranges!)' : '(this domain is out of the observed residue ranges!)') : ''),
             '.',
             capital(viewPhrase(view)), '.');
         return {

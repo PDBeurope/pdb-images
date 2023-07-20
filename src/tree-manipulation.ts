@@ -399,7 +399,7 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
         });
     }
     /** Color this visual by entity ID. */
-    async setColorByEntity(options?: { ignoreElementColors?: boolean, colorList?: Color[] }) {
+    async setColorByEntity(options?: { colorList?: Color[], ignoreElementColors?: boolean }) {
         const palette = paletteParam(options?.colorList);
         return this.updateVisual(old => ({
             colorTheme: (old.type.name === 'ball-and-stick' && !options?.ignoreElementColors) ?
@@ -408,7 +408,7 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
         }));
     }
     /** Color this visual by auth chain ID (i.e. copies of the same chain in an assembly will have the same color), color balls-and-sticks by element with chainId-colored carbons. */
-    async setColorByChainId(options?: { ignoreElementColors?: boolean, colorList?: Color[] }) {
+    async setColorByChainId(options?: { colorList?: Color[], ignoreElementColors?: boolean }) {
         const palette = paletteParam(options?.colorList);
         return this.updateVisual(old => ({
             colorTheme: (old.type.name === 'ball-and-stick' && !options?.ignoreElementColors) ?
@@ -417,11 +417,11 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
         }));
     }
     /** Color this visual by chain instance (i.e. copies of the same chain in an assembly will have different colors), color balls-and-sticks by element with gray carbons. */
-    async setColorByChainInstance(options?: { ignoreElementColors?: boolean, colorList?: Color[], entityColorList?: Color[] }) {
+    async setColorByChainInstance(options?: { colorList?: Color[], ignoreElementColors?: boolean }) {
         const palette = paletteParam(options?.colorList);
         return this.updateVisual(old => ({
             colorTheme: (old.type.name === 'ball-and-stick' && !options?.ignoreElementColors) ?
-                { name: 'element-symbol', params: { carbonColor: (options?.entityColorList) ? { name: 'entity-id', params: { palette: paletteParam(options.entityColorList) } } : { name: 'element-symbol', params: {} } } } // 'unit-index' is not available for carbonColor :(
+                { name: 'element-symbol', params: { carbonColor: { name: 'unit-index', params: { palette } } } }
                 : { name: 'unit-index', params: { palette } }
         }));
     }

@@ -153,11 +153,10 @@ export class ImageGenerator {
             if (mode === 'pdb') {
                 if (this.shouldRender('entry')) {
                     if (nModels === 1) {
-                        await visuals.applyToAll(vis => vis.setColorByChainInstance({ colorList: colors.units, entityColorList: colors.entities, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') }));
-                        // TODO remove ignoreElementsColors bit once element colors can be applied with carbonColor: unit-index (everywhere in this file)
+                        await visuals.applyToAll(vis => vis.setColorByChainInstance({ colorList: colors.units }));
                         await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'chains', view }));
 
-                        await visuals.applyToAll(vis => vis.setColorByEntity({ colorList: colors.entities, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') }));
+                        await visuals.applyToAll(vis => vis.setColorByEntity({ colorList: colors.entities }));
                         await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'entities', view }));
                     } else {
                         model.setCollapsed(ALLOW_COLLAPSED_NODES);
@@ -176,14 +175,13 @@ export class ImageGenerator {
                             this.zoomAll(); // zoom whole ensemble (needed e.g. for 3gaw)
                             for (let i = 0; i < visualsByModel.length; i++) {
                                 const unitColors = this.options.ensembleShades ? lightnessVariant(colors.units, i) : colors.units;
-                                const entityColors = this.options.ensembleShades ? lightnessVariant(colors.entities, i) : colors.entities;
-                                await visualsByModel[i].applyToAll(vis => vis.setColorByChainInstance({ colorList: unitColors, entityColorList: entityColors, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') }));
+                                await visualsByModel[i].applyToAll(vis => vis.setColorByChainInstance({ colorList: unitColors }));
                             }
                             await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'chains', view }));
 
                             for (let i = 0; i < visualsByModel.length; i++) {
                                 const entityColors = this.options.ensembleShades ? lightnessVariant(colors.entities, i) : colors.entities;
-                                await visualsByModel[i].applyToAll(vis => vis.setColorByEntity({ colorList: entityColors, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') }));
+                                await visualsByModel[i].applyToAll(vis => vis.setColorByEntity({ colorList: entityColors }));
                             }
                             await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'entities', view }));
                         });
@@ -250,10 +248,10 @@ export class ImageGenerator {
             const visuals = await components.makeStandardVisuals(this.options);
             this.orientAndZoomAll(structure);
             if (this.shouldRender('assembly')) {
-                await visuals.applyToAll(vis => vis.setColorByChainInstance({ colorList: colors.units, entityColorList: colors.entities, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') }));
+                await visuals.applyToAll(vis => vis.setColorByChainInstance({ colorList: colors.units }));
                 await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'chains', view }));
 
-                await visuals.applyToAll(vis => vis.setColorByEntity({ colorList: colors.entities, ignoreElementColors: vis.node.cell?.transform.tags?.includes('nonstandardSticks') }));
+                await visuals.applyToAll(vis => vis.setColorByEntity({ colorList: colors.entities }));
                 await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'entities', view }));
             }
 
@@ -383,7 +381,7 @@ export class ImageGenerator {
                             for (const domainStruct of Object.values(domainStructures)) {
                                 const components = await domainStruct.makeStandardComponents(ALLOW_COLLAPSED_NODES);
                                 const visuals = await components.makeStandardVisuals(this.options);
-                                const color = colorsIterator.next().value!; // same color for all visual of the domain
+                                const color = colorsIterator.next().value!; // same color for all visuals of the domain
                                 await visuals.applyToAll(vis => vis.setColorUniform(color, { ignoreElementColors: true }));
                             }
                             await this.saveViews('front', view => Captions.forDomain({ ...context, source, familyId, familyName, entityId, chainId, authChainId, totalCopies, shownCopies, outOfRangeCopies, view }));
