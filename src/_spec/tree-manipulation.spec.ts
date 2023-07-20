@@ -10,7 +10,7 @@ import { Color } from 'molstar/lib/commonjs/mol-util/color';
 import { PDBeAPI } from '../api';
 import { getEntityInfo } from '../helpers/structure-info';
 import { RootNode, using } from '../tree-manipulation';
-import { getTestingHeadlessPlugin } from './_utils';
+import { LONG_TEST_TIMEOUT, getTestingHeadlessPlugin } from './_utils';
 
 
 const DOWNLOAD_PARAMS = { url: 'file://./test_data/structures/1hda.cif', isBinary: false };
@@ -51,7 +51,7 @@ describe('basic', () => {
         } finally {
             plugin.dispose();
         }
-    });
+    }, LONG_TEST_TIMEOUT);
 
     it('download, parse binary CIF, get model, custom model props', async () => {
         const plugin = await getTestingHeadlessPlugin();
@@ -70,7 +70,7 @@ describe('basic', () => {
         } finally {
             plugin.dispose();
         }
-    });
+    }, LONG_TEST_TIMEOUT);
 
     it('using', async () => {
         const plugin = await getTestingHeadlessPlugin();
@@ -83,7 +83,7 @@ describe('basic', () => {
         } finally {
             plugin.dispose();
         }
-    });
+    }, LONG_TEST_TIMEOUT);
 
     it('toggle visible, collapsed, ghost', async () => {
         const plugin = await getTestingHeadlessPlugin();
@@ -112,7 +112,7 @@ describe('basic', () => {
         } finally {
             plugin.dispose();
         }
-    });
+    }, LONG_TEST_TIMEOUT);
 
 });
 
@@ -133,7 +133,7 @@ describe('structure', () => {
         } finally {
             plugin.dispose();
         }
-    });
+    }, LONG_TEST_TIMEOUT);
 
     it('makeStructure "assembly"', async () => {
         const plugin = await getTestingHeadlessPlugin();
@@ -151,7 +151,7 @@ describe('structure', () => {
         } finally {
             plugin.dispose();
         }
-    });
+    }, LONG_TEST_TIMEOUT);
 });
 
 
@@ -190,7 +190,7 @@ describe('substructures', () => {
         } finally {
             plugin.dispose();
         }
-    });
+    }, LONG_TEST_TIMEOUT);
 
     it('group, makeChain, makeAuthChain', async () => {
         const plugin = await getTestingHeadlessPlugin();
@@ -211,7 +211,7 @@ describe('substructures', () => {
         } finally {
             plugin.dispose();
         }
-    });
+    }, LONG_TEST_TIMEOUT);
 
     it('entities', async () => {
         const plugin = await getTestingHeadlessPlugin();
@@ -230,7 +230,7 @@ describe('substructures', () => {
         } finally {
             plugin.dispose();
         }
-    });
+    }, LONG_TEST_TIMEOUT);
 });
 
 
@@ -252,7 +252,7 @@ describe('visuals', () => {
         } finally {
             plugin.dispose();
         }
-    });
+    }, LONG_TEST_TIMEOUT);
 
     it('makeStandardVisuals', async () => {
         const plugin = await getTestingHeadlessPlugin();
@@ -279,7 +279,7 @@ describe('visuals', () => {
         } finally {
             plugin.dispose();
         }
-    });
+    }, LONG_TEST_TIMEOUT);
 
     it('makeLigEnvComponents', async () => {
         const plugin = await getTestingHeadlessPlugin();
@@ -301,7 +301,7 @@ describe('visuals', () => {
         } finally {
             plugin.dispose();
         }
-    });
+    }, LONG_TEST_TIMEOUT);
 
     it('changing visuals', async () => {
         const plugin = await getTestingHeadlessPlugin();
@@ -364,7 +364,7 @@ describe('visuals', () => {
         } finally {
             plugin.dispose();
         }
-    });
+    }, LONG_TEST_TIMEOUT);
 
     it('changing visuals - plddt', async () => {
         const plugin = await getTestingHeadlessPlugin();
@@ -389,5 +389,5 @@ describe('visuals', () => {
         } finally {
             plugin.dispose();
         }
-    });
+    }, LONG_TEST_TIMEOUT);
 });

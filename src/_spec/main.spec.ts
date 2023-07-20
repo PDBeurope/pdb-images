@@ -11,10 +11,8 @@ import path from 'path';
 import { Args } from '../args';
 import { loadPngToRaw } from '../image/resize';
 import { VERSION, main, parseArguments } from '../main';
-import { isBorderBlank, isImageBlank, versionFromPackageJson } from './_utils';
+import { LONG_TEST_TIMEOUT, isBorderBlank, isImageBlank, versionFromPackageJson } from './_utils';
 
-
-const TEST_TIMEOUT = 600_000; // ms
 
 const EXPECTED_FILENAMES_1AD5 = [
     '1ad5_deposited_chain',
@@ -63,7 +61,7 @@ describe('isImageBlank', () => {
         expect(isImageBlank(await loadPngToRaw('./test_data/sample_images/axes_front.png'))).toBeFalsy();
         expect(isBorderBlank(await loadPngToRaw('./test_data/sample_images/white.png'))).toBeTruthy();
         expect(isBorderBlank(await loadPngToRaw('./test_data/sample_images/axes_front.png'))).toBeTruthy();
-    }, TEST_TIMEOUT);
+    }, LONG_TEST_TIMEOUT);
 });
 
 
@@ -218,7 +216,7 @@ describe('main', () => {
                 expect(isBorderBlank(image)).toBeTruthy();
             }
         }
-    }, TEST_TIMEOUT);
+    }, LONG_TEST_TIMEOUT);
 
     it('AF-Q8W3K0-F1-model_v4', async () => {
         const OUTPUT_DIR = './test_data/outputs/AF-Q8W3K0-F1-model_v4';
@@ -277,5 +275,5 @@ describe('main', () => {
                 expect(isBorderBlank(image)).toBeTruthy();
             }
         }
-    }, TEST_TIMEOUT);
+    }, LONG_TEST_TIMEOUT);
 });
