@@ -10,6 +10,7 @@ import { ElementSymbolColors } from 'molstar/lib/commonjs/mol-theme/color/elemen
 import { Color, ColorListEntry } from 'molstar/lib/commonjs/mol-util/color/color';
 import { ColorLists } from 'molstar/lib/commonjs/mol-util/color/lists';
 import { Hcl } from 'molstar/lib/commonjs/mol-util/color/spaces/hcl';
+import { getElementsInChains, getEntityInfo } from './structure-info';
 
 
 const SET1 = colorArray(ColorLists['set-1'].list.slice(0, 8)); // Discard the last color (gray)
@@ -60,13 +61,27 @@ export function assignEntityAndUnitColors(structure: Structure) {
 
     structure = structure.parent ?? structure;
 
+    const entityInfo = getEntityInfo(structure);
     const entities = structure.model.entities;
-    const entityColors = [];
+    const entityColors: Color[] = [];
     const entityIndex: { [entityId: string]: number } = {};
     for (let i = 0; i < entities.data._rowCount; i++) {
         const id = entities.data.id.value(i);
         const typ = entities.data.type.value(i);
-        const color = typ === 'water' ? waterColor : typ === 'non-polymer' ? ligandColors.next().value! : polymerColors.next().value!;
+        const elementSymbols = getElementsInChains(structure, entityInfo[id]?.chains ?? []);
+        let color: Color | undefined;
+        if (typ === 'water') {
+            color = waterColor;
+        }
+        if (!color && elementSymbols.length === 1) {
+            color = ElementSymbolColors[elementSymbols[0] as keyof ElementSymbolColors]; // might be undefined!
+        }
+        if (!color && typ === 'non-polymer') {
+            color = ligandColors.next().value!;
+        }
+        if (!color) {
+            color = polymerColors.next().value!;
+        }
         entityColors.push(color);
         entityIndex[id] = i;
     }
@@ -83,6 +98,12 @@ export function assignEntityAndUnitColors(structure: Structure) {
         unitColors.push(color);
     }
     return { entities: entityColors, units: unitColors };
+}
+
+/** Generate lighter or darker variant of colors (how much lighter or darker will depend quasi-randomly on integer `i`; i=0 means original colors). */
+export function lightnessVariant(colors: Color[], i: number): Color[] {
+    if (i === 0) return [...colors];
+    return colors.map(c => SisterColors.getSisterColor(c, i, SisterColors.LUMINOSITY_SISTER_COLOR_PARAMS));
 }
 
 /** Convert an array of ColorListEntries into Colors. */
@@ -173,12 +194,21 @@ namespace PslColors {
 
 
 namespace SisterColors {
-    const DEFAULT_SISTER_COLOR_PARAMS = {
+    export const DEFAULT_SISTER_COLOR_PARAMS = {
         hueRadius: 90,
         satRadius: 0.3,
         satMin: 0.2,
         satMax: 1.0,
         lumRadius: 0.25,
+        lumMin: 0.1,
+        lumMax: 0.9,
+    };
+    export const LUMINOSITY_SISTER_COLOR_PARAMS = {
+        hueRadius: 0,
+        satRadius: 0,
+        satMin: 0,
+        satMax: 1,
+        lumRadius: 0.3,
         lumMin: 0.1,
         lumMax: 0.9,
     };
@@ -192,7 +222,7 @@ namespace SisterColors {
         const [hue0, sat0, lum0] = PslColors.colorToPsl(base);
         const hue = remap(magicNumber2(i), hue0, params.hueRadius);
         const sat = remap(magicNumber3(i), sat0, params.satRadius, params.satMin, params.satMax);
-        const lum = remap(magicNumber(i), lum0, params.lumRadius, params.lumMin, params.lumMax);
+        const lum = remap((1 - magicNumber(i)) % 1, lum0, params.lumRadius, params.lumMin, params.lumMax);
         return PslColors.pslToColor(PslColors.PSL(hue, sat, lum));
     }
 
@@ -213,11 +243,19 @@ namespace SisterColors {
      * 0 maps to center, [0, 0.5) map to [center, center+radius), [0.5, 1) map to [center-radius, center).
      * If min and/or max are given, shift the codomain to fully fit in [min, max), but 0 must still map to center. */
     function remap(value: number, center: number, radius: number, min?: number, max?: number) {
-        const start = center - radius;
-        if (min !== undefined) Math.max(min, start);
-        if (max !== undefined) Math.min(max - 2 * radius, start);
-        const valueShift = (center - start) / (2 * radius);
-        return start + ((value + valueShift) % 1) * 2 * radius;
+        let start = center - radius;
+        const range = (min !== undefined && max !== undefined) ? Math.min(2 * radius, max - min) : 2 * radius;
+        if (min !== undefined) {
+            start = Math.max(start, min);
+            center = Math.max(center, min);
+        }
+        if (max !== undefined) {
+            start = Math.min(start, max - range);
+            center = Math.min(center, max - 0.001 * range);
+        }
+
+        const valueShift = (range > 0) ? (center - start) / range : 0;
+        return start + ((value + valueShift) % 1) * range;
     }
 
     /** Golden ratio */

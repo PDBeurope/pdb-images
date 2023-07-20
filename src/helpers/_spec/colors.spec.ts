@@ -4,7 +4,7 @@
  * @author Adam Midlik <midlik@gmail.com>
  */
 
-import { assignEntityAndUnitColors, cycleIterator } from '../colors';
+import { assignEntityAndUnitColors, cycleIterator, lightnessVariant } from '../colors';
 import { getTestingStructure } from '../../_spec/_utils';
 
 
@@ -44,6 +44,17 @@ describe('colors', () => {
         expect(result.units[2] === result.entities[1]); // first beta subunit
         expect(result.units[4] === result.entities[2]); // first HEM
         expect(result.units[8] === result.entities[3]); // water
+        return;
+    });
+
+    it('lightnessVariant', async () => {
+        const structure = await getTestingStructure('1hda');
+        const colors = assignEntityAndUnitColors(structure).units;
+        expect(lightnessVariant(colors, 0).length).toBe(colors.length);
+        expect(lightnessVariant(colors, 1).length).toBe(colors.length);
+        expect(new Set(lightnessVariant(colors, 1)).size).toEqual(colors.length);
+        expect(lightnessVariant(colors, 0)).toEqual(colors);
+        expect(lightnessVariant(colors, 1)).not.toEqual(colors);
         return;
     });
 });

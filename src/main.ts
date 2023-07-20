@@ -18,10 +18,13 @@ import { HeadlessScreenshotHelperOptions, STYLIZED_POSTPROCESSING, defaultCanvas
 import { setFSModule } from 'molstar/lib/commonjs/mol-util/data-source';
 
 import { PDBeAPI } from './api';
+import { Args, ImageTypes, Mode, Modes } from './args';
 import { collectCaptions } from './captions/collect';
+import { checkMissingFiles, getExpectedFiles } from './expected-files';
 import { fetchUrl, gunzipData, parseIntStrict } from './helpers/helpers';
-import { LogLevel, LogLevels, configureLogging, getLogger, oneLine } from './helpers/logging';
-import { ImageGenerator, ImageType, ImageTypes, Mode, Modes } from './image-generator';
+import { LogLevels, configureLogging, getLogger, oneLine } from './helpers/logging';
+import { ImageGenerator, ImageGeneratorOptions } from './image-generator';
+import * as Paths from './paths';
 import { makeSaveFunction } from './save';
 
 
@@ -38,27 +41,6 @@ const DEFAULT_PDBE_API_URL = 'https://www.ebi.ac.uk/pdbe/api';
 const DEFAULT_IMAGE_SIZE = '800x800';
 
 
-/** Command line argument values for `main` */
-export interface Args {
-    entry_id: string,
-    output_dir: string,
-    input: string | undefined,
-    input_public: string | undefined,
-    mode: Mode,
-    api_url: string,
-    api_retry: boolean,
-    no_api: boolean,
-    size: { width: number, height: number }[],
-    render_each_size: boolean,
-    type: ImageType[],
-    view: 'front' | 'all' | 'auto',
-    opaque_background: boolean,
-    no_axes: boolean,
-    date: string | undefined,
-    clear: boolean,
-    log: LogLevel,
-}
-
 /** Return parsed command line arguments for `main` */
 export function parseArguments(): Args {
     const parser = new ArgumentParser({ description: 'PDBImages, a CLI tool for generating images of macromolecular models.' });
@@ -71,12 +53,16 @@ export function parseArguments(): Args {
     parser.add_argument('--api-url', { default: DEFAULT_PDBE_API_URL, help: `PDBe API URL. Default: ${DEFAULT_PDBE_API_URL}.` });
     parser.add_argument('--api-retry', { action: 'store_true', help: 'Retry any failed API call up to 5 times, waiting random time (up to 30 seconds) before each retry.' });
     parser.add_argument('--no-api', { action: 'store_true', help: 'Do not use PDBe API at all (some images will be skipped, some entity names will be different in captions, etc.).' });
-    parser.add_argument('--size', { nargs: '*', default: [DEFAULT_IMAGE_SIZE], help: `One or more output image sizes, e.g. 800x800 200x200. Default: ${DEFAULT_IMAGE_SIZE}. Only the first size is rendered, others are obtained by resizing unless --render_each_size is used. Use without any value to disable image rendering (only create captions and MOLJ files).` });
+    parser.add_argument('--size', { nargs: '*', default: [DEFAULT_IMAGE_SIZE], help: `One or more output image sizes, e.g. 800x800 200x200. Default: ${DEFAULT_IMAGE_SIZE}. Only the largest size is rendered, others are obtained by resizing unless --render_each_size is used. Use without any value to disable image rendering (only create captions and MOLJ files).` });
     parser.add_argument('--render-each-size', { action: 'store_true', help: 'Render image for each size listed in --size, instead of rendering only the first size and resampling to the other sizes.' });
     parser.add_argument('--type', { nargs: '*', choices: [...ImageTypes], default: ['all'], help: 'One or more image types to be created. Use "all" as a shortcut for all types. See README.md for details on image types. Default: all. Use without any value to skip all types (only create summary files from existing outputs).' });
     parser.add_argument('--view', { choices: ['front', 'all', 'auto'], default: 'auto', help: 'Select which views should be created for each image type (front view / all views (front, side, top) / auto (creates all views only for these image types: entry, assembly, entity, modres, plddt)). Default: auto.' });
     parser.add_argument('--opaque-background', { action: 'store_true', help: 'Render opaque background in images (default: transparent background).' });
     parser.add_argument('--no-axes', { action: 'store_true', help: 'Do not render axis indicators aka PCA arrows (default: render axes when rendering the same scene from multiple view angles (front, side, top)).' });
+    parser.add_argument('--show-hydrogens', { action: 'store_true', help: 'Show hydrogen atoms in ball-and-stick visuals (default: always ignore hydrogen atoms).' });
+    parser.add_argument('--show-branched-sticks', { action: 'store_true', help: 'Show semi-transparent ball-and-stick visuals for branched entities (i.e. carbohydrates) in addition to the default 3D-SNFG visuals.' });
+    parser.add_argument('--ensemble-shades', { action: 'store_true', help: 'Show individual models within an ensemble in different shades of the base color (lighter and darker), default: use the same colors for all models.' });
+    parser.add_argument('--allow-lowest-quality', { action: 'store_true', help: "Allow any quality level for visuals, including 'lowest', which is really ugly (default: allow only 'lower' quality level and better)." });
     parser.add_argument('--date', { help: `Date to use as "last_modification" in the caption JSON (default: today's date formatted as YYYY-MM-DD).` });
     parser.add_argument('--clear', { action: 'store_true', help: 'Remove all contents of the output directory before running.' });
     parser.add_argument('--log', { choices: [...LogLevels], type: (s: string) => s.toUpperCase(), default: 'INFO', help: 'Set logging level. Default: INFO.' });
@@ -101,10 +87,11 @@ export async function main(args: Args) {
     fs.mkdirSync(args.output_dir, { recursive: true });
     if (args.clear) {
         for (const file of fs.readdirSync(args.output_dir)) {
-            fs.rmSync(path.join(args.output_dir, file));
+            fs.rmSync(path.join(args.output_dir, file), { recursive: true });
         }
     }
 
+    let expectedFiles: string[] | undefined = undefined;
     if (args.type.length > 0) {
         const defaultUrl = DEFAULT_INPUT_URL_TEMPLATES[args.mode].replace(/\$\{id\}/g, args.entry_id); // replace ${id} by actual ID
         let runtimeUrl = resolveUrl(args.input) ?? defaultUrl;
@@ -116,11 +103,16 @@ export async function main(args: Args) {
             runtimeUrl = 'file://' + tmpStructureFile;
         }
 
-        const api = new PDBeAPI(args.api_url, args.no_api, args.api_retry);
+        const api = new PDBeAPI(args.api_url, args.no_api || args.mode === 'alphafold', args.api_retry);
+        expectedFiles = await getExpectedFiles(args, api);
+        fs.writeFileSync(Paths.expectedFilelist(args.output_dir, args.entry_id), expectedFiles.join('\n') + '\n');
+        await api.saveCache(Paths.apiDataPath(args.output_dir, args.entry_id));
+
         const plugin = await createHeadlessPlugin(args);
         try {
             const saveFunction = makeSaveFunction(plugin, args.output_dir, args, publicUrl);
-            const imageGenerator = new ImageGenerator(plugin, saveFunction, api, args.type, args.view);
+            const options: ImageGeneratorOptions = { showHydrogens: args.show_hydrogens, showBranchedSticks: args.show_branched_sticks, ensembleShades: args.ensemble_shades, allowLowestQuality: args.allow_lowest_quality };
+            const imageGenerator = new ImageGenerator(plugin, saveFunction, api, args.type, args.view, options);
             await imageGenerator.processAll(args.entry_id, runtimeUrl, args.mode);
             if (tmpStructureFile) fs.rmSync(tmpStructureFile, { force: true });
         } finally {
@@ -131,6 +123,10 @@ export async function main(args: Args) {
     }
 
     collectCaptions(args.output_dir, args.entry_id, args.date);
+    if (expectedFiles) {
+        checkMissingFiles(args.output_dir, expectedFiles, args.entry_id);
+        fs.rmSync(Paths.expectedFilelist(args.output_dir, args.entry_id));
+    }
 }
 
 /** Return a new and initiatized HeadlessPlugin */

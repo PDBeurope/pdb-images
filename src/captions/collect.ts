@@ -6,6 +6,8 @@
 
 import fs from 'fs';
 import path from 'path';
+
+import * as Paths from '../paths';
 import { ImageSpec } from './captions';
 
 
@@ -37,8 +39,8 @@ export function collectCaptions(directory: string, pdbId: string, lastModificati
     filenameStems.sort();
     result['image_suffix'] = getCommonSuffixes(allFiles, filenameStems);
     result['last_modification'] = lastModificationDate ?? new Date().toISOString().split(/[T ]/)[0]; // format as 2023-03-21
-    fs.writeFileSync(path.join(directory, `${pdbId}.json`), JSON.stringify({ [pdbId]: result }, undefined, 2) + '\n');
-    fs.writeFileSync(path.join(directory, `${pdbId}_filelist`), filenameStems.join('\n') + '\n');
+    fs.writeFileSync(Paths.captionsJson(directory, pdbId), JSON.stringify({ [pdbId]: result }, undefined, 2) + '\n');
+    fs.writeFileSync(Paths.filelist(directory, pdbId), filenameStems.join('\n') + '\n');
 }
 
 /** Get the specified section in a nested object `obj`

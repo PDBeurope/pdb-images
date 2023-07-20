@@ -11,11 +11,12 @@ import { ROTATION_MATRICES, structureLayingTransform } from 'molstar/lib/commonj
 import { PluginContext } from 'molstar/lib/commonjs/mol-plugin/context';
 import { Color } from 'molstar/lib/commonjs/mol-util/color';
 
-import { DomainRecord, ModifiedResidueRecord, PDBeAPI, PDBeAPIReturn, SiftsSource } from './api';
+import { PDBeAPI } from './api';
+import { ImageType, ImageTypes } from './args';
 import { Captions, ImageSpec } from './captions/captions';
 import { adjustCamera, changeCameraRotation, combineRotations, zoomAll } from './helpers/camera';
-import { ANNOTATION_COLORS, ENTITY_COLORS, MODRES_COLORS, assignEntityAndUnitColors, cycleIterator } from './helpers/colors';
-import { SafePromise, getModifiedResidueInfo, pickObjectKeys, safePromise } from './helpers/helpers';
+import { ANNOTATION_COLORS, ENTITY_COLORS, MODRES_COLORS, assignEntityAndUnitColors, cycleIterator, lightnessVariant } from './helpers/colors';
+import { getModifiedResidueInfo } from './helpers/helpers';
 import { getLogger, oneLine } from './helpers/logging';
 import { countDomains, selectBestChainForDomains, sortDomainsByChain, sortDomainsByEntity } from './helpers/sifts';
 import { countChainResidues, getChainInfo, getEntityInfo, getLigandInfo } from './helpers/structure-info';
@@ -28,19 +29,18 @@ const logger = getLogger(module);
 const ALLOW_GHOST_NODES = true; // just for debugging, should be `true` in production
 const ALLOW_COLLAPSED_NODES = true; // just for debugging, should be `true` in production
 
-export const Modes = ['pdb', 'alphafold'] as const;
-export type Mode = typeof Modes[number]
 
-export const ImageTypes = ['entry', 'assembly', 'entity', 'domain', 'ligand', 'modres', 'bfactor', 'validation', 'plddt', 'all'] as const;
-export type ImageType = typeof ImageTypes[number]
-
-interface DataPromises {
-    entityNames?: SafePromise<PDBeAPIReturn<'getEntityNames'>>;
-    preferredAssembly?: SafePromise<PDBeAPIReturn<'getPreferredAssembly'>>;
-    siftsMappings?: SafePromise<PDBeAPIReturn<'getSiftsMappings'>>;
-    modifiedResidues?: SafePromise<PDBeAPIReturn<'getModifiedResidue'>>;
+/** Options for modifying visualization style */
+export interface ImageGeneratorOptions {
+    /** Set `true` to show hydrogen atoms in ball-and-stick visuals, `false` to always ignore them. */
+    showHydrogens?: boolean,
+    /** Set `true` to show semi-transparent ball-and-stick visuals for branched entities (i.e. carbohydrates) in addition to the default 3D-SNFG visuals. */
+    showBranchedSticks?: boolean,
+    /** Set `true` to show individual models within an ensemble in different shades of the base color (lighter and darker). */
+    ensembleShades?: boolean,
+    /** Set `true` to allow any quality level for visuals (including 'lowest', which is really ugly). Set `false` to allow only 'lower' and better. */
+    allowLowestQuality?: boolean,
 }
-
 
 /** Class for generating all possible images of an entry */
 export class ImageGenerator {
@@ -62,6 +62,7 @@ export class ImageGenerator {
         imageTypes: ImageType[] = ['all'],
         /** 'front' is to render only front view; 'all' is to render front, side, and top view; 'auto' is to render all three views only for certain image types */
         public views: 'front' | 'all' | 'auto' = 'auto',
+        public options: ImageGeneratorOptions = {},
     ) {
         if (imageTypes.includes('all')) {
             this.imageTypes = new Set(ImageTypes);
@@ -84,13 +85,6 @@ export class ImageGenerator {
         const startTime = Date.now();
         let success = false;
         try {
-            const promises: DataPromises = (mode === 'pdb') ? {
-                entityNames: safePromise(() => this.api.getEntityNames(entryId)),
-                preferredAssembly: safePromise(() => this.api.getPreferredAssembly(entryId)),
-                siftsMappings: safePromise(() => this.api.getSiftsMappings(entryId)),
-                modifiedResidues: safePromise(() => this.api.getModifiedResidue(entryId)),
-            } : {}; // allow async fetching in the meantime
-
             const root = RootNode.create(this.plugin);
             await using(root.makeDownload({ url: inputUrl, isBinary }, entryId), async download => {
                 const cif = await download.makeCif();
@@ -101,23 +95,29 @@ export class ImageGenerator {
                     // Images from assembly structures
                     if (mode === 'pdb' && this.shouldRender('assembly', 'entity', 'modres')) {
                         let assemblies = ModelSymmetry.Provider.get(model.data!)?.assemblies ?? [];
-                        const preferredAssemblyId = promises.preferredAssembly ? (await promises.preferredAssembly.result())?.assemblyId : undefined;
+                        let preferredAssemblyId = await this.api.getPreferredAssemblyId(entryId);
                         logger.debug(`Assemblies (${assemblies.length}):`);
                         for (const ass of assemblies) logger.debug('   ', oneLine(ass));
                         logger.debug('Preferred assembly:', preferredAssemblyId);
-                        assemblies = [
-                            ...assemblies.filter(ass => ass.id === preferredAssemblyId),
-                            ...assemblies.filter(ass => ass.id !== preferredAssemblyId),
-                        ];
+                        if (assemblies.length === 0) logger.error('There are no assemblies');
+                        if (preferredAssemblyId === undefined) {
+                            preferredAssemblyId = assemblies[0]?.id;
+                            if (!this.api.offline) logger.warn(`API says preferred assembly is undefined, using the first assembly (${preferredAssemblyId}) as preferred`);
+                        } else {
+                            assemblies = [
+                                ...assemblies.filter(ass => ass.id === preferredAssemblyId),
+                                ...assemblies.filter(ass => ass.id !== preferredAssemblyId),
+                            ];
+                        };
                         for (const assembly of assemblies) {
                             const isPreferredAssembly = assembly.id === preferredAssemblyId;
-                            await this.processAssemblyStructure(entryId, model, assembly.id, isPreferredAssembly, promises);
+                            await this.processAssemblyStructure(entryId, model, assembly.id, isPreferredAssembly);
                         }
                     }
 
                     // Images from deposited model structure
                     if (this.shouldRender('entry', 'validation', 'bfactor', 'ligand', 'domain', 'plddt') || this.failedEntities.length > 0) {
-                        await this.processDepositedStructure(mode, entryId, model, traj, promises);
+                        await this.processDepositedStructure(mode, entryId, model, traj);
                     }
 
                     if (this.failedEntities.length > 0) {
@@ -134,18 +134,18 @@ export class ImageGenerator {
     }
 
     /** Create requested images which are generated from the deposited model */
-    private async processDepositedStructure(mode: 'pdb' | 'alphafold', entryId: string, model: ModelNode, traj: TrajectoryNode, promises: DataPromises) {
+    private async processDepositedStructure(mode: 'pdb' | 'alphafold', entryId: string, model: ModelNode, traj: TrajectoryNode) {
         logger.info('Processing deposited structure');
         await using(model.makeStructure({ type: { name: 'model', params: {} } }), async structure => {
             const group = await structure.makeGroup({ label: 'Whole Entry' }, { state: { isGhost: ALLOW_GHOST_NODES } });
             const components = await group.makeStandardComponents(ALLOW_COLLAPSED_NODES);
-            const visuals = await components.makeStandardVisuals();
-            this.orientAndZoom(structure);
+            const visuals = await components.makeStandardVisuals(this.options);
+            this.orientAndZoomAll(structure);
             const nModels = traj.data?.frameCount ?? 1;
             logger.info('Number of models:', nModels);
             const context = {
                 entryId, assemblyId: undefined, isPreferredAssembly: false, nModels,
-                entityNames: promises.entityNames ? await promises.entityNames.result() : {},
+                entityNames: await this.api.getEntityNames(entryId),
                 entityInfo: getEntityInfo(structure.data!)
             };
             const colors = assignEntityAndUnitColors(structure.data!);
@@ -153,29 +153,39 @@ export class ImageGenerator {
             if (mode === 'pdb') {
                 if (this.shouldRender('entry')) {
                     if (nModels === 1) {
-                        await visuals.applyToAll(vis => vis.setColorByChainInstance({ colorList: colors.units, entityColorList: colors.entities }));
+                        await visuals.applyToAll(vis => vis.setColorByChainInstance({ colorList: colors.units }));
                         await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'chains', view }));
 
                         await visuals.applyToAll(vis => vis.setColorByEntity({ colorList: colors.entities }));
                         await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'entities', view }));
                     } else {
                         model.setCollapsed(ALLOW_COLLAPSED_NODES);
+                        const visualsByModel = [visuals];
                         await using(traj.makeGroup({ label: 'Other models' }, { state: { isGhost: ALLOW_GHOST_NODES } }), async group => {
                             const allVisuals: (VisualNode | undefined)[] = Object.values(visuals.nodes);
                             for (let iModel = 1; iModel < nModels; iModel++) {
                                 const otherModel = await group.makeModel(iModel);
                                 const otherStructure = await otherModel.makeStructure({ type: { name: 'model', params: {} } });
                                 const otherComponents = await otherStructure.makeStandardComponents(ALLOW_COLLAPSED_NODES);
-                                const otherVisuals = await otherComponents.makeStandardVisuals();
+                                const otherVisuals = await otherComponents.makeStandardVisuals(this.options);
                                 otherModel.setCollapsed(ALLOW_COLLAPSED_NODES);
                                 allVisuals.push(...Object.values(otherVisuals.nodes));
+                                visualsByModel.push(otherVisuals);
                             }
-                            for (const vis of allVisuals) await vis?.setColorByChainInstance();
+                            this.zoomAll(); // zoom whole ensemble (needed e.g. for 3gaw)
+                            for (let i = 0; i < visualsByModel.length; i++) {
+                                const unitColors = this.options.ensembleShades ? lightnessVariant(colors.units, i) : colors.units;
+                                await visualsByModel[i].applyToAll(vis => vis.setColorByChainInstance({ colorList: unitColors }));
+                            }
                             await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'chains', view }));
 
-                            for (const vis of allVisuals) await vis?.setColorByEntity();
+                            for (let i = 0; i < visualsByModel.length; i++) {
+                                const entityColors = this.options.ensembleShades ? lightnessVariant(colors.entities, i) : colors.entities;
+                                await visualsByModel[i].applyToAll(vis => vis.setColorByEntity({ colorList: entityColors }));
+                            }
                             await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'entities', view }));
                         });
+                        this.zoomAll(); // zoom back to model 1
                         model.setCollapsed(false);
                     }
                 }
@@ -195,7 +205,7 @@ export class ImageGenerator {
                     }
                 }
 
-                await visuals.applyToAll(vis => vis.setFaded());
+                await visuals.applyToAll(vis => vis.setFaded('size-dependent'));
 
                 if (this.failedEntities.length > 0) {
                     logger.info(`Retrying previously failed entities: ${this.failedEntities}`);
@@ -210,9 +220,8 @@ export class ImageGenerator {
                 if (this.shouldRender('ligand')) {
                     await this.processLigands(structure, context, colors.entities);
                 }
-                if (this.shouldRender('domain') && promises.siftsMappings) {
-                    const siftsMappings = await promises.siftsMappings.result();
-                    await this.processDomains(structure, siftsMappings, context);
+                if (this.shouldRender('domain')) {
+                    await this.processDomains(structure, context);
                 }
             }
 
@@ -225,21 +234,21 @@ export class ImageGenerator {
 
     /** Create requested images that are generated from each assembly structure.
      * If `isPreferredAssembly`, also create images that are generated from the preferred assembly. */
-    private async processAssemblyStructure(entryId: string, model: ModelNode, assemblyId: string, isPreferredAssembly: boolean, promises: DataPromises) {
+    private async processAssemblyStructure(entryId: string, model: ModelNode, assemblyId: string, isPreferredAssembly: boolean) {
         logger.info(`Processing assembly ${assemblyId}`, isPreferredAssembly ? '(preferred)' : '(non-preferred)');
         await using(model.makeStructure({ type: { name: 'assembly', params: { id: assemblyId } } }), async structure => {
             const context = {
                 entryId, assemblyId, isPreferredAssembly, nModels: 1,
-                entityNames: promises.entityNames ? await promises.entityNames.result() : {},
+                entityNames: await this.api.getEntityNames(entryId),
                 entityInfo: getEntityInfo(structure.data!)
             };
             const colors = assignEntityAndUnitColors(structure.data!);
             const group = await structure.makeGroup({ label: 'Whole Assembly' }, { state: { isGhost: ALLOW_GHOST_NODES } });
             const components = await group.makeStandardComponents(ALLOW_COLLAPSED_NODES);
-            const visuals = await components.makeStandardVisuals();
-            this.orientAndZoom(structure);
+            const visuals = await components.makeStandardVisuals(this.options);
+            this.orientAndZoomAll(structure);
             if (this.shouldRender('assembly')) {
-                await visuals.applyToAll(vis => vis.setColorByChainInstance({ colorList: colors.units, entityColorList: colors.entities }));
+                await visuals.applyToAll(vis => vis.setColorByChainInstance({ colorList: colors.units }));
                 await this.saveViews('all', view => Captions.forEntryOrAssembly({ ...context, coloring: 'chains', view }));
 
                 await visuals.applyToAll(vis => vis.setColorByEntity({ colorList: colors.entities }));
@@ -249,13 +258,13 @@ export class ImageGenerator {
             if (isPreferredAssembly && this.shouldRender('entity') || this.failedEntities.length > 0) {
                 if (this.failedEntities.length > 0) logger.info(`Retrying previously failed entities: ${this.failedEntities}`);
                 const todoEntities = isPreferredAssembly ? undefined : this.failedEntities; // undefined means all
-                await visuals.applyToAll(vis => vis.setFaded());
+                await visuals.applyToAll(vis => vis.setFaded('size-dependent'));
                 const summary = await this.processEntities(structure, context, colors.entities, todoEntities);
                 this.failedEntities = summary.failedEntities;
             }
-            if (isPreferredAssembly && this.shouldRender('modres') && promises.modifiedResidues) {
-                await visuals.applyToAll(vis => vis.setFaded());
-                await this.processModifiedResidues(structure, await promises.modifiedResidues.result(), context);
+            if (isPreferredAssembly && this.shouldRender('modres')) {
+                await visuals.applyToAll(vis => vis.setFaded('size-dependent'));
+                await this.processModifiedResidues(structure, context);
             }
         });
     }
@@ -274,7 +283,7 @@ export class ImageGenerator {
                 if (!entityStruct) continue;
                 const entityColor = colors[entityInfo[entityId].index % colors.length];
                 const components = await entityStruct.makeStandardComponents(ALLOW_COLLAPSED_NODES);
-                const visuals = await components.makeStandardVisuals();
+                const visuals = await components.makeStandardVisuals(this.options);
                 await visuals.applyToAll(vis => vis.setHighlight(entityColor));
                 entityStruct.setVisible(false);
                 entityStruct.setCollapsed(ALLOW_COLLAPSED_NODES);
@@ -309,15 +318,16 @@ export class ImageGenerator {
         for (const lig in ligandInfo) logger.debug('   ', lig, oneLine(ligandInfo[lig]));
         for (const info of Object.values(ligandInfo)) {
             await using(structure.makeLigEnvComponents(info, ALLOW_COLLAPSED_NODES), async components => {
-                const visuals = await components.makeLigEnvVisuals(entityColors);
-                this.orientAndZoom(components.nodes.ligand!);
+                const visuals = await components.makeLigEnvVisuals({ ...this.options, entityColors });
+                this.orientAndZoomAll(components.nodes.ligand!);
                 await this.saveViews('front', view => Captions.forLigandEnvironment({ ...context, view, ligandInfo: info }));
             });
         }
     }
 
     /** Create images for SIFTS domains */
-    private async processDomains(structure: StructureNode, domains: { [source in SiftsSource]: { [family: string]: DomainRecord[] } }, context: Captions.StructureContext) {
+    private async processDomains(structure: StructureNode, context: Captions.StructureContext) {
+        const domains = await this.api.getSiftsMappings(context.entryId);
         const chainInfo = getChainInfo(structure.data!.model);
         const chainLengths = countChainResidues(structure.data!.model);
         logger.debug('Chain lengths:', oneLine(chainLengths));
@@ -349,10 +359,10 @@ export class ImageGenerator {
                 if (!chain) return;
                 const entityId = chainInfo[chainId].entityId;
                 const components = await chain.makeStandardComponents(ALLOW_COLLAPSED_NODES);
-                const visuals = await components.makeStandardVisuals();
+                const visuals = await components.makeStandardVisuals(this.options);
                 chain.setCollapsed(ALLOW_COLLAPSED_NODES);
-                this.orientAndZoom(chain);
-                await visuals.applyToAll(vis => vis.setFaded());
+                this.orientAndZoomAll(chain);
+                await visuals.applyToAll(vis => vis.setFaded('normal'));
 
                 for (const [source, sourceDomains] of Object.entries(chainDomains)) {
                     for (const [familyId, familyDomains] of Object.entries(sourceDomains)) {
@@ -370,9 +380,9 @@ export class ImageGenerator {
                             const outOfRangeCopies = shownCopies - Object.keys(domainStructures).length; // this will be >0 when a domain is out of observed residue ranges (e.g. 8eiu chain KA [auth h] Pfam PF03948)
                             for (const domainStruct of Object.values(domainStructures)) {
                                 const components = await domainStruct.makeStandardComponents(ALLOW_COLLAPSED_NODES);
-                                const visuals = await components.makeStandardVisuals();
-                                const color = colorsIterator.next().value!; // same color for all visual of the domain
-                                await visuals.applyToAll(vis => vis.setColorUniform(color));
+                                const visuals = await components.makeStandardVisuals(this.options);
+                                const color = colorsIterator.next().value!; // same color for all visuals of the domain
+                                await visuals.applyToAll(vis => vis.setColorUniform(color, { ignoreElementColors: true }));
                             }
                             await this.saveViews('front', view => Captions.forDomain({ ...context, source, familyId, familyName, entityId, chainId, authChainId, totalCopies, shownCopies, outOfRangeCopies, view }));
                         });
@@ -383,7 +393,8 @@ export class ImageGenerator {
     }
 
     /** Create images for modified residues */
-    private async processModifiedResidues(structure: StructureNode, modifiedResidues: ModifiedResidueRecord[], context: Captions.StructureContext) {
+    private async processModifiedResidues(structure: StructureNode, context: Captions.StructureContext) {
+        const modifiedResidues = await this.api.getModifiedResidue(context.entryId);
         const modresInfo = getModifiedResidueInfo(modifiedResidues);
         logger.debug(`Modified residues (${Object.keys(modresInfo).length}):`);
         for (const modres in modresInfo) logger.debug('   ', modres, oneLine(modresInfo[modres]));
@@ -398,7 +409,7 @@ export class ImageGenerator {
         await using(structure.makeGroup({ label: 'Modified Residues' }), async group => {
             const modresStructures = await group.makeSubstructures(setDefinitions);
             for (const struct of Object.values(modresStructures)) {
-                const visual = await struct.makeBallsAndSticks(['modresSticks']);
+                const visual = await struct.makeBallsAndSticks(this.options, ['modresSticks']);
                 await visual.setHighlight(colorsIterator.next().value!);
                 struct.setCollapsed(ALLOW_COLLAPSED_NODES);
                 struct.setVisible(false);
@@ -414,10 +425,15 @@ export class ImageGenerator {
         });
     }
 
-    /** Set rotation matrix to align PCA axes of `structure` with screen axes and zoom whole visible scene. */
-    private orientAndZoom(structure: StructureNode, referenceRotation?: Mat3) {
-        this.rotation = structureLayingTransform([structure.data!], referenceRotation).rotation;
+    /** Zoom whole visible scene, without changing camera rotation. */
+    private zoomAll() {
         zoomAll(this.plugin);
+    }
+
+    /** Set rotation matrix to align PCA axes of `structure` with screen axes and zoom whole visible scene. */
+    private orientAndZoomAll(structure: StructureNode, referenceRotation?: Mat3) {
+        this.rotation = structureLayingTransform([structure.data!], referenceRotation).rotation;
+        this.zoomAll();
     }
 
     /** Run saveFunction on the current state.

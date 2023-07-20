@@ -34,13 +34,20 @@ const LIGAND_ENVIRONMENT_RADIUS = 5;
 /** Number of connected residues to add to ligand environment to create "wider environment" and show as cartoon in ligand images */
 const LIGAND_WIDE_ENVIRONMENT_LAYERS = 2;
 /** Opacity for ball-and-stick visual of carbohydrates */
-const BRANCHED_STICKS_OPACITY = 0.5;
+const BRANCHED_STICKS_OPACITY = 0.3;
 
 const DEFAULT_HIGHLIGHT_COLOR = Color.fromRgb(40, 100, 255);
 const FADED_COLOR = Color.fromRgb(120, 120, 120);
-const FADED_OPACITY = 0.5;
 const FADED_SIZE_SCALE = 0.9;
 const EXTRA_FADED_SIZE_SCALE = 0.4;
+/** Level of opacity used for domain and ligand images */
+const FADED_OPACITY = 0.5;
+/** Parameter for structure-size-dependent opacity, used for entity images */
+const SMART_FADED_OPACITY_PARAMS = {
+    targetOpacity: 0.9, // ~ desired opacity of the structure as a whole
+    baseOpacity: 0.05, // minimum opacity (for infinitely large structure)
+    n0: 100, // artificial offset of residue count
+}; // This will result in opacity ~0.4 for tiny structures, ~0.05 for huge structures
 
 const STICK_SIZE_FACTOR = 0.25;
 const HIGHTLIGHT_STICK_SIZE_FACTOR = 0.75;
@@ -48,16 +55,12 @@ const HIGHTLIGHT_STICK_SIZE_FACTOR = 0.75;
 const ENVIRONMENT_STICK_SIZE_FACTOR = 0.11;
 const STICK_SIZE_ASPECT_RATIO = 0.5;
 
-/** Set true to allow any quality level for visuals (including 'lowest', which is really ugly).
- * Set false to allow only 'lower' and better. */
-const ALLOW_LOWEST_QUALITY = false;
-
 
 export type StructureObjSelector = StateObjectSelector<PluginStateObject.Molecule.Structure, any>
 
-type StandardComponentType = 'polymer' | 'ligand' | 'branched' | 'ion'
+type StandardComponentType = 'polymer' | 'branched' | 'ligand' | 'ion' | 'nonstandard'
 type LigEnvComponentType = 'ligand' | 'environment' | 'wideEnvironment' | 'linkage'
-type StandardVisualType = 'polymerCartoon' | 'ligandSticks' | 'branchedCarbohydrate' | 'branchedSticks' | 'ionSticks'
+type StandardVisualType = 'polymerCartoon' | 'branchedCarbohydrate' | 'branchedSticks' | 'ligandSticks' | 'ionSticks' | 'nonstandardSticks'
 type LigEnvVisualType = 'ligandSticks' | 'environmentSticks' | 'linkageSticks' | 'wideEnvironmentCartoon'
 
 type StructureParams = ParamDefinition.Values<ReturnType<typeof RootStructureDefinition.getParams>>
@@ -209,14 +212,15 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
             return undefined;
         }
     }
-    /** Create components "polymer", "branched", "ligand", "ion" for a structure */
+    /** Create components "polymer", "branched", "ligand", "ion", "nonstandard" for a structure */
     async makeStandardComponents(collapsed: boolean = false): Promise<StandardComponents> {
         const options: Partial<StateTransform.Options> = { state: { isCollapsed: collapsed } };
         const polymer = await this.makeComponent({ type: { name: 'static', params: 'polymer' } }, options, 'polymer');
-        const ligand = await this.makeComponent({ type: { name: 'static', params: 'ligand' } }, options, 'ligand');
         const branched = await this.makeComponent({ type: { name: 'static', params: 'branched' } }, options, 'branched');
+        const ligand = await this.makeComponent({ type: { name: 'static', params: 'ligand' } }, options, 'ligand');
         const ion = await this.makeComponent({ type: { name: 'static', params: 'ion' } }, options, 'ion');
-        return new StandardComponents({ polymer, branched, ligand, ion });
+        const nonstandard = await this.makeComponent({ type: { name: 'static', params: 'non-standard' } }, options, 'nonstandard');
+        return new StandardComponents({ polymer, branched, ligand, ion, nonstandard });
     }
     /** Create components "ligand" and "environment" for a ligand */
     async makeLigEnvComponents(ligandInfo: LigandInfo, collapsed: boolean = false): Promise<LigandEnvironmentComponents> {
@@ -331,35 +335,35 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
     }
 
     /** Create a visual node (3D representation) with this node as parent */
-    async makeVisual(params: VisualParams, tags?: string[]): Promise<VisualNode> {
+    async makeVisual(params: VisualParams, options: { allowLowestQuality?: boolean }, tags?: string[]): Promise<VisualNode> {
         const ref = this.childRef(params.type.name);
-        params.type.params.quality ??= decideVisualQuality(this.data);
+        params.type.params.quality ??= decideVisualQuality(this.data, options.allowLowestQuality ? 'lowest' : 'lower');
         const visual = await this.state.build().to(this.node).apply(StructureRepresentation3D, params, { ref, tags }).commit();
         return new VisualNode(visual);
     }
     /** Create a cartoon visual node with this node as parent */
-    async makeCartoon(tags?: string[]): Promise<VisualNode> {
+    async makeCartoon(options: { allowLowestQuality?: boolean }, tags?: string[]): Promise<VisualNode> {
         return await this.makeVisual({
             type: { name: 'cartoon', params: { alpha: 1 } },
             colorTheme: { name: 'unit-index', params: { palette: paletteParam() } },
             sizeTheme: { name: 'uniform', params: { value: 1 } },
-        }, tags);
+        }, options, tags);
     }
     /** Create a ball-and-stick visual node with this node as parent */
-    async makeBallsAndSticks(tags?: string[]): Promise<VisualNode> {
+    async makeBallsAndSticks(options: { showHydrogens?: boolean, allowLowestQuality?: boolean }, tags?: string[]): Promise<VisualNode> {
         return await this.makeVisual({
-            type: { name: 'ball-and-stick', params: { sizeFactor: STICK_SIZE_FACTOR, sizeAspectRatio: STICK_SIZE_ASPECT_RATIO } },
+            type: { name: 'ball-and-stick', params: { sizeFactor: STICK_SIZE_FACTOR, sizeAspectRatio: STICK_SIZE_ASPECT_RATIO, ignoreHydrogens: !options.showHydrogens } },
             colorTheme: { name: 'element-symbol', params: { carbonColor: { name: 'element-symbol', params: {} } } }, // in original: carbonColor: chain-id
             sizeTheme: { name: 'physical', params: {} },
-        }, tags);
+        }, options, tags);
     }
     /** Create a carbohydrate visual (3D-SNFG) node with this node as parent */
-    async makeCarbohydrate(tags?: string[]): Promise<VisualNode> {
+    async makeCarbohydrate(options: { allowLowestQuality?: boolean }, tags?: string[]): Promise<VisualNode> {
         return await this.makeVisual({
             type: { name: 'carbohydrate', params: {} },
             colorTheme: { name: 'carbohydrate-symbol', params: {} },
             sizeTheme: { name: 'uniform', params: { value: 1 } },
-        }, tags);
+        }, options, tags);
     }
 }
 
@@ -395,7 +399,7 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
         });
     }
     /** Color this visual by entity ID. */
-    async setColorByEntity(options?: { ignoreElementColors?: boolean, colorList?: Color[] }) {
+    async setColorByEntity(options?: { colorList?: Color[], ignoreElementColors?: boolean }) {
         const palette = paletteParam(options?.colorList);
         return this.updateVisual(old => ({
             colorTheme: (old.type.name === 'ball-and-stick' && !options?.ignoreElementColors) ?
@@ -404,7 +408,7 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
         }));
     }
     /** Color this visual by auth chain ID (i.e. copies of the same chain in an assembly will have the same color), color balls-and-sticks by element with chainId-colored carbons. */
-    async setColorByChainId(options?: { ignoreElementColors?: boolean, colorList?: Color[] }) {
+    async setColorByChainId(options?: { colorList?: Color[], ignoreElementColors?: boolean }) {
         const palette = paletteParam(options?.colorList);
         return this.updateVisual(old => ({
             colorTheme: (old.type.name === 'ball-and-stick' && !options?.ignoreElementColors) ?
@@ -413,11 +417,11 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
         }));
     }
     /** Color this visual by chain instance (i.e. copies of the same chain in an assembly will have different colors), color balls-and-sticks by element with gray carbons. */
-    async setColorByChainInstance(options?: { ignoreElementColors?: boolean, colorList?: Color[], entityColorList?: Color[] }) {
+    async setColorByChainInstance(options?: { colorList?: Color[], ignoreElementColors?: boolean }) {
         const palette = paletteParam(options?.colorList);
         return this.updateVisual(old => ({
             colorTheme: (old.type.name === 'ball-and-stick' && !options?.ignoreElementColors) ?
-                { name: 'element-symbol', params: { carbonColor: (options?.entityColorList) ? { name: 'entity-id', params: { palette: paletteParam(options.entityColorList) } } : { name: 'element-symbol', params: {} } } } // 'unit-index' is not available for carbonColor :(
+                { name: 'element-symbol', params: { carbonColor: { name: 'unit-index', params: { palette } } } }
                 : { name: 'unit-index', params: { palette } }
         }));
     }
@@ -475,14 +479,18 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
         });
     }
 
+
     /** Make this visual "faded", i.e. set grey color, lower opacity, and thinner.
-     * If `level` is 2, make even more faded. */
-    setFaded(level: 1 | 2 = 1): Promise<void> {
-        const sizeScale = level === 1 ? FADED_SIZE_SCALE : EXTRA_FADED_SIZE_SCALE;
+     * Level 'normal' is basic fading with constant opacity;
+     * level 'extra' is stronger fading with thinner cartoon (e.g. for wider ligand environment);
+     * level 'size-dependent' sets opacity based on size of the whole structure (makes larger structures more transparent). */
+    setFaded(level: 'normal' | 'size-dependent' | 'extra'): Promise<void> {
+        const opacity = level === 'size-dependent' ? smartFadedOpacity(this.getStructure()?.root) : FADED_OPACITY;
+        const sizeScale = level === 'extra' ? EXTRA_FADED_SIZE_SCALE : FADED_SIZE_SCALE;
         return this.updateVisual((old, tags) => ({
             type: {
                 params: {
-                    alpha: FADED_OPACITY * (tags.includes('branchedSticks') ? BRANCHED_STICKS_OPACITY : 1),
+                    alpha: opacity * (tags.includes('branchedSticks') ? BRANCHED_STICKS_OPACITY : 1),
                 }
             },
             colorTheme: { name: 'uniform', params: { value: FADED_COLOR } },
@@ -506,6 +514,13 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
             },
             colorTheme: { name: 'uniform', params: { value: color } }
         }));
+    }
+
+    /** Return structure from which this visual was created */
+    private getStructure(): Structure | undefined {
+        const data = this.node.data;
+        const structure = (data as any).sourceData as Structure | undefined;
+        return (structure instanceof Structure) ? structure : undefined;
     }
 
 }
@@ -534,19 +549,21 @@ abstract class NodeCollection<KeyType extends string, NodeType extends Node> {
 /** Collection of nodes for standard structure components (polymer, ligand...) */
 export class StandardComponents extends NodeCollection<StandardComponentType, StructureNode> {
     /** Create visuals like polymer cartoon, ligand balls-and-sticks etc., for a structure or its part */
-    async makeStandardVisuals(): Promise<StandardVisuals> {
-        const polymerCartoon = await this.nodes.polymer?.makeCartoon(['polymerCartoon']);
-        const branchedCarbohydrate = await this.nodes.branched?.makeCarbohydrate(['branchedCarbohydrate']);
-        const branchedSticks = await this.nodes.branched?.makeBallsAndSticks(['branchedSticks']);
+    async makeStandardVisuals(options: { showHydrogens?: boolean, showBranchedSticks?: boolean, allowLowestQuality?: boolean }): Promise<StandardVisuals> {
+        const polymerCartoon = await this.nodes.polymer?.makeCartoon(options, ['polymerCartoon']);
+        const branchedCarbohydrate = await this.nodes.branched?.makeCarbohydrate(options, ['branchedCarbohydrate']);
+        const branchedSticks = options.showBranchedSticks ? await this.nodes.branched?.makeBallsAndSticks(options, ['branchedSticks']) : undefined;
         await branchedSticks?.setOpacity(BRANCHED_STICKS_OPACITY);
-        const ligandSticks = await this.nodes.ligand?.makeBallsAndSticks(['ligandSticks']);
-        const ionSticks = await this.nodes.ion?.makeBallsAndSticks(['ionSticks']);
+        const ligandSticks = await this.nodes.ligand?.makeBallsAndSticks(options, ['ligandSticks']);
+        const ionSticks = await this.nodes.ion?.makeBallsAndSticks(options, ['ionSticks']);
+        const nonstandardSticks = await this.nodes.nonstandard?.makeBallsAndSticks(options, ['nonstandardSticks']);
         return new StandardVisuals({
             polymerCartoon,
             branchedCarbohydrate,
             branchedSticks,
             ligandSticks,
             ionSticks,
+            nonstandardSticks,
         });
     }
 }
@@ -554,15 +571,15 @@ export class StandardComponents extends NodeCollection<StandardComponentType, St
 /** Collection of nodes for structure components for ligand visualization (ligand, environment, wider enviroment...) */
 export class LigandEnvironmentComponents extends NodeCollection<LigEnvComponentType, StructureNode> {
     /** Create visuals like ligand balls-and-sticks, wider enviroment cartoon... */
-    async makeLigEnvVisuals(entityColors?: Color[]): Promise<LigandEnvironmentVisuals> {
-        const ligandSticks = await this.nodes.ligand?.makeBallsAndSticks(['ligandSticks']);
-        await ligandSticks?.setColorByEntity({ colorList: entityColors ?? ENTITY_COLORS });
-        const environmentSticks = await this.nodes.environment?.makeBallsAndSticks(['environmentSticks']);
+    async makeLigEnvVisuals(options: { showHydrogens?: boolean, allowLowestQuality?: boolean, entityColors?: Color[] }): Promise<LigandEnvironmentVisuals> {
+        const ligandSticks = await this.nodes.ligand?.makeBallsAndSticks(options, ['ligandSticks']);
+        await ligandSticks?.setColorByEntity({ colorList: options.entityColors ?? ENTITY_COLORS });
+        const environmentSticks = await this.nodes.environment?.makeBallsAndSticks(options, ['environmentSticks']);
         await environmentSticks?.setThinBallsAndSticks(ENVIRONMENT_STICK_SIZE_FACTOR);
-        const linkageSticks = await this.nodes.linkage?.makeBallsAndSticks(['linkageSticks']);
+        const linkageSticks = await this.nodes.linkage?.makeBallsAndSticks(options, ['linkageSticks']);
         await linkageSticks?.setThinBallsAndSticks(ENVIRONMENT_STICK_SIZE_FACTOR);
-        const wideEnvironmentCartoon = await this.nodes.wideEnvironment?.makeCartoon(['wideEnvironmentCartoon']);
-        await wideEnvironmentCartoon?.setFaded(2);
+        const wideEnvironmentCartoon = await this.nodes.wideEnvironment?.makeCartoon(options, ['wideEnvironmentCartoon']);
+        await wideEnvironmentCartoon?.setFaded('extra');
 
         return new LigandEnvironmentVisuals({
             ligandSticks,
@@ -585,9 +602,9 @@ export class LigandEnvironmentVisuals extends NodeCollection<LigEnvVisualType, V
 
 /** Decide quality (e.g. 'medium', 'low, 'lowest'...) based on the size of the structure itself (i.e. the visualized part),
  * not based on its root (i.e. the whole model) as 'auto' does */
-function decideVisualQuality(structure: Structure | undefined) {
+function decideVisualQuality(structure: Structure | undefined, minimumQuality: 'lower' | 'lowest') {
     if (structure) {
-        const thresholds = ALLOW_LOWEST_QUALITY ? {} : { lowestElementCount: Number.POSITIVE_INFINITY };
+        const thresholds = (minimumQuality === 'lower') ? { lowestElementCount: Number.POSITIVE_INFINITY } : {};
         return getStructureQuality(structure, thresholds);
     } else {
         return 'auto';
@@ -600,6 +617,19 @@ function paletteParam(colorList?: Color[]) {
         name: 'colors',
         params: { list: { kind: 'set', colors: colorList ?? DEFAULT_COLORS } }
     };
+}
+
+/** Calculate optimal opacity of a visual based on structure size. */
+function smartFadedOpacity(structure: Structure | undefined, params: typeof SMART_FADED_OPACITY_PARAMS = SMART_FADED_OPACITY_PARAMS) {
+    const { targetOpacity, baseOpacity, n0 } = params;
+    const nRes = structure?.polymerResidueCount ?? 0;
+    // The formula is derived from Lamber-Beer law:
+    // -log(1 - targetOpacity) = -log(I/I0) = A = epsilon c l,
+    // assuming that optical path length l is proportional to cube root of residue count.
+    // This is of course very simplified.
+    // Artificial parameters `n0` and `baseOpacity` are to avoid too high/low opacity for tiny/huge structures.
+    const theoreticalOpacity = 1 - (1 - targetOpacity) ** (1 / (n0 + nRes) ** (1 / 3));
+    return baseOpacity + theoreticalOpacity;
 }
 
 /** Apply a function to node or node collection and dispose (remove from the tree) it afterwards.

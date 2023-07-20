@@ -12,12 +12,12 @@ import { Entities } from 'molstar/lib/commonjs/mol-model/structure/model/propert
 type EntityType = ReturnType<Entities['data']['type']['value']>
 
 /** Basic info about several entities, mapped by entityId */
-export type EntityInfo = ReturnType<typeof getEntityInfo>
+export type EntityInfo = { [entityId: string]: { description: string, type: EntityType, chains: ChainIndex[], index: number } }
 
 /** Return basic info about entities in the structure, mapped by entityId */
 export function getEntityInfo(structure: Structure) {
     const entities = structure.model.entities;
-    const ent: { [entityId: string]: { description: string, type: EntityType, chains: ChainIndex[], index: number } } = {};
+    const ent: EntityInfo = {};
 
     for (let i = 0; i < entities.data._rowCount; i++) {
         const id = entities.data.id.value(i);
@@ -35,6 +35,20 @@ export function getEntityInfo(structure: Structure) {
         ent[entityId].chains.push(chainIdx);
     }
     return ent;
+}
+
+/** Return list of unique element symbols (C, N, O, FE...) in the given chains */
+export function getElementsInChains(structure: Structure, chains: ChainIndex[]): string[] {
+    const symbols = new Set<string>();
+    for (const ci of chains) {
+        const fromAtom = structure.model.atomicHierarchy.chainAtomSegments.offsets[ci];
+        const toAtom = structure.model.atomicHierarchy.chainAtomSegments.offsets[ci + 1];
+        for (let ai = fromAtom; ai < toAtom; ai++) {
+            const symbol = structure.model.atomicHierarchy.atoms.type_symbol.value(ai);
+            symbols.add(symbol);
+        }
+    }
+    return Array.from(symbols).sort();
 }
 
 /** Info about a ligand (non-polymer entity) and its occurrences in a structure */

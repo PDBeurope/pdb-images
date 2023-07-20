@@ -4,8 +4,9 @@
  * @author Adam Midlik <midlik@gmail.com>
  */
 
+import { ChainIndex } from 'molstar/lib/commonjs/mol-model/structure';
 import { getTestingModel, getTestingStructure } from '../../_spec/_utils';
-import { countChainResidues, getChainInfo, getEntityInfo, getLigandInfo } from '../structure-info';
+import { countChainResidues, getChainInfo, getElementsInChains, getEntityInfo, getLigandInfo } from '../structure-info';
 
 describe('structure-info', () => {
     it('getEntityInfo', async () => {
@@ -36,6 +37,13 @@ describe('structure-info', () => {
                 type: 'water',
             }
         });
+    });
+
+    it('getElementsInChains', async () => {
+        const struct = await getTestingStructure('1hda');
+        expect(getElementsInChains(struct, [])).toEqual([]);
+        expect(getElementsInChains(struct, [0 as ChainIndex])).toEqual(['C', 'N', 'O', 'S']);
+        expect(getElementsInChains(struct, [0 as ChainIndex, 4 as ChainIndex])).toEqual(['C', 'FE', 'N', 'O', 'S']);
     });
 
     it('getLigandInfo', async () => {

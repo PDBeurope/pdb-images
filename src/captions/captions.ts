@@ -58,19 +58,21 @@ export namespace Captions {
         const colorClause = coloring === 'chains' ? 'by chain' : 'by chemically distinct molecules';
         const modelClause = nModels > 1 ? `ensemble of ${nModels} models` : '';
         const description = new TextBuilder();
-        description.push(structurePhrase(context), 'of PDB entry', B_, entryId, _B, 'coloured', colorClause, ',', modelClause, ',', viewPhrase(view), '.');
+        description.push(structurePhrase(context), B_, entryId, _B, 'coloured', colorClause, ',', modelClause, ',', viewPhrase(view), '.');
         description.push('This structure contains', ':', UL_);
         for (const entityId in entityInfo) {
             const name = entityName(context, entityId);
             const nCopies = entityInfo[entityId].chains.length;
-            description.push(LI_, countNoun(nCopies, 'cop|y|ies'), 'of', B_, name, _B, ';', _LI);
+            if (nCopies > 0) {
+                description.push(LI_, countNoun(nCopies, 'cop|y|ies'), 'of', B_, name, _B, ';', _LI);
+            }
         }
         description.push('.', _UL);
         const assemblyPrefix = assemblyId ? `assembly_${assemblyId}` : 'deposited';
         const colorSuffix = coloring === 'chains' ? 'chain' : 'chemically_distinct_molecules';
         return {
             filename: `${entryId}_${assemblyPrefix}_${colorSuffix}${viewSuffix(view)}`,
-            alt: new TextBuilder().push('PDB entry', entryId, 'coloured', colorClause, ',', modelClause, ',', viewPhrase(view), '.').buildText(),
+            alt: new TextBuilder().push(structurePhrase(context, 'short'), entryId, 'coloured', colorClause, ',', modelClause, ',', viewPhrase(view), '.').buildPlainText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
             _entry_id: entryId,
@@ -88,7 +90,7 @@ export namespace Captions {
         description.push('The macromolecules are shown in backbone representation. The thickness reflects the B-factor values (thin = low, thick = high). The colour varies from blue to red corresponding to a B-factor range of 0 to 100 square angstroms.');
         return {
             filename: `${entryId}_bfactor${viewSuffix(view)}`,
-            alt: new TextBuilder().push('B-factors for PDB entry', entryId, ',', viewPhrase(view), '.').buildText(),
+            alt: new TextBuilder().push('B-factors for PDB entry', entryId, ',', viewPhrase(view), '.').buildPlainText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
             _entry_id: entryId,
@@ -105,7 +107,7 @@ export namespace Captions {
         description.push('Residues are coloured by the number of geometry outliers: green – no outliers, yellow – one outlier yellow, orange – two outliers, red – three or more outliers.');
         return {
             filename: `${entryId}_validation_geometry_deposited${viewSuffix(view)}`,
-            alt: new TextBuilder().push('Geometry outliers in PDB entry', entryId, ',', viewPhrase(view), '.').buildText(),
+            alt: new TextBuilder().push('Geometry outliers in PDB entry', entryId, ',', viewPhrase(view), '.').buildPlainText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
             _entry_id: entryId,
@@ -122,7 +124,7 @@ export namespace Captions {
         description.push('Residues are coloured by pLDDT values: dark blue – very high (90–100), light blue – confident (70–90), yellow – low (50–70), orange – very low (0–50).');
         return {
             filename: `${afdbId}_plddt${viewSuffix(view)}`,
-            alt: new TextBuilder().push('Predicted structure of', afdbId, ',', viewPhrase(view), '.').buildText(),
+            alt: new TextBuilder().push('Predicted structure of', afdbId, ',', viewPhrase(view), '.').buildPlainText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
             _entry_id: afdbId,
@@ -137,13 +139,13 @@ export namespace Captions {
         const nCopies = entityInfo[entityId].chains.length;
         const name = entityName(context, entityId);
         const description = new TextBuilder();
-        description.push(structurePhrase(context), 'of PDB entry', B_, entryId, _B,
+        description.push(structurePhrase(context), B_, entryId, _B,
             'contains', countNoun(nCopies, 'cop|y|ies'), 'of', B_, name, _B, '.',
             capital(viewPhrase(view)), '.');
         return {
             filename: `${entryId}_entity_${entityId}${viewSuffix(view)}`,
             alt: new TextBuilder().push(name, 'in PDB entry', entryId, ',',
-                (assemblyId ? `assembly ${assemblyId}` : ''), ',', viewPhrase(view), '.').buildText(),
+                (assemblyId ? `assembly ${assemblyId}` : ''), ',', viewPhrase(view), '.').buildPlainText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
             _entry_id: entryId,
@@ -174,7 +176,7 @@ export namespace Captions {
         description.push('The deposited structure of PDB entry', B_, entryId, _B,
             'contains', countNoun(totalCopies, 'cop|y|ies'), 'of', source, 'domain', B_, familyId, `(${familyName})`, _B, 'in', B_, name, _B, '.',
             'Showing', countNoun(shownCopies, 'cop|y|ies'), 'in chain', B_, chainLabel(chainId, authChainId), _B,
-            (outOfRangeCopies > 0 ? (shownCopies > 1 ? '(some of the domains are out of the observed residue ranges!)' : '(this domain is out of the observed residue ranges!)') : ''),
+            (outOfRangeCopies > 0 ? (outOfRangeCopies < shownCopies ? '(some of the copies are out of the observed residue ranges!)' : '(this domain is out of the observed residue ranges!)') : ''),
             '.',
             capital(viewPhrase(view)), '.');
         return {
@@ -202,7 +204,7 @@ export namespace Captions {
         return {
             filename: `${entryId}_ligand_${ligandInfo.compId}${viewSuffix(view)}`,
             alt: new TextBuilder().push('The binding environment for', (nCopies === 1 ? '' : 'an instance of'), ligandInfo.compId, 'in PDB entry', entryId, ',',
-                viewPhrase(view), '.').buildText(),
+                viewPhrase(view), '.').buildPlainText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
             _entry_id: entryId,
@@ -218,13 +220,13 @@ export namespace Captions {
         const assemblyPrefix = assemblyId ? `assembly-${assemblyId}` : 'entry';
         const nCopies = modresInfo.nInstances;
         const description = new TextBuilder();
-        description.push(structurePhrase(context), 'of PDB entry', B_, entryId, _B,
+        description.push(structurePhrase(context), B_, entryId, _B,
             'contains', countNoun(nCopies, 'instance|s'), 'of modified residue', B_, modresInfo.compId, `(${modresInfo.compName})`, _B, '.',
             capital(viewPhrase(view)), '.');
         return {
             filename: `${entryId}_modres_${modresInfo.compId}${viewSuffix(view)}`,
             alt: new TextBuilder().push('Modified residue', modresInfo.compId, 'in PDB entry', entryId, ',',
-                (assemblyId ? `assembly ${assemblyId}` : ''), ',', viewPhrase(view), '.').buildText(),
+                (assemblyId ? `assembly ${assemblyId}` : ''), ',', viewPhrase(view), '.').buildPlainText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
             _entry_id: entryId,
@@ -233,10 +235,16 @@ export namespace Captions {
         };
     }
 
-    /** Return a phrase like 'The deposited structure' or 'Homo-tetrameric assembly 1' */
-    function structurePhrase(context: StructureContext) {
-        if (context.assemblyId) return `${capital(homoHeteroHowManyMer(context.entityInfo))}ic assembly ${context.assemblyId}`;
-        else return 'The deposited structure';
+    /** Return a phrase like 'The deposited structure of PDB entry' or 'Homo-tetrameric assembly 1 of PDB entry' if `type` is 'verbose'.
+     * Return a phrase like 'PDB entry' or 'Homo-tetrameric assembly 1 of PDB entry' if `type` is 'short'. */
+    function structurePhrase(context: StructureContext, type: 'verbose' | 'short' = 'verbose') {
+        if (context.assemblyId) {
+            return `${capital(homoHeteroHowManyMer(context.entityInfo))}ic assembly ${context.assemblyId} of PDB entry`;
+        } else if (type === 'verbose') {
+            return 'The deposited structure of PDB entry';
+        } else {
+            return 'PDB entry';
+        }
     }
 
     /** Return a phrase like 'front view' or '' */
@@ -251,11 +259,11 @@ export namespace Captions {
         else return '';
     }
 
-    /** Return a word like 'homo-tetramer' or 'hetero-20-mer', based on the number of polymeric chains in a structure. */
+    /** Return a word like 'homo tetramer' or 'hetero 20-mer', based on the number of polymeric chains in a structure. */
     function homoHeteroHowManyMer(entityInfo: EntityInfo): string {
         let nTypes = 0;
         for (const info of Object.values(entityInfo)) {
-            if (info.type === 'polymer') {
+            if (info.type === 'polymer' && info.chains.length > 0) {
                 nTypes += 1;
             }
         }
@@ -263,9 +271,9 @@ export namespace Captions {
         if (suffix === 'monomer' || nTypes === 0) {
             return suffix; // nTypes can be zero, some entries don't contain polymer (1aga)
         } else if (nTypes === 1) {
-            return 'homo-' + suffix;
+            return 'homo ' + suffix;
         } else {
-            return 'hetero-' + suffix;
+            return 'hetero ' + suffix;
         }
     }
 

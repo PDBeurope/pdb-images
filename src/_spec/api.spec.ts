@@ -15,12 +15,16 @@ describe('api', () => {
     it('noApi', async () => {
         expect(NO_API.pdbeStructureQualityReportPrefix()).toBeUndefined();
         expect(await NO_API.getEntityNames('1hda')).toEqual({} as PDBeAPIReturn<'getEntityNames'>);
+        expect(await NO_API.getEntityTypes('1hda')).toEqual({} as PDBeAPIReturn<'getEntityTypes'>);
         expect(await NO_API.getAssemblies('1hda')).toEqual([] as PDBeAPIReturn<'getAssemblies'>);
-        expect(await NO_API.getPreferredAssembly('1hda'))
-            .toEqual({ assemblyId: '1', form: '?', preferred: true, name: '?' } as PDBeAPIReturn<'getPreferredAssembly'>);
+        expect(await NO_API.getPreferredAssemblyId('1hda'))
+            .toEqual(undefined as PDBeAPIReturn<'getPreferredAssemblyId'>);
         expect(await NO_API.getModifiedResidue('1hda')).toEqual([] as PDBeAPIReturn<'getModifiedResidue'>);
         expect(await NO_API.getSiftsMappings('1hda'))
             .toEqual({ CATH: {}, Pfam: {}, Rfam: {}, SCOP: {} } as PDBeAPIReturn<'getSiftsMappings'>);
+        expect(await NO_API.getExperimentalMethods('1hda')).toEqual([] as PDBeAPIReturn<'getExperimentalMethods'>);
+        expect(await NO_API.getChainCoverages('1hda')).toEqual({} as PDBeAPIReturn<'getChainCoverages'>);
+        expect(await NO_API.getChainCoverageRatios('1hda')).toEqual({} as PDBeAPIReturn<'getChainCoverageRatios'>);
     });
 
     it('pdbeStructureQualityReportPrefix', async () => {
@@ -37,6 +41,15 @@ describe('api', () => {
         } as PDBeAPIReturn<'getEntityNames'>);
     });
 
+    it('getEntityTypes', async () => {
+        expect(await API.getEntityTypes('1hda')).toEqual({
+            '1': { type: 'polypeptide(L)' },
+            '2': { type: 'polypeptide(L)' },
+            '3': { type: 'bound', compId: 'HEM' },
+            '4': { type: 'water', compId: 'HOH' },
+        } as PDBeAPIReturn<'getEntityTypes'>);
+    });
+
     it('getAssemblies', async () => {
         expect(await API.getAssemblies('1hda')).toEqual([
             { assemblyId: '1', form: 'hetero', name: 'tetramer', preferred: true },
@@ -46,17 +59,10 @@ describe('api', () => {
             { assemblyId: '2', form: 'homo', name: 'tetramer', preferred: true },
         ] as PDBeAPIReturn<'getAssemblies'>);
     });
-    // TODO The API must be broken!!!
-    // Preferred assembly for 1tqn shouldn't be tetramer!!!
-    // Report and possibly fix sample testing data!
 
-    it('getPreferredAssembly', async () => {
-        expect(await API.getPreferredAssembly('1hda')).toEqual({
-            assemblyId: '1', form: 'hetero', name: 'tetramer', preferred: true
-        } as PDBeAPIReturn<'getPreferredAssembly'>);
-        expect(await API.getPreferredAssembly('1tqn')).toEqual({
-            assemblyId: '2', form: 'homo', name: 'tetramer', preferred: true
-        } as PDBeAPIReturn<'getPreferredAssembly'>);
+    it('getPreferredAssemblyId', async () => {
+        expect(await API.getPreferredAssemblyId('1hda')).toEqual('1' as PDBeAPIReturn<'getPreferredAssemblyId'>);
+        expect(await API.getPreferredAssemblyId('1tqn')).toEqual('2' as PDBeAPIReturn<'getPreferredAssemblyId'>);
     });
 
     it('getModifiedResidue', async () => {
@@ -162,5 +168,20 @@ describe('api', () => {
             },
             SCOP: {}
         } as PDBeAPIReturn<'getSiftsMappings'>);
+    });
+
+    it('getExperimentalMethods', async () => {
+        expect(await API.getExperimentalMethods('1hda')).toEqual(['X-ray diffraction'] as PDBeAPIReturn<'getExperimentalMethods'>);
+        expect(await API.getExperimentalMethods('176d')).toEqual(['Solution NMR'] as PDBeAPIReturn<'getExperimentalMethods'>);
+    });
+
+    it('getChainCoverages', async () => {
+        expect(await API.getChainCoverages('1hda')).toEqual({ 'A': 141, 'B': 145, 'C': 141, 'D': 145 } as PDBeAPIReturn<'getChainCoverages'>);
+        expect(await API.getChainCoverages('1tqn')).toEqual({ 'A': 468 } as PDBeAPIReturn<'getChainCoverages'>);
+    });
+
+    it('getChainCoverageRatios', async () => {
+        expect(await API.getChainCoverageRatios('1hda')).toEqual({ 'A': 1, 'B': 1, 'C': 1, 'D': 1 } as PDBeAPIReturn<'getChainCoverageRatios'>);
+        expect(await API.getChainCoverageRatios('1tqn')).toEqual({ 'A': 0.962 } as PDBeAPIReturn<'getChainCoverageRatios'>);
     });
 });

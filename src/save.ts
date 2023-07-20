@@ -5,17 +5,17 @@
  */
 
 import fs from 'fs';
-import path from 'path';
 
 import { HeadlessPluginContext } from 'molstar/lib/commonjs/mol-plugin/headless-plugin-context';
 import { RawImageData } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 
+import { Args } from './args';
 import { ImageSpec } from './captions/captions';
 import { MoljStateSaver } from './helpers/helpers';
 import { getLogger } from './helpers/logging';
 import { addAxisIndicators } from './image/draw';
 import { resizeRawImage, saveRawToPng } from './image/resize';
-import { Args } from './main';
+import * as Paths from './paths';
 
 
 const logger = getLogger(module);
@@ -31,11 +31,13 @@ export function makeSaveFunction(plugin: HeadlessPluginContext, outDir: string, 
     const postprocessing = undefined;
     return async (spec: ImageSpec) => {
         logger.info('Saving', spec.filename);
-        fs.writeFileSync(path.join(outDir, `${spec.filename}.caption.json`), JSON.stringify(spec, undefined, 2), { encoding: 'utf8' });
-        await stateSaver.save(path.join(outDir, `${spec.filename}.molj`));
+        fs.writeFileSync(Paths.imageCaptionJson(outDir, spec.filename), JSON.stringify(spec, undefined, 2), { encoding: 'utf8' });
+        await stateSaver.save(Paths.imageStateMolj(outDir, spec.filename));
 
+        const imageSizes = Array.from(args.size).sort((a, b) => b.width * b.height - a.width * a.height); // Sort from largest to smallest
         let fullsizeImage: RawImageData | undefined = undefined;
-        for (const size of args.size) {
+
+        for (const size of imageSizes) {
             let image: RawImageData;
             if (args.render_each_size || !fullsizeImage) {
                 // Render new image
@@ -49,7 +51,7 @@ export function makeSaveFunction(plugin: HeadlessPluginContext, outDir: string, 
                 // Resize existing image
                 image = resizeRawImage(fullsizeImage, size);
             }
-            await saveRawToPng(image, path.join(outDir, `${spec.filename}_image-${size.width}x${size.height}.png`));
+            await saveRawToPng(image, Paths.imagePng(outDir, spec.filename, size));
         }
     };
 }
