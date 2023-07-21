@@ -65,7 +65,7 @@ describe('captions', () => {
     });
 
     it('validation', () => {
-        expect(Captions.forGeometryValidation({ ...COMMON_CONTEXT, view: undefined })).toEqual({
+        expect(Captions.forGeometryValidation({ ...COMMON_CONTEXT, view: undefined, validationAvailable: true })).toEqual({
             _entry_id: '1hda',
             _extras: undefined,
             _section: ['validation', 'geometry', 'deposited'],
@@ -74,6 +74,16 @@ describe('captions', () => {
             clean_description: 'The deposited structure of PDB entry 1hda coloured by geometry validation. Residues are coloured by the number of geometry outliers: green – no outliers, yellow – one outlier yellow, orange – two outliers, red – three or more outliers.',
             description: "The deposited structure of PDB entry <span class='highlight'>1hda</span> coloured by geometry validation. Residues are coloured by the number of geometry outliers: green – no outliers, yellow – one outlier yellow, orange – two outliers, red – three or more outliers.",
             filename: '1hda_validation_geometry_deposited',
+        });
+        expect(Captions.forGeometryValidation({ ...COMMON_CONTEXT, view: 'front', validationAvailable: false })).toEqual({
+            _entry_id: '1hda',
+            _extras: undefined,
+            _section: ['validation', 'geometry', 'deposited'],
+            _view: 'front',
+            alt: 'Geometry outliers in PDB entry 1hda, front view – data not available.',
+            clean_description: 'The deposited structure of PDB entry 1hda coloured by geometry validation, front view. Validation data not available for this entry!',
+            description: "The deposited structure of PDB entry <span class='highlight'>1hda</span> coloured by geometry validation, front view. Validation data not available for this entry!",
+            filename: '1hda_validation_geometry_deposited_front',
         });
     });
 

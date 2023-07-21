@@ -193,6 +193,7 @@ export class ImageGenerator {
                 if (this.shouldRender('validation')) {
                     const structQualityReport = await this.api.getPdbeStructureQualityReport(entryId);
                     const validationAvailable = !!structQualityReport;
+                    if (!validationAvailable) logger.warn(`Validation data for ${entryId} not available (validation image will use gray color)`);
                     await visuals.applyToAll(vis => vis.setColorByGeometryValidation(validationAvailable));
                     await this.saveViews('front', view => Captions.forGeometryValidation({ entryId, view, validationAvailable }));
                 }
