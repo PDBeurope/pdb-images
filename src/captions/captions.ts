@@ -221,7 +221,6 @@ export namespace Captions {
     /** Create captions for `modres` image type. */
     export function forModifiedResidue(context: StructureContext & { modresInfo: ModifiedResidueInfo, view: ViewType }): ImageSpec {
         const { entryId, assemblyId, modresInfo, view } = context;
-        const assemblyPrefix = assemblyId ? `assembly-${assemblyId}` : 'entry';
         const nCopies = modresInfo.nInstances;
         const description = new TextBuilder();
         description.push(structurePhrase(context), B_, entryId, _B,
@@ -230,7 +229,7 @@ export namespace Captions {
         return {
             filename: `${entryId}_modres_${modresInfo.compId}${viewSuffix(view)}`,
             alt: new TextBuilder().push('Modified residue', modresInfo.compId, 'in PDB entry', entryId, ',',
-                (assemblyId ? `assembly ${assemblyId}` : ''), ',', viewPhrase(view), '.').buildPlainText(),
+                (assemblyId ? `assembly ${assemblyId}` : ''), ',', viewPhrase(view), nCopies === 0 ? '(not present)' : '', '.').buildPlainText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
             _entry_id: entryId,
