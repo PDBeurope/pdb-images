@@ -229,8 +229,7 @@ export function checkMissingFiles(directory: string, files: string[], entryId: s
         if (!fs.existsSync(fullPath)) {
             missing.push(file);
             logger.error(`Missing output file: ${file}`);
-        }
-        if (fs.statSync(fullPath).size === 0) {
+        } else if (fs.statSync(fullPath).size === 0) {
             missing.push(file);
             logger.error(`Empty output file: ${file}`);
         }

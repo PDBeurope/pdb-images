@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Fixed bug in checking expected files (do not check if empty when missing)
+
+## [2.1.0] - 2023-07-20
+
 - Image sizes are automatically sorted from the largest to the smallest (so that the largest one is rendered)
 - Fixed assembly captions, fixed homo/hetero n-mer names in captions (e.g. 8a5v)
 - Ensembles - zoom on all models

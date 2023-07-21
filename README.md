@@ -40,6 +40,7 @@ To release a new version of this package:
 * Change version in `package.json`
 * Change version in `src/main.ts` (`export const VERSION = ...`)
 * Run tests (will check if the versions match)
+* Update `CHANGELOG.md`
 * Commit and push to `main` branch
 * Create a git tag using semantic versioning (e.g. `2.0.0`); do not start the tag with "v" (e.g. `v2.0.0`)
 * GitHub workflow will automatically publish NPM package (https://www.npmjs.com/package/pdb-images)
