@@ -33,6 +33,7 @@ async function getExpectedFilenameStemsForPdbMode(entryId: string, types: Set<Im
         chainCoverages: safePromise(() => api.getChainCoverages(entryId)),
         modresRecords: safePromise(() => api.getModifiedResidue(entryId)),
         methods: safePromise(() => api.getExperimentalMethods(entryId)),
+        structQuality: safePromise(() => api.getPdbeStructureQualityReport(entryId)), // not used here but pre-loading because will be used later
     }; // run all API calls in parallel
 
     if (types.has('entry')) {
@@ -241,22 +242,4 @@ export function checkMissingFiles(directory: string, files: string[], entryId: s
     } else {
         logger.debug(`Checking for missing/empty output files passed (all ${files.length} expected files are present)`);
     }
-}
-
-
-/** Like `Promise.all` but with objects instead of arrays */
-async function promiseAllObj<T extends {}>(promisesObj: { [key in keyof T]: Promise<T[key]> }): Promise<T> {
-    const keys = Object.keys(promisesObj);
-    const promises = Object.values(promisesObj);
-    const results = await Promise.all(promises);
-    return objectFromKeysAndValues(keys, results) as any;
-}
-
-/** Create an object from keys and values (first key maps to first value etc.) */
-function objectFromKeysAndValues<K extends keyof any, V>(keys: K[], values: V[]): Record<K, V> {
-    const obj: Partial<Record<K, V>> = {};
-    for (let i = 0; i < keys.length; i++) {
-        obj[keys[i]] = values[i];
-    }
-    return obj as Record<K, V>;
 }

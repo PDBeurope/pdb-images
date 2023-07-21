@@ -191,8 +191,10 @@ export class ImageGenerator {
                 }
 
                 if (this.shouldRender('validation')) {
-                    await visuals.applyToAll(vis => vis.setColorByGeometryValidation());
-                    await this.saveViews('front', view => Captions.forGeometryValidation({ entryId, view }));
+                    const structQualityReport = await this.api.getPdbeStructureQualityReport(entryId);
+                    const validationAvailable = !!structQualityReport;
+                    await visuals.applyToAll(vis => vis.setColorByGeometryValidation(validationAvailable));
+                    await this.saveViews('front', view => Captions.forGeometryValidation({ entryId, view, validationAvailable }));
                 }
                 if (this.shouldRender('bfactor')) {
                     if (model.data && Model.isFromXray(model.data)) {
