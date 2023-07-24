@@ -94,21 +94,7 @@ export class ImageGenerator {
 
                     // Images from assembly structures
                     if (mode === 'pdb' && this.shouldRender('assembly', 'entity', 'modres')) {
-                        let assemblies = ModelSymmetry.Provider.get(model.data!)?.assemblies ?? [];
-                        let preferredAssemblyId = await this.api.getPreferredAssemblyId(entryId);
-                        logger.debug(`Assemblies (${assemblies.length}):`);
-                        for (const ass of assemblies) logger.debug('   ', oneLine(ass));
-                        logger.debug('Preferred assembly:', preferredAssemblyId);
-                        if (assemblies.length === 0) logger.error('There are no assemblies');
-                        if (preferredAssemblyId === undefined) {
-                            preferredAssemblyId = assemblies[0]?.id;
-                            if (!this.api.offline) logger.warn(`API says preferred assembly is undefined, using the first assembly (${preferredAssemblyId}) as preferred`);
-                        } else {
-                            assemblies = [
-                                ...assemblies.filter(ass => ass.id === preferredAssemblyId),
-                                ...assemblies.filter(ass => ass.id !== preferredAssemblyId),
-                            ];
-                        };
+                        const { assemblies, preferredAssemblyId } = await this.getAssemblyInfo(entryId, model.data!);
                         for (const assembly of assemblies) {
                             const isPreferredAssembly = assembly.id === preferredAssemblyId;
                             await this.processAssemblyStructure(entryId, model, assembly.id, isPreferredAssembly);
@@ -434,6 +420,36 @@ export class ImageGenerator {
                 if (struct) struct.setVisible(false);
             };
         });
+    }
+
+    /** Return list of assemblies (starting with the preferred assembly) and preferred assembly ID.
+     * Try to solve API-related problems (undefined preferred assembly, different assemblies than listed in the model). */
+    private async getAssemblyInfo(entryId: string, model: Model) {
+        let assemblies = ModelSymmetry.Provider.get(model)?.assemblies ?? [];
+        let preferredAssemblyId = await this.api.getPreferredAssemblyId(entryId);
+        const apiAssemblies = this.api.offline ? undefined : await this.api.getAssemblies(entryId);
+
+        logger.debug(`Assemblies (${assemblies.length}):`);
+        for (const ass of assemblies) logger.debug('   ', oneLine(ass));
+        logger.debug('Preferred assembly:', preferredAssemblyId);
+
+        if (assemblies.length === 0) logger.error('There are no assemblies');
+
+        if (apiAssemblies && apiAssemblies.length !== assemblies.length) logger.warn(`API says there are ${apiAssemblies.length} assemblies but the structure file says there are ${assemblies.length} assemblies`);
+
+        if (preferredAssemblyId === undefined) {
+            preferredAssemblyId = assemblies[0]?.id;
+            if (!this.api.offline) logger.warn(`API says preferred assembly is undefined, using the first assembly (${preferredAssemblyId}) as preferred`);
+        } else if (!assemblies.some(ass => ass.id === preferredAssemblyId)) {
+            const substitutePreferredAssemblyId = assemblies[0]?.id;
+            if (!this.api.offline) logger.warn(`API says preferred assembly is ${preferredAssemblyId}, but such assembly is not present, using the first assembly (${substitutePreferredAssemblyId}) as preferred`);
+            preferredAssemblyId = substitutePreferredAssemblyId;
+        };
+        assemblies = [
+            ...assemblies.filter(ass => ass.id === preferredAssemblyId),
+            ...assemblies.filter(ass => ass.id !== preferredAssemblyId),
+        ];
+        return { assemblies, preferredAssemblyId };
     }
 
     /** Zoom whole visible scene, without changing camera rotation. */

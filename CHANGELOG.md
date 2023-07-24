@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Do not fail when PDBe Structure Validation Report is not available, show gray structure instead (e.g. 6u6h)
 - Do not fail when modified residue is not modelled, show structure without anything highlighted instead (e.g. 1aco)
 - Do not fail when ligand is not modelled, show structure without anything highlighted instead (e.g. 2icy)
+- Print warning when assemblies from API don't reflect mmCIF and use the first assembly as fallback for preferred assembly (e.g. 2zuf)
 
 ## [2.1.0] - 2023-07-20
 
