@@ -8,8 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Fixed bug in checking expected files (do not check if empty when missing)
-- Do not fail when PDBe Structure Validation Report is not available, show gray structure instead
-- Do not fail when modified residue is not modelled, show structure without anything highlighted instead
+- Do not fail when PDBe Structure Validation Report is not available, show gray structure instead (e.g. 6u6h)
+- Do not fail when modified residue is not modelled, show structure without anything highlighted instead (e.g. 1aco)
+- Do not fail when ligand is not modelled, show structure without anything highlighted instead (e.g. 2icy)
 
 ## [2.1.0] - 2023-07-20
 

@@ -321,9 +321,15 @@ export class ImageGenerator {
         for (const lig in ligandInfo) logger.debug('   ', lig, oneLine(ligandInfo[lig]));
         for (const info of Object.values(ligandInfo)) {
             await using(structure.makeLigEnvComponents(info, ALLOW_COLLAPSED_NODES), async components => {
-                const visuals = await components.makeLigEnvVisuals({ ...this.options, entityColors });
-                this.orientAndZoomAll(components.nodes.ligand!);
-                await this.saveViews('front', view => Captions.forLigandEnvironment({ ...context, view, ligandInfo: info }));
+                if (components.nodes.ligand) {
+                    const visuals = await components.makeLigEnvVisuals({ ...this.options, entityColors });
+                    this.orientAndZoomAll(components.nodes.ligand!);
+                    await this.saveViews('front', view => Captions.forLigandEnvironment({ ...context, view, ligandInfo: info }));
+                } else {
+                    const assembly = context.assemblyId ? `assembly ${context.assemblyId}` : 'the deposited structure';
+                    const ligandName = (info.compId && info.compId !== '') ? info.compId : info.description;
+                    logger.error(`Skipping images for ligand ${ligandName} (not present in ${assembly})`);
+                }
             });
         }
     }
@@ -419,7 +425,10 @@ export class ImageGenerator {
             for (const modres in modresInfo) {
                 const struct = modresStructures[modres] as StructureNode | undefined;
                 const nInstances = struct?.data?.atomicResidueCount ?? 0; // Using number of instances in the assembly, not in the deposited model
-                if (nInstances === 0) logger.warn(`Modified residue ${modres} is not present in the processed assembly (creating image without highlighted modified residue)`);
+                if (nInstances === 0) {
+                    const assembly = context.assemblyId ? `assembly ${context.assemblyId}` : 'the deposited structure';
+                    logger.warn(`Modified residue ${modres} is not present in ${assembly} (creating image without highlighted modified residue)`);
+                }
                 if (struct) struct.setVisible(true);
                 await this.saveViews('all', view => Captions.forModifiedResidue({ ...context, modresInfo: { ...modresInfo[modres], nInstances }, view }));
                 if (struct) struct.setVisible(false);
