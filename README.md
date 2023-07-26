@@ -41,7 +41,7 @@ To release a new version of this package:
 * Change version in `src/main.ts` (`export const VERSION = ...`)
 * Run tests (will check if the versions match)
 * Update `CHANGELOG.md`
-* Commit and push to `main` branch
+* Commit and push to `main` branch (use the version as the commit message, e.g. `2.0.0`)
 * Create a git tag using semantic versioning (e.g. `2.0.0`); do not start the tag with "v" (e.g. `v2.0.0`)
 * GitHub workflow will automatically publish NPM package (https://www.npmjs.com/package/pdb-images)
 * GitHub workflow will automatically publish Docker images (https://hub.docker.com/r/pdbegroup/pdb-images and dockerhub.ebi.ac.uk/pdbe/packages/pdb-images)
