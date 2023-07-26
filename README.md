@@ -1,6 +1,6 @@
 # PDBImages
 
-**PDBImages** is a command line tool for generating images of macromolecular structures from mmCIF or binary CIF structure files based on Mol*.
+**PDBImages** is a command-line tool for generating images of macromolecular structures from mmCIF or binary CIF structure files based on Mol*.
 
 
 ## Development
@@ -40,13 +40,14 @@ To release a new version of this package:
 * Change version in `package.json`
 * Change version in `src/main.ts` (`export const VERSION = ...`)
 * Run tests (will check if the versions match)
+* Update `CHANGELOG.md`
 * Commit and push to `main` branch
 * Create a git tag using semantic versioning (e.g. `2.0.0`); do not start the tag with "v" (e.g. `v2.0.0`)
 * GitHub workflow will automatically publish NPM package (https://www.npmjs.com/package/pdb-images)
 * GitHub workflow will automatically publish Docker images (https://hub.docker.com/r/pdbegroup/pdb-images and dockerhub.ebi.ac.uk/pdbe/packages/pdb-images)
 
 
-## Including as dependency
+## Including as a dependency
 
 **PDBImages** is available in the NPM registry. You can add it as a dependency to your own package:
 
@@ -55,7 +56,7 @@ npm install pdb-images
 ```
 
 
-## Installing as CLI tool
+## Installing as a command-line tool
 
 **PDBImages** is available in the NPM registry. You can install it globally on your machine:
 
@@ -109,28 +110,30 @@ pdb-images 1hda data/output_1hda/ \
 
 Input is a structure file in mmCIF (`.cif`) or binary CIF (`.bcif`) format. The input file can be also compressed by GZIP (`.cif.gz`, `.bcif.gz`). If the `--input` option is not given, the input file will be retrieved from a public source (`https://www.ebi.ac.uk/pdbe/entry-files/download/${id}.bcif` for PDB mode, `https://alphafold.ebi.ac.uk/files/${id}.cif` for AlphaFold mode). There is some issue with AlphaFold bcifs, this might be fixed in the future.
 
-Additional input data will be retrieved from a PDBe API (default `https://www.ebi.ac.uk/pdbe/api`, can be changed by the `--api-url` option). With `--no-api` option, API will not be used at all – as a result, some image types will not be generated or captions will be slightly different.
+Additional input data will be retrieved from the PDBe API (default `https://www.ebi.ac.uk/pdbe/api`, can be changed by the `--api-url` option). With the `--no-api` option, API will not be used at all – as a result, some image types will not be generated or captions will be slightly different.
 
 ### Output
 
 #### Image files
 
-The program creates a collection of image types. Each scene can be rendered in different views (front, side, top; `--view` argument) and in different resolutions (`--size` argument). Besides the rendered images in PNG format, the program also saves `.molj` files (Mol* plugin states, aka snapshots, which can be loaded in Mol*) and `.caption.json` files (image captions).
+The program creates a collection of image types. Each scene can be rendered in different views (front, side, top; `--view` option) and in different resolutions (`--size` option). Besides the rendered images in PNG format, the program also saves `.molj` files (Mol* plugin states, aka snapshots, which can be loaded in Mol*) and `.caption.json` files (image captions).
+
+(Names of the individual files may be a bit confusing, as they were inherited from an older image generation process. See section *Generated image types* for explanation of the filenames.)
 
 #### Summary files
  
 After generating all images, two summary files are created: 
 
-* `{pdb}_filelist` contains the list of created images (without file suffixes, i.e. `1ad5_deposited_chain_front` instead of `1ad5_deposited_chain_front_image-800x800.png`)
+* `{pdb}_filelist` contains the list of created images
 * `{pdb}.json` contains the structured list of created images, including their captions and some other metadata.
 
-If the output directory contains older files from previous runs, these will also be included in the summary files (run with `--clear` to remove any older files instead).
+These summary files contain filenames without suffixes, e.g. `1ad5_deposited_chain_front` instead of the full filename `1ad5_deposited_chain_front_image-800x800.png`. To get full filenames, you must combine the filenames in the `"image"` sections and the suffixes in the `"image_suffix"` section of the JSON summary file (e.g `1ad5_deposited_chain_front` + `_image-800x800.png` -> `1ad5_deposited_chain_front_image-800x800.png`).
 
-(File names may be a bit confusing, they were inherited from an older image generation process.)
+If the output directory contains older files from previous runs, these will also be included in the summary files (run with `--clear` to remove any older files instead). If you only want to update the summary files based on the current contents of the output directory without generating any new images, run with `--type` (without specifying any type).
 
 ### Generated image types
 
-**PDBImages** generates many types of images. By default, it will create all image types that make sense for the selected mode (`pdb`/`alphafold`) and entry. Alternatively, the user can select a subset of image types by the option `--type`. These are all the available types:
+**PDBImages** generates many types of images. By default, it will create all image types that make sense for the selected mode (`pdb`/`alphafold`) and entry. Alternatively, the user can select a subset of image types by the `--type` option. These are all the available types:
 
 * `entry` – Create images of the whole deposited structure, colored by chains and colored by entities (i.e. chemically distinct molecules).
   * –> `{pdb}_deposited_chain_{view}_image-{size}.png`
@@ -154,10 +157,80 @@ If the output directory contains older files from previous runs, these will also
   * –> `{pdb}_modres_{modres}_image-{size}.png`
 * `all` – A shortcut to create all meaningful image types (i.e. all but `plddt` in `pdb` mode, `plddt` in `alphafold` mode).
 
-By default, some image types are rendered in three views (front, side, top view) with axis arrows shown in the left bottom corner, while other image types are only rendered in front view without axis arrows. This can be changed by `--view` and `--no-axes` arguments.
+By default, some image types are rendered in three views (front, side, top view) with axis arrows shown in the left bottom corner, while other image types are only rendered in front view without axis arrows. This can be changed by the `--view` and `--no-axes` options.
 
-By default, the images are rendered in one resolution, 800x800. This can be changed by `--size` argument. If multiple sizes are provided (e.g. `--size 100x100 800x800 1600x1600`), only the largest size (measured by area) will be rendered and the others will be obtained by resizing (use `--render_each_size` to render each size separately). 
-If you use `--size` without any value, no PNG images will be rendered but captions (`.caption.json`) and state files (`.molj`) will still be created. 
+By default, the images are rendered in one resolution, 800x800. This can be changed by the `--size` option. If multiple sizes are provided (e.g. `--size 100x100 800x800 1600x1600`), only the largest size (measured by area) will be rendered and the others will be obtained by resizing (use `--render_each_size` to render each size separately). 
+If you use `--size` without any value, no PNG images will be rendered but captions (`.caption.json`) and state files (`.molj`) will still be created.
+
+
+### Overview of the command-line arguments
+
+```
+positional arguments:
+  entry_id              Entry identifier (PDB ID or AlphaFoldDB ID).
+  output_dir            Output directory.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --version         Print version info and exit.
+  --input INPUT         Input structure file path or URL (.cif, .bcif,
+                        .cif.gz, .bcif.gz).
+  --input-public INPUT_PUBLIC
+                        Input structure URL to use in saved Mol* states (.molj
+                        files) (cif or bcif format).
+  --mode {pdb,alphafold}
+                        Mode.
+  --api-url API_URL     PDBe API URL. Default: https://www.ebi.ac.uk/pdbe/api.
+  --api-retry           Retry any failed API call up to 5 times, waiting
+                        random time (up to 30 seconds) before each retry.
+  --no-api              Do not use PDBe API at all (some images will be
+                        skipped, some entity names will be different in
+                        captions, etc.).
+  --size [SIZE ...]     One or more output image sizes, e.g. 800x800 200x200.
+                        Default: 800x800. Only the largest size is rendered,
+                        others are obtained by resizing unless
+                        --render_each_size is used. Use without any value to
+                        disable image rendering (only create captions and MOLJ
+                        files).
+  --render-each-size    Render image for each size listed in --size, instead
+                        of rendering only the first size and resampling to the
+                        other sizes.
+  --type [{entry,assembly,entity,domain,ligand,modres,bfactor,validation,plddt,all} ...]
+                        One or more image types to be created. Use "all" as a
+                        shortcut for all types. See README.md for details on
+                        image types. Default: all. Use without any value to
+                        skip all types (only create summary files from
+                        existing outputs).
+  --view {front,all,auto}
+                        Select which views should be created for each image
+                        type (front view / all views (front, side, top) / auto
+                        (creates all views only for these image types: entry,
+                        assembly, entity, modres, plddt)). Default: auto.
+  --opaque-background   Render opaque background in images (default:
+                        transparent background).
+  --no-axes             Do not render axis indicators aka PCA arrows (default:
+                        render axes when rendering the same scene from
+                        multiple view angles (front, side, top)).
+  --show-hydrogens      Show hydrogen atoms in ball-and-stick visuals
+                        (default: always ignore hydrogen atoms).
+  --show-branched-sticks
+                        Show semi-transparent ball-and-stick visuals for
+                        branched entities (i.e. carbohydrates) in addition to
+                        the default 3D-SNFG visuals.
+  --ensemble-shades     Show individual models within an ensemble in different
+                        shades of the base color (lighter and darker),
+                        default: use the same colors for all models.
+  --allow-lowest-quality
+                        Allow any quality level for visuals, including
+                        'lowest', which is really ugly (default: allow only
+                        'lower' quality level and better).
+  --date DATE           Date to use as "last_modification" in the caption JSON
+                        (default: today's date formatted as YYYY-MM-DD).
+  --clear               Remove all contents of the output directory before
+                        running.
+  --log {ALL,TRACE,DEBUG,INFO,WARN,ERROR,FATAL,MARK,OFF}
+                        Set logging level. Default: INFO.
+```
 
 
 ## Run in Docker
@@ -177,8 +250,6 @@ docker build . -t pdb-images                         # if you run it on the same
 docker build . -t pdb-images --platform linux/amd64  # if you need it for a different architecture
 docker run -v ~/data/output_1ad5:/out pdb-images 1ad5 /out
 ```
-
-(Add `-f Dockerfile-dev` to the build command if you want to build the current state of the project in Docker instead of using NPM package.)
 
 ### Run in Singularity
 

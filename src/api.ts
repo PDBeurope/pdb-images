@@ -215,6 +215,13 @@ export class PDBeAPI {
         return coverages;
     }
 
+    /** Get PDBe Structure Quality Report */
+    async getPdbeStructureQualityReport(pdbId: string): Promise<any | undefined> {
+        const url = `${this.baseUrl}/validation/residuewise_outlier_summary/entry/${pdbId}`;
+        const json = await this.get(url);
+        return json[pdbId];
+    }
+
     /** Get a URL prefix (without the PDBID argument) for PDBe structure quality report,
      * or `undefined` if initialized with `offline`. */
     pdbeStructureQualityReportPrefix(): string | undefined {

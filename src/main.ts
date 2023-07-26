@@ -43,7 +43,7 @@ const DEFAULT_IMAGE_SIZE = '800x800';
 
 /** Return parsed command line arguments for `main` */
 export function parseArguments(): Args {
-    const parser = new ArgumentParser({ description: 'PDBImages, a CLI tool for generating images of macromolecular models.' });
+    const parser = new ArgumentParser({ description: 'PDBImages, a command-line tool for generating images of macromolecular models.' });
     parser.add_argument('-v', '--version', { action: 'version', version: VERSION, help: 'Print version info and exit.' });
     parser.add_argument('entry_id', { help: 'Entry identifier (PDB ID or AlphaFoldDB ID).' });
     parser.add_argument('output_dir', { help: 'Output directory.' });

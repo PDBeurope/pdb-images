@@ -55,6 +55,9 @@ const HIGHTLIGHT_STICK_SIZE_FACTOR = 0.75;
 const ENVIRONMENT_STICK_SIZE_FACTOR = 0.11;
 const STICK_SIZE_ASPECT_RATIO = 0.5;
 
+/** To be used when PDBe Structure Quality report is not available. */
+const VALIDATION_UNAVAILABLE_COLOR = FADED_COLOR;
+
 
 export type StructureObjSelector = StateObjectSelector<PluginStateObject.Molecule.Structure, any>
 
@@ -435,10 +438,14 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
     }
 
     /** Color this visual by geometry validation info */
-    async setColorByGeometryValidation() {
-        return this.updateVisual({
-            colorTheme: { name: 'pdbe-structure-quality-report' }
-        });
+    async setColorByGeometryValidation(validationAvailable: boolean = true) {
+        if (validationAvailable) {
+            return await this.updateVisual({
+                colorTheme: { name: 'pdbe-structure-quality-report' }
+            });
+        } else {
+            return await this.setColorUniform(VALIDATION_UNAVAILABLE_COLOR);
+        }
     }
 
     /** Color this visual by pLDDT values */
@@ -518,8 +525,7 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
 
     /** Return structure from which this visual was created */
     private getStructure(): Structure | undefined {
-        const data = this.node.data;
-        const structure = (data as any).sourceData as Structure | undefined;
+        const structure = this.data?.sourceData as Structure | undefined;
         return (structure instanceof Structure) ? structure : undefined;
     }
 

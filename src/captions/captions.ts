@@ -100,14 +100,18 @@ export namespace Captions {
     }
 
     /** Create captions for `validation` image type. */
-    export function forGeometryValidation(context: { entryId: string, view: ViewType }): ImageSpec {
-        const { entryId, view } = context;
+    export function forGeometryValidation(context: { entryId: string, view: ViewType, validationAvailable: boolean }): ImageSpec {
+        const { entryId, view, validationAvailable } = context;
         const description = new TextBuilder();
         description.push('The deposited structure of PDB entry', B_, entryId, _B, 'coloured by geometry validation', ',', viewPhrase(view), '.');
-        description.push('Residues are coloured by the number of geometry outliers: green – no outliers, yellow – one outlier yellow, orange – two outliers, red – three or more outliers.');
+        if (validationAvailable) {
+            description.push('Residues are coloured by the number of geometry outliers: green – no outliers, yellow – one outlier yellow, orange – two outliers, red – three or more outliers.');
+        } else {
+            description.push('Validation data not available for this entry!');
+        }
         return {
             filename: `${entryId}_validation_geometry_deposited${viewSuffix(view)}`,
-            alt: new TextBuilder().push('Geometry outliers in PDB entry', entryId, ',', viewPhrase(view), '.').buildPlainText(),
+            alt: new TextBuilder().push('Geometry outliers in PDB entry', entryId, ',', viewPhrase(view), '-', validationAvailable ? '' : 'data not available', '.').buildPlainText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
             _entry_id: entryId,
@@ -217,7 +221,6 @@ export namespace Captions {
     /** Create captions for `modres` image type. */
     export function forModifiedResidue(context: StructureContext & { modresInfo: ModifiedResidueInfo, view: ViewType }): ImageSpec {
         const { entryId, assemblyId, modresInfo, view } = context;
-        const assemblyPrefix = assemblyId ? `assembly-${assemblyId}` : 'entry';
         const nCopies = modresInfo.nInstances;
         const description = new TextBuilder();
         description.push(structurePhrase(context), B_, entryId, _B,
@@ -226,7 +229,7 @@ export namespace Captions {
         return {
             filename: `${entryId}_modres_${modresInfo.compId}${viewSuffix(view)}`,
             alt: new TextBuilder().push('Modified residue', modresInfo.compId, 'in PDB entry', entryId, ',',
-                (assemblyId ? `assembly ${assemblyId}` : ''), ',', viewPhrase(view), '.').buildPlainText(),
+                (assemblyId ? `assembly ${assemblyId}` : ''), ',', viewPhrase(view), nCopies === 0 ? '(not present)' : '', '.').buildPlainText(),
             description: description.buildText(),
             clean_description: description.buildPlainText(),
             _entry_id: entryId,

@@ -94,21 +94,7 @@ export class ImageGenerator {
 
                     // Images from assembly structures
                     if (mode === 'pdb' && this.shouldRender('assembly', 'entity', 'modres')) {
-                        let assemblies = ModelSymmetry.Provider.get(model.data!)?.assemblies ?? [];
-                        let preferredAssemblyId = await this.api.getPreferredAssemblyId(entryId);
-                        logger.debug(`Assemblies (${assemblies.length}):`);
-                        for (const ass of assemblies) logger.debug('   ', oneLine(ass));
-                        logger.debug('Preferred assembly:', preferredAssemblyId);
-                        if (assemblies.length === 0) logger.error('There are no assemblies');
-                        if (preferredAssemblyId === undefined) {
-                            preferredAssemblyId = assemblies[0]?.id;
-                            if (!this.api.offline) logger.warn(`API says preferred assembly is undefined, using the first assembly (${preferredAssemblyId}) as preferred`);
-                        } else {
-                            assemblies = [
-                                ...assemblies.filter(ass => ass.id === preferredAssemblyId),
-                                ...assemblies.filter(ass => ass.id !== preferredAssemblyId),
-                            ];
-                        };
+                        const { assemblies, preferredAssemblyId } = await this.getAssemblyInfo(entryId, model.data!);
                         for (const assembly of assemblies) {
                             const isPreferredAssembly = assembly.id === preferredAssemblyId;
                             await this.processAssemblyStructure(entryId, model, assembly.id, isPreferredAssembly);
@@ -191,8 +177,11 @@ export class ImageGenerator {
                 }
 
                 if (this.shouldRender('validation')) {
-                    await visuals.applyToAll(vis => vis.setColorByGeometryValidation());
-                    await this.saveViews('front', view => Captions.forGeometryValidation({ entryId, view }));
+                    const structQualityReport = await this.api.getPdbeStructureQualityReport(entryId);
+                    const validationAvailable = !!structQualityReport;
+                    if (!validationAvailable) logger.warn(`Validation data for ${entryId} not available (validation image will use gray color)`);
+                    await visuals.applyToAll(vis => vis.setColorByGeometryValidation(validationAvailable));
+                    await this.saveViews('front', view => Captions.forGeometryValidation({ entryId, view, validationAvailable }));
                 }
                 if (this.shouldRender('bfactor')) {
                     if (model.data && Model.isFromXray(model.data)) {
@@ -318,9 +307,15 @@ export class ImageGenerator {
         for (const lig in ligandInfo) logger.debug('   ', lig, oneLine(ligandInfo[lig]));
         for (const info of Object.values(ligandInfo)) {
             await using(structure.makeLigEnvComponents(info, ALLOW_COLLAPSED_NODES), async components => {
-                const visuals = await components.makeLigEnvVisuals({ ...this.options, entityColors });
-                this.orientAndZoomAll(components.nodes.ligand!);
-                await this.saveViews('front', view => Captions.forLigandEnvironment({ ...context, view, ligandInfo: info }));
+                if (components.nodes.ligand) {
+                    const visuals = await components.makeLigEnvVisuals({ ...this.options, entityColors });
+                    this.orientAndZoomAll(components.nodes.ligand!);
+                    await this.saveViews('front', view => Captions.forLigandEnvironment({ ...context, view, ligandInfo: info }));
+                } else {
+                    const assembly = context.assemblyId ? `assembly ${context.assemblyId}` : 'the deposited structure';
+                    const ligandName = (info.compId && info.compId !== '') ? info.compId : info.description;
+                    logger.error(`Skipping images for ligand ${ligandName} (not present in ${assembly})`);
+                }
             });
         }
     }
@@ -404,7 +399,6 @@ export class ImageGenerator {
         const setDefinitions: { [modres: string]: SubstructureDef } = {};
         for (const modres in modresInfo) setDefinitions[modres] = modresInfo[modres].instances;
 
-        const unprocessedModres = new Set(Object.keys(modresInfo));
         const colorsIterator = cycleIterator(MODRES_COLORS);
         await using(structure.makeGroup({ label: 'Modified Residues' }), async group => {
             const modresStructures = await group.makeSubstructures(setDefinitions);
@@ -414,15 +408,48 @@ export class ImageGenerator {
                 struct.setCollapsed(ALLOW_COLLAPSED_NODES);
                 struct.setVisible(false);
             }
-            for (const [modres, struct] of Object.entries(modresStructures)) {
-                const nInstances = struct.data!.atomicResidueCount; // Using number of instances in the assembly, not in the deposited model
-                struct.setVisible(true);
+            for (const modres in modresInfo) {
+                const struct = modresStructures[modres] as StructureNode | undefined;
+                const nInstances = struct?.data?.atomicResidueCount ?? 0; // Using number of instances in the assembly, not in the deposited model
+                if (nInstances === 0) {
+                    const assembly = context.assemblyId ? `assembly ${context.assemblyId}` : 'the deposited structure';
+                    logger.warn(`Modified residue ${modres} is not present in ${assembly} (creating image without highlighted modified residue)`);
+                }
+                if (struct) struct.setVisible(true);
                 await this.saveViews('all', view => Captions.forModifiedResidue({ ...context, modresInfo: { ...modresInfo[modres], nInstances }, view }));
-                struct.setVisible(false);
-                unprocessedModres.delete(modres);
+                if (struct) struct.setVisible(false);
             };
-            if (unprocessedModres.size > 0) logger.error(`Failed to create images for these modified residues: ${Array.from(unprocessedModres).sort()}`);
         });
+    }
+
+    /** Return list of assemblies (starting with the preferred assembly) and preferred assembly ID.
+     * Try to solve API-related problems (undefined preferred assembly, different assemblies than listed in the model). */
+    private async getAssemblyInfo(entryId: string, model: Model) {
+        let assemblies = ModelSymmetry.Provider.get(model)?.assemblies ?? [];
+        let preferredAssemblyId = await this.api.getPreferredAssemblyId(entryId);
+        const apiAssemblies = this.api.offline ? undefined : await this.api.getAssemblies(entryId);
+
+        logger.debug(`Assemblies (${assemblies.length}):`);
+        for (const ass of assemblies) logger.debug('   ', oneLine(ass));
+        logger.debug('Preferred assembly:', preferredAssemblyId);
+
+        if (assemblies.length === 0) logger.error('There are no assemblies');
+
+        if (apiAssemblies && apiAssemblies.length !== assemblies.length) logger.warn(`API says there are ${apiAssemblies.length} assemblies but the structure file says there are ${assemblies.length} assemblies`);
+
+        if (preferredAssemblyId === undefined) {
+            preferredAssemblyId = assemblies[0]?.id;
+            if (!this.api.offline) logger.warn(`API says preferred assembly is undefined, using the first assembly (${preferredAssemblyId}) as preferred`);
+        } else if (!assemblies.some(ass => ass.id === preferredAssemblyId)) {
+            const substitutePreferredAssemblyId = assemblies[0]?.id;
+            if (!this.api.offline) logger.warn(`API says preferred assembly is ${preferredAssemblyId}, but such assembly is not present, using the first assembly (${substitutePreferredAssemblyId}) as preferred`);
+            preferredAssemblyId = substitutePreferredAssemblyId;
+        };
+        assemblies = [
+            ...assemblies.filter(ass => ass.id === preferredAssemblyId),
+            ...assemblies.filter(ass => ass.id !== preferredAssemblyId),
+        ];
+        return { assemblies, preferredAssemblyId };
     }
 
     /** Zoom whole visible scene, without changing camera rotation. */
