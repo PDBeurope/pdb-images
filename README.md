@@ -118,7 +118,7 @@ Additional input data will be retrieved from the PDBe API (default `https://www.
 
 The program creates a collection of image types. Each scene can be rendered in different views (front, side, top; `--view` option) and in different resolutions (`--size` option). Besides the rendered images in PNG format, the program also saves `.molj` files (Mol* plugin states, aka snapshots, which can be loaded in Mol*) and `.caption.json` files (image captions).
 
-(Names of the individual files may be a bit confusing, they were inherited from an older image generation process.)
+(Names of the individual files may be a bit confusing, as they were inherited from an older image generation process. See section *Generated image types* for explanation of the filenames.)
 
 #### Summary files
  
@@ -250,8 +250,6 @@ docker build . -t pdb-images                         # if you run it on the same
 docker build . -t pdb-images --platform linux/amd64  # if you need it for a different architecture
 docker run -v ~/data/output_1ad5:/out pdb-images 1ad5 /out
 ```
-
-(Add `-f Dockerfile-dev` to the build command if you want to build the current state of the project in Docker instead of using NPM package.)
 
 ### Run in Singularity
 
