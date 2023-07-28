@@ -25,6 +25,7 @@ import { ParamDefinition } from 'molstar/lib/commonjs/mol-util/param-definition'
 import { PDBeAPI } from './api';
 import { DEFAULT_COLORS, ENTITY_COLORS } from './helpers/colors';
 import { PPartial, chainLabel, deepMerge, toKebabCase } from './helpers/helpers';
+import { oneLine } from './helpers/logging';
 import { EntityInfo, LigandInfo, getEntityInfo } from './helpers/structure-info';
 import { SubstructureDef } from './helpers/substructure-def';
 
@@ -197,7 +198,12 @@ export class ModelNode extends Node<PluginStateObject.Molecule.Model> {
         if (params.type.name === 'assembly') refSuffix += `-${params.type.params.id}`;
         const ref = this.childRef(refSuffix);
         const structure = await this.state.build().to(this.node).apply(StructureFromModel, params, { ref }).commit();
-        return new StructureNode(structure);
+        if (structure.data && !structure.data.isEmpty) {
+            return new StructureNode(structure);
+        } else {
+            await this.state.build().delete(structure).commit();
+            throw new Error(`Failed to create a structure from model node '${this.node.ref}' with params ${oneLine(params)}.`);
+        }
     }
 }
 
