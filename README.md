@@ -11,7 +11,7 @@
 npm install
 ```
 
-(See FAQ if installation fails on the `gl` package.)
+Requires Node.js >= 18. See FAQ if installation fails on the `gl` package.
 
 ### Build
 
@@ -49,16 +49,34 @@ To release a new version of this package:
 
 ## Including as a dependency
 
-**PDBImages** is available in the NPM registry. You can add it as a dependency to your own package:
+**PDBImages** is available in the NPM registry. You can add it as a dependency to your own package (requires Node.js >= 18):
 
 ```sh
 npm install pdb-images
 ```
 
+Then you can call the asynchronous `main` function in your code (this example assumes you are using TypeScript):
+
+```typescript
+import { main } from 'pdb-images/lib/main';
+
+main({
+    entry_id: '1ad5', output_dir: '../data/out/1ad5',
+    input: undefined, input_public: undefined, mode: 'pdb',
+    api_url: 'https://www.ebi.ac.uk/pdbe/api', api_retry: false, no_api: false,
+    size: [{ width: 800, height: 800 }], render_each_size: false,
+    type: ['all'], view: 'auto', opaque_background: false, no_axes: false,
+    show_hydrogens: false, show_branched_sticks: false, ensemble_shades: false,
+    allow_lowest_quality: false, date: undefined, clear: false, log: 'INFO',
+});
+```
+
+In TypeScript configuration (`tsconfig.js`) use `"module": "CommonJS"`.
+
 
 ## Installing as a command-line tool
 
-**PDBImages** is available in the NPM registry. You can install it globally on your machine:
+**PDBImages** is available in the NPM registry. You can install it globally on your machine (requires Node.js >= 18):
 
 ```sh
 npm install -g pdb-images
@@ -299,3 +317,20 @@ It is important to set `XVFB_DIR` variable to an existing mounted directory (use
   This approach is used for the GitHub testing workflow (`sudo apt-get install xvfb && xvfb-run --auto-servernum npm run jest`). It is also used in the enclosed Dockerfile.
   
   The downside of this approach is that `Xvfb` is a purely software implementation and cannot use GPU (this information cannot be found in any official source but a bunch of people on StackOverflow say so), thus not allowing the full performance potential of PDBImages.
+
+- Installation completed successfully and running `pdb-images --help` works fine, but trying to run image generation gives an error like this:
+
+  ```
+  ReferenceError: fetch is not defined
+  ```
+
+  This is probably because you are using an older version of Node.js. Version 18 or higher is required to run PDBImages.
+  
+  When you update Node.js, make sure to uninstall the PDBImages package and then install it again: 
+  
+  ```
+  npm uninstall -g pdb-images
+  npm install -g pdb-images
+  ```
+
+  (use `-g` only if you install globally)
