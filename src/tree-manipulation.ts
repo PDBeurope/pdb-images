@@ -62,9 +62,9 @@ const VALIDATION_UNAVAILABLE_COLOR = FADED_COLOR;
 
 export type StructureObjSelector = StateObjectSelector<PluginStateObject.Molecule.Structure, any>
 
-type StandardComponentType = 'polymer' | 'branched' | 'ligand' | 'ion' | 'nonstandard'
+type StandardComponentType = 'polymer' | 'branched' | 'branchedLinkage' | 'ligand' | 'ion' | 'nonstandard'
 type LigEnvComponentType = 'ligand' | 'environment' | 'wideEnvironment' | 'linkage'
-type StandardVisualType = 'polymerCartoon' | 'branchedCarbohydrate' | 'branchedSticks' | 'ligandSticks' | 'ionSticks' | 'nonstandardSticks'
+type StandardVisualType = 'polymerCartoon' | 'branchedCarbohydrate' | 'branchedSticks' | 'branchedLinkageSticks' | 'ligandSticks' | 'ionSticks' | 'nonstandardSticks'
 type LigEnvVisualType = 'ligandSticks' | 'environmentSticks' | 'linkageSticks' | 'wideEnvironmentCartoon'
 
 type StructureParams = ParamDefinition.Values<ReturnType<typeof RootStructureDefinition.getParams>>
@@ -226,10 +226,11 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
         const options: Partial<StateTransform.Options> = { state: { isCollapsed: collapsed } };
         const polymer = await this.makeComponent({ type: { name: 'static', params: 'polymer' } }, options, 'polymer');
         const branched = await this.makeComponent({ type: { name: 'static', params: 'branched' } }, options, 'branched');
+        const branchedLinkage = await branched?.makeComponent({ type: { name: 'static', params: 'polymer' }, label: 'Linkage' }, options, 'branchedLinkage');
         const ligand = await this.makeComponent({ type: { name: 'static', params: 'ligand' } }, options, 'ligand');
         const ion = await this.makeComponent({ type: { name: 'static', params: 'ion' } }, options, 'ion');
         const nonstandard = await this.makeComponent({ type: { name: 'static', params: 'non-standard' } }, options, 'nonstandard');
-        return new StandardComponents({ polymer, branched, ligand, ion, nonstandard });
+        return new StandardComponents({ polymer, branched, branchedLinkage, ligand, ion, nonstandard });
     }
     /** Create components "ligand" and "environment" for a ligand */
     async makeLigEnvComponents(ligandInfo: LigandInfo, collapsed: boolean = false): Promise<LigandEnvironmentComponents> {
@@ -566,6 +567,7 @@ export class StandardComponents extends NodeCollection<StandardComponentType, St
         const branchedCarbohydrate = await this.nodes.branched?.makeCarbohydrate(options, ['branchedCarbohydrate']);
         const branchedSticks = options.showBranchedSticks ? await this.nodes.branched?.makeBallsAndSticks(options, ['branchedSticks']) : undefined;
         await branchedSticks?.setOpacity(BRANCHED_STICKS_OPACITY);
+        const branchedLinkageSticks = await this.nodes.branchedLinkage?.makeBallsAndSticks(options, ['branchedLinkageSticks']);
         const ligandSticks = await this.nodes.ligand?.makeBallsAndSticks(options, ['ligandSticks']);
         const ionSticks = await this.nodes.ion?.makeBallsAndSticks(options, ['ionSticks']);
         const nonstandardSticks = await this.nodes.nonstandard?.makeBallsAndSticks(options, ['nonstandardSticks']);
@@ -573,6 +575,7 @@ export class StandardComponents extends NodeCollection<StandardComponentType, St
             polymerCartoon,
             branchedCarbohydrate,
             branchedSticks,
+            branchedLinkageSticks,
             ligandSticks,
             ionSticks,
             nonstandardSticks,

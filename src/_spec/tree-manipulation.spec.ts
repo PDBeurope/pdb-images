@@ -268,12 +268,12 @@ describe('visuals', () => {
             await using(stdComps.makeStandardVisuals({}), visuals => {
                 expect(getTransformerTypes(plugin)).toContain('ms-plugin.structure-representation-3d');
                 expect(getCells(plugin, 'ms-plugin.structure-representation-3d').map(c => c.params?.values.type.name))
-                    .toEqual(['cartoon', 'carbohydrate', 'ball-and-stick']);
+                    .toEqual(['cartoon', 'carbohydrate', 'ball-and-stick', 'ball-and-stick']);
             });
             await using(stdComps.makeStandardVisuals({ showBranchedSticks: true }), visuals => {
                 expect(getTransformerTypes(plugin)).toContain('ms-plugin.structure-representation-3d');
                 expect(getCells(plugin, 'ms-plugin.structure-representation-3d').map(c => c.params?.values.type.name))
-                    .toEqual(['cartoon', 'carbohydrate', 'ball-and-stick', 'ball-and-stick']);
+                    .toEqual(['cartoon', 'carbohydrate', 'ball-and-stick', 'ball-and-stick', 'ball-and-stick']);
             });
             expect(getTransformerTypes(plugin)).not.toContain('ms-plugin.structure-representation-3d');
         } finally {
