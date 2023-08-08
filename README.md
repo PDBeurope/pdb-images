@@ -3,73 +3,9 @@
 **PDBImages** is a command-line tool for generating images of macromolecular structures from mmCIF or binary CIF structure files based on Mol*.
 
 
-## Development
-
-### Install dependencies
-
-```sh
-npm install
-```
-
-Requires Node.js >= 18. See FAQ if installation fails on the `gl` package.
-
-### Build
-
-```sh
-rm -rf ./lib/  # For a clean build
-npm run build
-```
-
-Build automatically on file save:
-
-```sh
-npm run watch
-```
-
-### Test
-
-```sh
-npm run lint
-npm run jest
-```
-
-### Release
-
-To release a new version of this package:
-
-* Change version in `package.json`
-* Change version in `src/main.ts` (`export const VERSION = ...`)
-* Run tests (will check if the versions match)
-* Update `CHANGELOG.md`
-* Commit and push to `main` branch (use the version as the commit message, e.g. `2.0.0`)
-* Create a git tag using semantic versioning (e.g. `2.0.0`); do not start the tag with "v" (e.g. `v2.0.0`)
-* GitHub workflow will automatically publish NPM package (https://www.npmjs.com/package/pdb-images)
-* GitHub workflow will automatically publish Docker images (https://hub.docker.com/r/pdbegroup/pdb-images and dockerhub.ebi.ac.uk/pdbe/packages/pdb-images)
-
-
-## Including as a dependency
-
-**PDBImages** is available in the NPM registry. You can add it as a dependency to your own package (requires Node.js >= 18):
-
-```sh
-npm install pdb-images
-```
-
-Then you can call the asynchronous `main` function (and others) in your code. This example shows how to call `main` from TypeScript code:
-
-```typescript
-import { createArgs } from 'pdb-images/lib/args';
-import { main } from 'pdb-images/lib/main';
-
-main(createArgs('1ad5', 'data/output_1ad5/', { size: [{ width: 1600, height: 1200 }], view: 'front', clear: true }));
-```
-
-In TypeScript configuration (`tsconfig.js`) use `"module": "CommonJS"`.
-
-
 ## Installing as a command-line tool
 
-**PDBImages** is available in the NPM registry. You can install it globally on your machine (requires Node.js >= 18):
+**PDBImages** is available in the **npm** registry. You can install it globally on your machine (requires Node.js >= 18):
 
 ```sh
 npm install -g pdb-images
@@ -270,6 +206,70 @@ singularity run --env XVFB_DIR=~/data/xvfb ./pdb-images 1ad5 ~/data/output_1ad5
 ```
 
 It is important to set `XVFB_DIR` variable to an existing mounted directory (use `--bind` if paths are not mounted automatically). When running multiple jobs in parallel, set a separate `XVFB_DIR` for each job.
+
+
+## Including as a dependency
+
+**PDBImages** is available in the **npm** registry. You can add it as a dependency to your own package (requires Node.js >= 18):
+
+```sh
+npm install pdb-images
+```
+
+Then you can call the asynchronous `main` function (and others) in your code. This example shows how to call `main` from TypeScript code:
+
+```typescript
+import { createArgs } from 'pdb-images/lib/args';
+import { main } from 'pdb-images/lib/main';
+
+main(createArgs('1ad5', 'data/output_1ad5/', { size: [{ width: 1600, height: 1200 }], view: 'front', clear: true }));
+```
+
+In TypeScript configuration (`tsconfig.js`) use `"module": "CommonJS"`.
+
+
+## Development
+
+### Install dependencies
+
+```sh
+npm install
+```
+
+Requires Node.js >= 18. See FAQ if installation fails on the `gl` package.
+
+### Build
+
+```sh
+rm -rf ./lib/  # For a clean build
+npm run build
+```
+
+Build automatically on file save:
+
+```sh
+npm run watch
+```
+
+### Test
+
+```sh
+npm run lint
+npm run jest
+```
+
+### Release
+
+To release a new version of this package:
+
+* Change version in `package.json`
+* Change version in `src/main.ts` (`export const VERSION = ...`)
+* Run tests (will check if the versions match)
+* Update `CHANGELOG.md`
+* Commit and push to `main` branch (use the version as the commit message, e.g. `2.0.0`)
+* Create a git tag using semantic versioning (e.g. `2.0.0`); do not start the tag with "v" (e.g. `v2.0.0`)
+* GitHub workflow will automatically publish npm package (https://www.npmjs.com/package/pdb-images)
+* GitHub workflow will automatically publish Docker images (https://hub.docker.com/r/pdbegroup/pdb-images and dockerhub.ebi.ac.uk/pdbe/packages/pdb-images)
 
 
 ## FAQ
