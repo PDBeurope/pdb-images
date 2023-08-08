@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2023-08-08
+
 - Show ball-and-stick visual for amino acids linking carbohydrate to protein
 - Added `createArgs` function for calling `main` more easily
 
