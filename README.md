@@ -55,20 +55,13 @@ To release a new version of this package:
 npm install pdb-images
 ```
 
-Then you can call the asynchronous `main` function in your code (this example assumes you are using TypeScript):
+Then you can call the asynchronous `main` function (and others) in your code. This example shows how to call `main` from TypeScript code:
 
 ```typescript
+import { createArgs } from 'pdb-images/lib/args';
 import { main } from 'pdb-images/lib/main';
 
-main({
-    entry_id: '1ad5', output_dir: '../data/out/1ad5',
-    input: undefined, input_public: undefined, mode: 'pdb',
-    api_url: 'https://www.ebi.ac.uk/pdbe/api', api_retry: false, no_api: false,
-    size: [{ width: 800, height: 800 }], render_each_size: false,
-    type: ['all'], view: 'auto', opaque_background: false, no_axes: false,
-    show_hydrogens: false, show_branched_sticks: false, ensemble_shades: false,
-    allow_lowest_quality: false, date: undefined, clear: false, log: 'INFO',
-});
+main(createArgs('1ad5', 'data/output_1ad5/', { size: [{ width: 1600, height: 1200 }], view: 'front', clear: true }));
 ```
 
 In TypeScript configuration (`tsconfig.js`) use `"module": "CommonJS"`.
