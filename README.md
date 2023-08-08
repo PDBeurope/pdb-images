@@ -274,7 +274,7 @@ To release a new version of this package:
 
 ## FAQ
 
-- `npm install` fails on the `gl` package, printing something like:
+- **`npm install` fails on the `gl` package, printing something like:**
 
   ```
   ...
@@ -291,7 +291,7 @@ To release a new version of this package:
   
   or follow instructions here: <https://www.npmjs.com/package/gl#system-dependencies>
 
-- Installation completed successfully and running `pdb-images --help` works fine, but trying to run image generation gives an error like this:
+- **Installation completed successfully and running `pdb-images --help` works fine, but trying to run image generation gives an error like this:**
 
   ```
           var ext = gl.getExtension('ANGLE_instanced_arrays');
@@ -311,7 +311,7 @@ To release a new version of this package:
   
   The downside of this approach is that `Xvfb` is a purely software implementation and cannot use GPU (this information cannot be found in any official source but a bunch of people on StackOverflow say so), thus not allowing the full performance potential of PDBImages.
 
-- Installation completed successfully and running `pdb-images --help` works fine, but trying to run image generation gives an error like this:
+- **Installation completed successfully and running `pdb-images --help` works fine, but trying to run image generation gives an error like this:**
 
   ```
   ReferenceError: fetch is not defined
