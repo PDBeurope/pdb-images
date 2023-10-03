@@ -131,8 +131,8 @@ export async function main(args: Args) {
 /** Return a new and initiatized HeadlessPlugin */
 async function createHeadlessPlugin(args: Pick<Args, 'size' | 'opaque_background'>) {
     const canvasParams = defaultCanvas3DParams();
-    canvasParams.camera!.mode='perspective'
-    canvasParams.camera!.fov=45
+    canvasParams.camera!.mode = 'perspective';
+    canvasParams.camera!.fov = 45;
     const options: HeadlessScreenshotHelperOptions = { canvas: canvasParams, imagePass: defaultImagePassParams() };
 
     options.canvas!.camera!.manualReset = true;
