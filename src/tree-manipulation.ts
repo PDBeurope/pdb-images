@@ -151,6 +151,10 @@ export class DataNode extends Node<PluginStateObject.Data.Binary | PluginStateOb
     async makeCif(): Promise<CifNode> {
         const ref = this.childRef('cif', true);
         const cifNode = await this.state.build().to(this.node).apply(ParseCif, undefined, { ref }).commit();
+        if (!cifNode.obj) {
+            const format = PluginStateObject.Data.Binary.is(this.node.obj) ? 'binary CIF' : 'CIF';
+            throw new Error(`Failed to parse ${format} from data node '${this.node.ref}'.`);
+        }
         return new CifNode(cifNode);
     }
 }
