@@ -59,6 +59,12 @@ Input is a structure file in mmCIF (`.cif`) or binary CIF (`.bcif`) format. The 
 
 Additional input data will be retrieved from the PDBe API (default `https://www.ebi.ac.uk/pdbe/api`, can be changed by the `--api-url` option). With the `--no-api` option, API will not be used at all – as a result, some image types will not be generated or captions will be slightly different.
 
+The legacy PDB file format is not directly supported by `pdb-images`. For convenience, this package provides a script for conversion of PDB files to mmCIF, which can then be passed to `pdb-images`. However, correct behavior with the converted files cannot be guaranteed, as the internal logic of the PDB format is fundamentally different from mmCIF, and this conversion should not be relied on. Use original mmCIF files whenever possible. Usage:
+
+```sh
+pdb2cif data/1ad5.pdb data/1ad5.cif
+```
+
 ### Output
 
 #### Image files

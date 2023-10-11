@@ -40,6 +40,8 @@ export interface ImageGeneratorOptions {
     ensembleShades?: boolean,
     /** Set `true` to allow any quality level for visuals (including 'lowest', which is really ugly). Set `false` to allow only 'lower' and better. */
     allowLowestQuality?: boolean,
+    /** Force outputting 'bfactor' image type even if the structure is not from X-ray (this might be necessary for custom mmCIF files with missing information about experimental methods) */
+    forceBfactor?: boolean,
 }
 
 /** Class for generating all possible images of an entry */
@@ -184,13 +186,13 @@ export class ImageGenerator {
                     await this.saveViews('front', view => Captions.forGeometryValidation({ entryId, view, validationAvailable }));
                 }
                 if (this.shouldRender('bfactor')) {
-                    if (model.data && Model.isFromXray(model.data)) {
+                    if (model.data && Model.isFromXray(model.data) || this.options.forceBfactor) {
                         await visuals.nodes.polymerCartoon?.setPutty();
                         await visuals.applyToAll(vis => vis.setColorByBfactor('rainbow'));
                         await this.saveViews('front', view => Captions.forBFactor({ entryId, view }));
                         await visuals.nodes.polymerCartoon?.setCartoon();
                     } else {
-                        logger.info('Skipping B-factor images because the structure is not from diffraction.');
+                        logger.info('Skipping B-factor images because the structure is not from diffraction (use --force-bfactor to create B-factor images anyway).');
                     }
                 }
 

@@ -70,7 +70,7 @@ describe('args', () => {
         const oldExit = ArgumentParser.prototype.exit;
         const oldArgv = process.argv;
         try {
-            ArgumentParser.prototype.exit = () => { console.error('ArgumentParser exiting'); throw Error('Exit'); };
+            ArgumentParser.prototype.exit = () => { console.error('ArgumentParser exiting (this is good)'); throw Error('Exit'); };
             process.argv = 'node index.js'.split(' ');
             expect(() => parseArguments()).toThrow();
         } finally {
@@ -83,7 +83,7 @@ describe('args', () => {
         const oldExit = ArgumentParser.prototype.exit;
         const oldArgv = process.argv;
         try {
-            ArgumentParser.prototype.exit = () => { console.error('ArgumentParser exiting'); throw Error('Exit'); };
+            ArgumentParser.prototype.exit = () => { console.error('ArgumentParser exiting (this is bad)'); throw Error('Exit'); };
             process.argv = 'node index.js 1ad5 /data/1ad5'.split(' ');
             const expectedArgs: Args = {
                 entry_id: '1ad5',
@@ -104,6 +104,7 @@ describe('args', () => {
                 show_branched_sticks: false,
                 ensemble_shades: false,
                 allow_lowest_quality: false,
+                force_bfactor: false,
                 date: undefined,
                 clear: false,
                 log: 'INFO',
@@ -119,12 +120,12 @@ describe('args', () => {
         const oldExit = ArgumentParser.prototype.exit;
         const oldArgv = process.argv;
         try {
-            ArgumentParser.prototype.exit = () => { console.error('ArgumentParser exiting'); throw Error('Exit'); };
+            ArgumentParser.prototype.exit = () => { console.error('ArgumentParser exiting (this is bad)'); throw Error('Exit'); };
             process.argv = 'node index.js 1ad5 /data/1ad5 --input http://smelly_cat.cif \
                 --input-public http://very_public_server.com/smelly_cat.cif --mode alphafold \
                 --api-url https://smelly_api.com --api-retry --no-api --size 500x500 300x200 --view front --render-each-size \
                 --type entry assembly plddt --opaque-background --no-axes --show-hydrogens --show-branched-sticks --ensemble-shades \
-                --allow-lowest-quality --date 2023/04/20 --clear --log DEBUG \
+                --allow-lowest-quality --force-bfactor --date 2023/04/20 --clear --log DEBUG \
                 '.trim().split(/\s+/);
             const expectedArgs: Args = {
                 entry_id: '1ad5',
@@ -145,6 +146,7 @@ describe('args', () => {
                 show_branched_sticks: true,
                 ensemble_shades: true,
                 allow_lowest_quality: true,
+                force_bfactor: true,
                 date: '2023/04/20',
                 clear: true,
                 log: 'DEBUG',
@@ -183,6 +185,7 @@ describe('main', () => {
             show_branched_sticks: false,
             ensemble_shades: false,
             allow_lowest_quality: false,
+            force_bfactor: false,
             date: undefined,
             clear: true,
             log: 'DEBUG',
@@ -242,6 +245,7 @@ describe('main', () => {
             show_branched_sticks: false,
             ensemble_shades: false,
             allow_lowest_quality: false,
+            force_bfactor: false,
             date: undefined,
             clear: true,
             log: 'DEBUG',

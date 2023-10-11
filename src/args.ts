@@ -62,6 +62,8 @@ export interface Args {
     ensemble_shades: boolean,
     /** Allow any quality level for visuals, including 'lowest', which is really ugly (default: allow only 'lower' quality level and better) */
     allow_lowest_quality: boolean,
+    /** Force outputting 'bfactor' image type even if the structure is not from X-ray (this might be necessary for custom mmCIF files with missing information about experimental methods) */
+    force_bfactor: boolean,
     /** Date to use as "last_modification" in the caption JSON; `undefined` to use today's date formatted as YYYY-MM-DD */
     date: string | undefined,
     /** Remove all contents of the output directory before running */
@@ -90,6 +92,7 @@ export const Defaults = {
     show_branched_sticks: false,
     ensemble_shades: false,
     allow_lowest_quality: false,
+    force_bfactor: false,
     date: undefined,
     clear: false,
     log: 'INFO',

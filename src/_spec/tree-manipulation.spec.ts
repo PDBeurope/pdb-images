@@ -173,7 +173,7 @@ describe('substructures', () => {
             await stdComps.dispose();
             expect(getTransformerTypes(plugin)).not.toContain('ms-plugin.structure-component');
 
-            const ligEnvComps = await struct.makeLigEnvComponents({ compId: 'HEM', chainId: 'E', authChainId: 'A', entityId: '2', description: 'Heme', nInstancesInEntry: 4 });
+            const ligEnvComps = await struct.makeLigEnvComponents({ compId: 'HEM', chainId: 'E', authChainId: 'A', entityId: '3', description: 'Heme', nInstancesInEntry: 4 });
             expect(getTransformerTypes(plugin)).toContain('ms-plugin.structure-component');
             expect(getCells(plugin, 'ms-plugin.structure-component').map(c => c.obj?.description))
                 .toEqual(['43 elements', '180 elements', '489 elements', '2 elements']);
@@ -291,7 +291,7 @@ describe('visuals', () => {
             const model = await traj.makeModel(0);
             const struct = await model.makeStructure({ type: { name: 'model', params: {} } });
 
-            const ligEnvComps = await struct.makeLigEnvComponents({ compId: 'HEM', chainId: 'E', authChainId: 'A', entityId: '2', description: 'Heme', nInstancesInEntry: 4 });
+            const ligEnvComps = await struct.makeLigEnvComponents({ compId: 'HEM', chainId: 'E', authChainId: 'A', entityId: '3', description: 'Heme', nInstancesInEntry: 4 });
             await using(ligEnvComps.makeLigEnvVisuals({}), visuals => {
                 expect(getTransformerTypes(plugin)).toContain('ms-plugin.structure-representation-3d');
                 expect(getCells(plugin, 'ms-plugin.structure-representation-3d').map(c => c.params?.values.type.name))

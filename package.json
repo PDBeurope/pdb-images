@@ -14,7 +14,8 @@
   ],
   "directories.lib": "lib/",
   "bin":{
-    "pdb-images": "./lib/cli/pdb-images.js"
+    "pdb-images": "./lib/cli/pdb-images.js",
+    "pdb2cif": "./lib/cli/pdb2cif.js"
   },
   "repository": {
     "type": "git",

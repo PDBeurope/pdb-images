@@ -7,6 +7,10 @@
 import { ChainIndex, Model, Structure } from 'molstar/lib/commonjs/mol-model/structure';
 import { Entities } from 'molstar/lib/commonjs/mol-model/structure/model/properties/common';
 
+import { getLogger } from './logging';
+
+
+const logger = getLogger(module);
 
 /** Entity type (i.e. value of _entity.type in mmCIF): polymer, non-polymer, water... */
 type EntityType = ReturnType<Entities['data']['type']['value']>
@@ -119,8 +123,8 @@ export function getChainInfo(model: Model) {
         const chainId = chains.label_asym_id.value(iChain);
         const authChainId = chains.auth_asym_id.value(iChain);
         const entityId = chains.label_entity_id.value(iChain);
-        if (result[chainId]) throw new Error('AssertionError');
-        result[chainId] = { authChainId, entityId };
+        if (result[chainId] && result[chainId].entityId !== entityId) logger.warn(`label_asym_id '${chainId}' maps to multiple label_entity_id values`);
+        result[chainId] ??= { authChainId, entityId };
     }
     return result;
 }

@@ -239,9 +239,14 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
         const envLabel = `Environment (${LIGAND_ENVIRONMENT_RADIUS} Å)`;
 
         const ligExpr = MolScriptBuilder.struct.generator.atomGroups({
-            'chain-test': MolScriptBuilder.core.rel.eq([
-                MolScriptBuilder.struct.atomProperty.macromolecular.label_asym_id(),
-                ligandInfo.chainId])
+            'chain-test': MolScriptBuilder.core.logic.and([
+                MolScriptBuilder.core.rel.eq([
+                    MolScriptBuilder.struct.atomProperty.macromolecular.label_asym_id(),
+                    ligandInfo.chainId]),
+                MolScriptBuilder.core.rel.eq([
+                    MolScriptBuilder.struct.atomProperty.macromolecular.label_entity_id(),
+                    ligandInfo.entityId]),
+            ])
         });
         const envExpr = MolScriptBuilder.struct.modifier.exceptBy({
             0: MolScriptBuilder.struct.modifier.includeSurroundings({
