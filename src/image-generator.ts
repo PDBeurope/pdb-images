@@ -343,7 +343,7 @@ export class ImageGenerator {
                 for (const [entityId, entityDoms] of Object.entries(familyDoms)) {
                     logger.debug(`            Entity ${entityId}:`);
                     for (const dom of entityDoms) {
-                        logger.debug(`                ${oneLine(dom)}:`);
+                        logger.debug(`                ${oneLine(dom)}`);
                     }
                 }
             }

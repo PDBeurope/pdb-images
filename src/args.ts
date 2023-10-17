@@ -36,7 +36,7 @@ export interface Args {
     input_public: string | undefined,
     /** Mode */
     mode: Mode,
-    /** PDBe API URL */
+    /** PDBe API URL (can use http:, https:, or file: protocol) */
     api_url: string,
     /** Retry any failed API call up to 5 times, waiting random time (up to 30 seconds) before each retry */
     api_retry: boolean,
@@ -60,9 +60,9 @@ export interface Args {
     show_branched_sticks: boolean,
     /** Show individual models within an ensemble in different shades of the base color (lighter and darker), default: use the same colors for all models */
     ensemble_shades: boolean,
-    /** Allow any quality level for visuals, including 'lowest', which is really ugly (default: allow only 'lower' quality level and better) */
+    /** Allow any quality level for visuals, including "lowest", which is really ugly (default: allow only "lower" quality level and better) */
     allow_lowest_quality: boolean,
-    /** Force outputting 'bfactor' image type even if the structure is not from X-ray (this might be necessary for custom mmCIF files with missing information about experimental methods) */
+    /** Force outputting "bfactor" image type even if the structure is not from X-ray (this might be necessary for custom mmCIF files with missing information about experimental methods) */
     force_bfactor: boolean,
     /** Date to use as "last_modification" in the caption JSON; `undefined` to use today's date formatted as YYYY-MM-DD */
     date: string | undefined,

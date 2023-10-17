@@ -276,7 +276,10 @@ export class PDBeAPI {
         if (this.offline) return {};
         if (url.startsWith('file://')) {
             const filePath = url.substring('file://'.length);
-            if (!fs.existsSync(filePath)) return {};
+            if (!fs.existsSync(filePath)) {
+                logger.warn(`API resource '${url}' not found, proceeding as if it contained an empty JSON object`);
+                return {};
+            }
             const text = fs.readFileSync(filePath, { encoding: 'utf8' });
             return JSON.parse(text);
         } else {

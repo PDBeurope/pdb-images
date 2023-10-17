@@ -55,9 +55,21 @@ pdb-images 1hda data/output_1hda/ \
 
 ### Input
 
-Input is a structure file in mmCIF (`.cif`) or binary CIF (`.bcif`) format. The input file can be also compressed by GZIP (`.cif.gz`, `.bcif.gz`). If the `--input` option is not given, the input file will be retrieved from a public source (`https://www.ebi.ac.uk/pdbe/entry-files/download/${id}.bcif` for PDB mode, `https://alphafold.ebi.ac.uk/files/${id}.cif` for AlphaFold mode). However, for this to work in AlphaFold mode, the user has to specify full identifier of a model in AlphaFold DB, e.g. "AF-Q5VSL9-F1-model_v4", not only "Q5VSL9". There is a persisting issue with `.bcif` files provided by AlphaFold DB (this might be fixed in the future), `.cif` files are processed without problems (therefore the default public source is set to `.cif` for AlphaFold mode).
+Input is a structure file in mmCIF (`.cif`) or binary CIF (`.bcif`) format. The input file can be also compressed by GZIP (`.cif.gz`, `.bcif.gz`). If the `--input` option is not given, the input file will be retrieved from a public source (`https://www.ebi.ac.uk/pdbe/entry-files/download/{id}.bcif` for PDB mode, `https://alphafold.ebi.ac.uk/files/{id}.cif` for AlphaFold mode). However, for this to work in AlphaFold mode, the user has to specify full identifier of a model in AlphaFold DB, e.g. "AF-Q5VSL9-F1-model_v4", not only "Q5VSL9". There is a persisting issue with `.bcif` files provided by AlphaFold DB (this might be fixed in the future), `.cif` files are processed without problems (therefore the default public source is set to `.cif` for AlphaFold mode).
 
-Additional input data will be retrieved from the PDBe API (default `https://www.ebi.ac.uk/pdbe/api`, can be changed by the `--api-url` option). With the `--no-api` option, API will not be used at all – as a result, some image types will not be generated or captions will be slightly different.
+Supplementary input data will be retrieved from the PDBe API. The default API URL is `https://www.ebi.ac.uk/pdbe/api` but can be changed by the `--api-url` option. The URL can use `http:`, `https:`, or `file:` protocol; using `file:` protocol allows the user to "plug in" custom data from a local directory, e.g. `--api-url 'file://path-to-this-repository/test_data/api'`. When using this approach, the organization of the files in the directory and the format of these file must imitate the PDBe API endpoints; see `test_data/api/` directory for a demonstration. If the program cannot find a specific file in the directory, it will print a warning and proceed as if the API returned an empty JSON response (`{}`). 
+
+Overview of accessed API endpoints (will be prefixed by the API URL and `{id}` will be replaced by the entry ID (i.e. the first command line argument)):
+* `/pdb/entry/molecules/{id}` – for entity names in the image captions (not essential)
+* `/pdb/entry/summary/{id}` – for preferred assembly information (not essential)
+* `/pdb/entry/modified_AA_or_NA/{id}` – for modified residue data (essential for `modres` images)
+* `/mappings/{id}`, `/nucleic_mappings/{id}` – for SIFTS domain mappings (essential for `domain` images)
+* `/validation/residuewise_outlier_summary/entry/{id}` – for validation report data (essential for `validation` images)
+
+With the `--no-api` option, API will not be used at all. Running without API will affect the program's behavior as follows:
+* the image types that vitally depend on the API data (i.e. `domain`, `modres`, `validation`) will not be generated;
+* some features can behave slightly differently (entity names for captions will be retrieved from the structure file instead of the API data; `entity` images will be rendered using the first assembly instead of the preferred assembly);
+* the final self-check, whether all expected images have been generated, will be skipped.
 
 The legacy PDB file format is not directly supported by `pdb-images`. For convenience, this package provides a script for conversion of PDB files to mmCIF, which can then be passed to `pdb-images`. However, correct behavior with the converted files cannot be guaranteed, as the internal logic of the PDB format is fundamentally different from mmCIF, and this conversion should not be relied on. Use original mmCIF files whenever possible. Usage:
 
@@ -74,7 +86,7 @@ The program creates a collection of image types. Each scene can be rendered in d
 (Names of the individual files may be a bit confusing, as they were inherited from an older image generation process. See section *Generated image types* for explanation of the filenames.)
 
 #### Summary files
- 
+
 After generating all images, two summary files are created: 
 
 * `{pdb}_filelist` contains the list of created images
@@ -83,6 +95,8 @@ After generating all images, two summary files are created:
 These summary files contain filenames without suffixes, e.g. `1ad5_deposited_chain_front` instead of the full filename `1ad5_deposited_chain_front_image-800x800.png`. To get full filenames, you must combine the filenames in the `"image"` sections and the suffixes in the `"image_suffix"` section of the JSON summary file (e.g `1ad5_deposited_chain_front` + `_image-800x800.png` -> `1ad5_deposited_chain_front_image-800x800.png`).
 
 If the output directory contains older files from previous runs, these will also be included in the summary files (run with `--clear` to remove any older files instead). If you only want to update the summary files based on the current contents of the output directory without generating any new images, run with `--type` (without specifying any type).
+
+After creating all output files, the program will perform a self-check, i.e. it will compare the expected list of output files (based purely on API data, agnostic to the structure file) with the actual list of generated output files. In case that any expected file is missing, the program will print an error message, save the expected file list to `{id}_expected_files.txt`, and terminate with a non-zero exit code. This self-check is skipped when using `--no-api`.
 
 ### Generated image types
 
@@ -115,7 +129,6 @@ By default, some image types are rendered in three views (front, side, top view)
 By default, the images are rendered in one resolution, 800x800. This can be changed by the `--size` option. If multiple sizes are provided (e.g. `--size 100x100 800x800 1600x1600`), only the largest size (measured by area) will be rendered and the others will be obtained by resizing (use `--render_each_size` to render each size separately). 
 If you use `--size` without any value, no PNG images will be rendered but captions (`.caption.json`) and state files (`.molj`) will still be created.
 
-
 ### Overview of the command-line arguments
 
 ```
@@ -133,7 +146,8 @@ optional arguments:
                         files) (cif or bcif format).
   --mode {pdb,alphafold}
                         Mode.
-  --api-url API_URL     PDBe API URL. Default: https://www.ebi.ac.uk/pdbe/api.
+  --api-url API_URL     PDBe API URL (can use http:, https:, or file: protocol).
+                        Default: https://www.ebi.ac.uk/pdbe/api.
   --api-retry           Retry any failed API call up to 5 times, waiting
                         random time (up to 30 seconds) before each retry.
   --no-api              Do not use PDBe API at all (some images will be
@@ -175,8 +189,11 @@ optional arguments:
                         default: use the same colors for all models.
   --allow-lowest-quality
                         Allow any quality level for visuals, including
-                        'lowest', which is really ugly (default: allow only
-                        'lower' quality level and better).
+                        "lowest", which is really ugly (default: allow only
+                        "lower" quality level and better).
+  --force-bfactor       Force outputting "bfactor" image type even if the structure is
+                        not from X-ray (this might be necessary for custom mmCIF files 
+                        with missing information about experimental methods).
   --date DATE           Date to use as "last_modification" in the caption JSON
                         (default: today's date formatted as YYYY-MM-DD).
   --clear               Remove all contents of the output directory before

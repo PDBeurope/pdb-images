@@ -49,7 +49,7 @@ export function parseArguments(): Args {
     parser.add_argument('--input', { help: 'Input structure file path or URL (.cif, .bcif, .cif.gz, .bcif.gz).' });
     parser.add_argument('--input-public', { help: 'Input structure URL to use in saved Mol* states (.molj files) (cif or bcif format).' });
     parser.add_argument('--mode', { choices: [...Modes], default: Defaults.mode, help: 'Mode.' });
-    parser.add_argument('--api-url', { default: Defaults.api_url, help: `PDBe API URL. Default: ${Defaults.api_url}.` });
+    parser.add_argument('--api-url', { default: Defaults.api_url, help: `PDBe API URL (can use http:, https:, or file: protocol). Default: ${Defaults.api_url}.` });
     parser.add_argument('--api-retry', { action: 'store_true', help: 'Retry any failed API call up to 5 times, waiting random time (up to 30 seconds) before each retry.' });
     parser.add_argument('--no-api', { action: 'store_true', help: 'Do not use PDBe API at all (some images will be skipped, some entity names will be different in captions, etc.).' });
     parser.add_argument('--size', { nargs: '*', default: DEFAULT_IMAGE_SIZE_STRINGS, help: `One or more output image sizes, e.g. 800x800 200x200. Default: ${DEFAULT_IMAGE_SIZE_STRINGS.join(' ')}. Only the largest size is rendered, others are obtained by resizing unless --render_each_size is used. Use without any value to disable image rendering (only create captions and MOLJ files).` });
@@ -61,8 +61,8 @@ export function parseArguments(): Args {
     parser.add_argument('--show-hydrogens', { action: 'store_true', help: 'Show hydrogen atoms in ball-and-stick visuals (default: always ignore hydrogen atoms).' });
     parser.add_argument('--show-branched-sticks', { action: 'store_true', help: 'Show semi-transparent ball-and-stick visuals for branched entities (i.e. carbohydrates) in addition to the default 3D-SNFG visuals.' });
     parser.add_argument('--ensemble-shades', { action: 'store_true', help: 'Show individual models within an ensemble in different shades of the base color (lighter and darker), default: use the same colors for all models.' });
-    parser.add_argument('--allow-lowest-quality', { action: 'store_true', help: "Allow any quality level for visuals, including 'lowest', which is really ugly (default: allow only 'lower' quality level and better)." });
-    parser.add_argument('--force-bfactor', { action: 'store_true', help: "Force outputting 'bfactor' image type even if the structure is not from X-ray (this might be necessary for custom mmCIF files with missing information about experimental methods)." });
+    parser.add_argument('--allow-lowest-quality', { action: 'store_true', help: 'Allow any quality level for visuals, including "lowest", which is really ugly (default: allow only "lower" quality level and better).' });
+    parser.add_argument('--force-bfactor', { action: 'store_true', help: 'Force outputting "bfactor" image type even if the structure is not from X-ray (this might be necessary for custom mmCIF files with missing information about experimental methods).' });
     parser.add_argument('--date', { help: `Date to use as "last_modification" in the caption JSON (default: today's date formatted as YYYY-MM-DD).` });
     parser.add_argument('--clear', { action: 'store_true', help: 'Remove all contents of the output directory before running.' });
     parser.add_argument('--log', { choices: [...LogLevels], type: (s: string) => s.toUpperCase(), default: Defaults.log, help: `Set logging level. Default: ${Defaults.log}.` });
