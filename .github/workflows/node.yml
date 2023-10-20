@@ -54,7 +54,7 @@ jobs:
             NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   docker_build_and_push_to_dockerhub:
-    needs: [build, valid_tag]
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -64,12 +64,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           push: true
           platforms: linux/amd64,linux/arm/v7,linux/arm64/v8
@@ -78,7 +78,7 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/pdb-images:latest
 
   docker_build_and_push_to_gitlab:
-    needs: [build, valid_tag]
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
