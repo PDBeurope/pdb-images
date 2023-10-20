@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Fixed typing for older TypeScript versions
+
 ## [2.3.0] - 2023-10-20
 
 - Added `pdb2cif` utility script

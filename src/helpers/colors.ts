@@ -120,12 +120,12 @@ namespace PslColors {
     interface RGB extends Array<number> { [d: number]: number, '@type': 'rgb', length: 3 }
     /** X-Y-luminosity color with values [-1...1] for X, Y, [0...1] for L */
     interface XYL extends Array<number> { [d: number]: number, '@type': 'xyl', length: 3 }
-    /** Phase-saturation-luminosity color with values [0, 360] for P (~hue), [0, 1] for S (~saturation), [0...1] for L */
+    /** Phase-saturation-luminosity color with values [0, 360] for P (hue-like), [0, 1] for S (saturation-like), [0...1] for L (luminosity-like) */
     export interface PSL extends Array<number> { [d: number]: number, '@type': 'psl', length: 3 }
 
-    function RGB(r: number, g: number, b: number) { return [r, g, b] as RGB; }
-    function XYL(x: number, y: number, l: number) { return [x, y, l] as XYL; }
-    export function PSL(phi: number, sat: number, l: number) { return [phi, sat, l] as PSL; }
+    function RGB(r: number, g: number, b: number) { return [r, g, b] as any as RGB; }
+    function XYL(x: number, y: number, l: number) { return [x, y, l] as any as XYL; }
+    export function PSL(phi: number, sat: number, l: number) { return [phi, sat, l] as any as PSL; }
 
     function defineMatrices() {
         const luminosities = { r: 0.32, g: 0.57, b: 0.11 }; // These luminosities are based on a simple Chrome Colorblindly comparison
