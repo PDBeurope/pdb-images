@@ -1,6 +1,6 @@
 {
   "name": "pdb-images",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "description": "Generates images from mmCIF/BCIF files",
   "scripts": {
     "build": "tsc",
