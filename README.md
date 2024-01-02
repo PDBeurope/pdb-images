@@ -295,6 +295,16 @@ To release a new version of this package:
 * GitHub workflow will automatically publish Docker images (https://hub.docker.com/r/pdbegroup/pdb-images and dockerhub.ebi.ac.uk/pdbe/packages/pdb-images)
 
 
+## Citing
+
+If you found PDBImages helpful, please cite:
+
+Midlik A, Nair S, Anyango S, Deshpande M, Sehnal D, Varadi M, Velankar S (2023)
+PDBImages: a command-line tool for automated macromolecular structure visualization.
+Bioinformatics, 39(12), btad744.
+https://doi.org/10.1093/bioinformatics/btad744
+
+
 ## FAQ
 
 - **`npm install` fails on the `gl` package, printing something like:**
