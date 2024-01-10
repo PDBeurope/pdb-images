@@ -13,7 +13,7 @@ import { getLogger, oneLine } from './logging';
 
 const logger = getLogger(module);
 
-const ZOOMOUT = 0.75;
+const ZOOMOUT = 1.0;
 
 
 /** Combine multiple rotation matrices in the order as they are applied. */
