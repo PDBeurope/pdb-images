@@ -13,7 +13,7 @@
     "lib/"
   ],
   "directories.lib": "lib/",
-  "bin":{
+  "bin": {
     "pdb-images": "./lib/cli/pdb-images.js",
     "pdb2cif": "./lib/cli/pdb2cif.js"
   },
@@ -35,6 +35,7 @@
   "devDependencies": {
     "@types/gl": "^6.0.2",
     "@types/jest": "^29.5.0",
+    "@types/jpeg-js": "^0.3.7",
     "@types/pngjs": "^6.0.1",
     "@types/react": "^18.0.9",
     "@types/react-dom": "^18.0.5",
