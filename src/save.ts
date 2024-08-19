@@ -42,7 +42,7 @@ export function makeSaveFunction(plugin: HeadlessPluginContext, outDir: string, 
             if (args.render_each_size || !fullsizeImage) {
                 // Render new image
                 plugin.canvas3d!.commit(true);
-                image = await plugin.renderer.getImageRaw(size, postprocessing);
+                image = await plugin.getImageRaw(size, postprocessing);
                 if (!args.no_axes) {
                     addAxisIndicators(image, spec._view);
                 }

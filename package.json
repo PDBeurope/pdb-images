@@ -33,6 +33,7 @@
   },
   "homepage": "https://github.com/PDBeurope/pdb-images#readme",
   "devDependencies": {
+    "@types/argparse": "^2.0.16",
     "@types/gl": "^6.0.2",
     "@types/jest": "^29.5.0",
     "@types/jpeg-js": "^0.3.7",
@@ -50,6 +51,7 @@
     "typescript": "^5.0.3"
   },
   "dependencies": {
+    "argparse": "^2.0.1",
     "gl": "^6.0.2",
     "log4js": "^6.9.1",
     "molstar": "~4.5.0",
