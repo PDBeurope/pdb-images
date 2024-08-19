@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Updated Molstar version to 4.5.0
+
 ## [2.4.0] - 2024-01-10
 
 - Fixed zoom issues (too much zoom when using PDBImages <2.4 with MolStar >=3.43.0)
