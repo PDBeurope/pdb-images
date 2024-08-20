@@ -16,7 +16,7 @@ import { SubstructureDef } from './substructure-def';
 
 
 /** Like `Partial<T>` but recursive (i.e. values themselves can be partial). */
-export type PPartial<T> = T extends {} ? { [P in keyof T]?: PPartial<T[P]> } | undefined : T
+export type PPartial<T> = T extends object ? { [P in keyof T]?: PPartial<T[P]> } | undefined : T;
 
 /** Create a new object with values from `first`, optionally overridden by values from `second`, recursively.
  * (I know there is `mergeDeep` in `immutable` but this implementation also gives type hints). */
@@ -151,7 +151,7 @@ export function safePromise<T>(asyncFunction: () => Promise<T>): SafePromise<T> 
             } else {
                 throw theReason;
             }
-        }
+        },
     };
 }
 

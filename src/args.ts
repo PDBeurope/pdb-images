@@ -10,12 +10,12 @@ import { LogLevel } from './helpers/logging';
 /** Modes of operation of PDBImages */
 export const Modes = ['pdb', 'alphafold'] as const;
 /** Modes of operation of PDBImages */
-export type Mode = typeof Modes[number]
+export type Mode = typeof Modes[number];
 
 /** Types of images that can be generated */
 export const ImageTypes = ['entry', 'assembly', 'entity', 'domain', 'ligand', 'modres', 'bfactor', 'validation', 'plddt', 'all'] as const;
 /** Types of images that can be generated */
-export type ImageType = typeof ImageTypes[number]
+export type ImageType = typeof ImageTypes[number];
 
 /** Types of images that can be generated for each mode */
 export const ImageTypesForModes = {
@@ -72,7 +72,7 @@ export interface Args {
     log: LogLevel,
 }
 
-export type OptionalArgs = Omit<Args, 'entry_id' | 'output_dir'>
+export type OptionalArgs = Omit<Args, 'entry_id' | 'output_dir'>;
 
 /** Default values for `Args` */
 export const Defaults = {

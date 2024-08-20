@@ -14,7 +14,8 @@ import { ImageGenerator } from '../image-generator';
 import { TestingPdb, getTestingHeadlessPlugin } from './_utils';
 
 
-PluginContext; // ensure PluginContext is imported before ImageGenerator
+// Ensure PluginContext is imported before ImageGenerator:
+PluginContext; // eslint-disable-line @typescript-eslint/no-unused-expressions
 
 const TEST_TIMEOUT = 180_000; // ms
 

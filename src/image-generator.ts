@@ -134,7 +134,7 @@ export class ImageGenerator {
             const context = {
                 entryId, assemblyId: undefined, isPreferredAssembly: false, nModels,
                 entityNames: await this.api.getEntityNames(entryId),
-                entityInfo: getEntityInfo(structure.data!)
+                entityInfo: getEntityInfo(structure.data!),
             };
             const colors = assignEntityAndUnitColors(structure.data!);
 
@@ -231,7 +231,7 @@ export class ImageGenerator {
             const context = {
                 entryId, assemblyId, isPreferredAssembly, nModels: 1,
                 entityNames: await this.api.getEntityNames(entryId),
-                entityInfo: getEntityInfo(structure.data!)
+                entityInfo: getEntityInfo(structure.data!),
             };
             const colors = assignEntityAndUnitColors(structure.data!);
             const group = await structure.makeGroup({ label: 'Whole Assembly' }, { state: { isGhost: ALLOW_GHOST_NODES } });

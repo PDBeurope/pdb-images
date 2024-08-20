@@ -93,7 +93,7 @@ describe('camera', () => {
         const plugin = await getTestingPlugin();
         try {
             const oldSnapshot = plugin.canvas3d?.camera.getSnapshot();
-            adjustCamera(plugin, s => ({ ...Camera.createDefaultSnapshot(), position: Vec3.create(11, 1, 1) }));
+            adjustCamera(plugin, () => ({ ...Camera.createDefaultSnapshot(), position: Vec3.create(11, 1, 1) }));
             const newSnapshot = plugin.canvas3d?.camera.getSnapshot();
             expect(newSnapshot).not.toEqual(oldSnapshot);
         } finally {

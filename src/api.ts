@@ -309,8 +309,8 @@ export class PDBeAPI {
     }
 }
 
-export type PDBeAPIMethod = 'pdbeStructureQualityReportPrefix' | 'getEntityNames' | 'getEntityTypes' | 'getAssemblies' | 'getPreferredAssemblyId' | 'getModifiedResidue' | 'getSiftsMappings' | 'getExperimentalMethods' | 'getChainCoverages' | 'getChainCoverageRatios'
-export type PDBeAPIReturn<key extends PDBeAPIMethod> = Awaited<ReturnType<PDBeAPI[key]>>
+export type PDBeAPIMethod = 'pdbeStructureQualityReportPrefix' | 'getEntityNames' | 'getEntityTypes' | 'getAssemblies' | 'getPreferredAssemblyId' | 'getModifiedResidue' | 'getSiftsMappings' | 'getExperimentalMethods' | 'getChainCoverages' | 'getChainCoverageRatios';
+export type PDBeAPIReturn<key extends PDBeAPIMethod> = Awaited<ReturnType<PDBeAPI[key]>>;
 
 
 /** Represents one instance of a modified residue. */
@@ -346,7 +346,7 @@ export type SiftsSource = typeof SIFTS_SOURCES[number];
 /**  */
 export interface DomainRecord {
     id: string,
-    source: string
+    source: string,
     family: string,
     familyName: string,
     chunks: DomainChunkRecord[],
@@ -366,5 +366,5 @@ interface DomainChunkRecord {
     endResidue: number,
     /** No idea what this was supposed to mean in the original process (probably segment number
      * from the API before cutting into smaller segments by removing missing residues) */
-    segment: number
+    segment: number,
 }

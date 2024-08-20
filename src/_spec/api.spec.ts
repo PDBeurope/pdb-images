@@ -68,7 +68,7 @@ describe('api', () => {
     it('getModifiedResidue', async () => {
         expect(await API.getModifiedResidue('1hda')).toEqual([] as PDBeAPIReturn<'getModifiedResidue'>);
         expect(await API.getModifiedResidue('1gkt')).toEqual([
-            { authChainId: 'A', compoundId: 'SUI', compoundName: '(3-AMINO-2,5-DIOXO-1-PYRROLIDINYL)ACETIC ACID', entityId: 1, labelChainId: 'A', residueNumber: 54 }
+            { authChainId: 'A', compoundId: 'SUI', compoundName: '(3-AMINO-2,5-DIOXO-1-PYRROLIDINYL)ACETIC ACID', entityId: 1, labelChainId: 'A', residueNumber: 54 },
         ] as PDBeAPIReturn<'getModifiedResidue'>);
         expect(await API.getModifiedResidue('1l7c')).toEqual([
             { authChainId: 'A', compoundId: 'MSE', compoundName: 'SELENOMETHIONINE', entityId: 1, labelChainId: 'A', residueNumber: 70 },
@@ -166,7 +166,7 @@ describe('api', () => {
                     { chunks: [{ endResidue: 125, startResidue: 1, chainId: 'B', authChainId: 'B', entityId: '2', segment: 1 }], family: 'RF00234', familyName: 'glmS glucosamine-6-phosphate activated ribozyme', id: 'RF00234_1', source: 'Rfam' },
                 ],
             },
-            SCOP: {}
+            SCOP: {},
         } as PDBeAPIReturn<'getSiftsMappings'>);
     });
 

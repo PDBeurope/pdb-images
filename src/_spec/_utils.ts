@@ -20,7 +20,7 @@ import { setFSModule } from 'molstar/lib/commonjs/mol-util/data-source';
 
 
 export const TESTING_PDBS = ['1hda', '1ad5', '176d', 'AF-Q8W3K0-F1-model_v4'] as const;
-export type TestingPdb = typeof TESTING_PDBS[number]
+export type TestingPdb = typeof TESTING_PDBS[number];
 /** Timeout for long-running tests (in ms) */
 export const LONG_TEST_TIMEOUT = 600_000;
 

@@ -8,7 +8,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { loadPngToRaw } from '../image/resize';
-import { makeSaveFunction, } from '../save';
+import { makeSaveFunction } from '../save';
 import { getTestingHeadlessPlugin, isBorderBlank, isImageBlank } from './_utils';
 
 

@@ -77,7 +77,7 @@ async function getExpectedFilenameStemsForPdbMode(entryId: string, types: Set<Im
     if (types.has('entity')) {
         const entities = await promises.entities.result();
         for (const entityId in entities) {
-            const { type, compId } = entities[entityId];
+            const { type } = entities[entityId];
             if (type !== 'water') {
                 if (view === 'front') {
                     result.push(

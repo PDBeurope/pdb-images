@@ -9,7 +9,6 @@ import { checkMissingFiles, getExpectedFiles } from '../expected-files';
 
 
 const API = new PDBeAPI('file://./test_data/api');
-const NO_API = new PDBeAPI('', true);
 
 
 describe('expected-filenames', () => {

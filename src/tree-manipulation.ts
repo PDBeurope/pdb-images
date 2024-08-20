@@ -60,15 +60,15 @@ const STICK_SIZE_ASPECT_RATIO = 0.5;
 const VALIDATION_UNAVAILABLE_COLOR = FADED_COLOR;
 
 
-export type StructureObjSelector = StateObjectSelector<PluginStateObject.Molecule.Structure, any>
+export type StructureObjSelector = StateObjectSelector<PluginStateObject.Molecule.Structure, any>;
 
-type StandardComponentType = 'polymer' | 'branched' | 'branchedLinkage' | 'ligand' | 'ion' | 'nonstandard'
-type LigEnvComponentType = 'ligand' | 'environment' | 'wideEnvironment' | 'linkage'
-type StandardVisualType = 'polymerCartoon' | 'branchedCarbohydrate' | 'branchedSticks' | 'branchedLinkageSticks' | 'ligandSticks' | 'ionSticks' | 'nonstandardSticks'
-type LigEnvVisualType = 'ligandSticks' | 'environmentSticks' | 'linkageSticks' | 'wideEnvironmentCartoon'
+type StandardComponentType = 'polymer' | 'branched' | 'branchedLinkage' | 'ligand' | 'ion' | 'nonstandard';
+type LigEnvComponentType = 'ligand' | 'environment' | 'wideEnvironment' | 'linkage';
+type StandardVisualType = 'polymerCartoon' | 'branchedCarbohydrate' | 'branchedSticks' | 'branchedLinkageSticks' | 'ligandSticks' | 'ionSticks' | 'nonstandardSticks';
+type LigEnvVisualType = 'ligandSticks' | 'environmentSticks' | 'linkageSticks' | 'wideEnvironmentCartoon';
 
-type StructureParams = ParamDefinition.Values<ReturnType<typeof RootStructureDefinition.getParams>>
-type VisualParams = ReturnType<typeof StructureRepresentation3D.createDefaultParams>
+type StructureParams = ParamDefinition.Values<ReturnType<typeof RootStructureDefinition.getParams>>;
+type VisualParams = ReturnType<typeof StructureRepresentation3D.createDefaultParams>;
 
 
 /** Handle for manipulating state tree node */
@@ -190,9 +190,9 @@ export class ModelNode extends Node<PluginStateObject.Molecule.Model> {
         const customPropsNode = await this.state.build().to(this.node).apply(CustomModelProperties, {
             properties: {
                 pdbe_structure_quality_report: {
-                    serverUrl: api?.pdbeStructureQualityReportPrefix()
-                }
-            }
+                    serverUrl: api?.pdbeStructureQualityReportPrefix(),
+                },
+            },
         }, { ref }).commit();
         return new ModelNode(customPropsNode);
     }
@@ -250,7 +250,7 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
                 MolScriptBuilder.core.rel.eq([
                     MolScriptBuilder.struct.atomProperty.macromolecular.label_entity_id(),
                     ligandInfo.entityId]),
-            ])
+            ]),
         });
         const envExpr = MolScriptBuilder.struct.modifier.exceptBy({
             0: MolScriptBuilder.struct.modifier.includeSurroundings({
@@ -264,7 +264,7 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
         const bondTest = MolScriptBuilder.core.flags.hasAny([
             MolScriptBuilder.struct.bondProperty.flags(),
             MolScriptBuilder.core.type.bitflags([BondType.Flag.Covalent | BondType.Flag.MetallicCoordination
-                | BondType.Flag.HydrogenBond | BondType.Flag.Disulfide | BondType.Flag.Aromatic | BondType.Flag.Computed])
+                | BondType.Flag.HydrogenBond | BondType.Flag.Disulfide | BondType.Flag.Aromatic | BondType.Flag.Computed]),
         ]); // taken from ligandPlusConnected (static component 'ligand')
         const linkageExpr = MolScriptBuilder.struct.modifier.intersectBy({
             0: MolScriptBuilder.struct.modifier.includeConnected({ 0: ligExpr, 'layer-count': 1, 'bond-test': bondTest }),
@@ -273,19 +273,19 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
 
         const ligand = await this.makeComponent({
             type: { name: 'expression', params: ligExpr },
-            label: ligandLabel
+            label: ligandLabel,
         }, options, `lig-${ligandLabel}`);
         const environment = await this.makeComponent({
             type: { name: 'expression', params: envExpr },
-            label: envLabel
+            label: envLabel,
         }, options, `env-${ligandLabel}`);
         const wideEnvironment = await this.makeComponent({
             type: { name: 'expression', params: wideEnvExpr },
-            label: 'Wider environment'
+            label: 'Wider environment',
         }, options, `wide-${ligandLabel}`);
         const linkage = await this.makeComponent({
             type: { name: 'expression', params: linkageExpr },
-            label: 'Linkage'
+            label: 'Linkage',
         }, options, `link-${ligandLabel}`);
         return new LigandEnvironmentComponents({ ligand, environment, wideEnvironment, linkage });
     }
@@ -298,11 +298,11 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
         for (const entityId in entityInfo) {
             const description = entityInfo[entityId].description;
             const expression = MolScriptBuilder.struct.generator.atomGroups({
-                'entity-test': MolScriptBuilder.core.rel.eq([MolScriptBuilder.struct.atomProperty.macromolecular.label_entity_id(), entityId])
+                'entity-test': MolScriptBuilder.core.rel.eq([MolScriptBuilder.struct.atomProperty.macromolecular.label_entity_id(), entityId]),
             });
             const entitySelection = await this.makeComponent({
                 type: { name: 'expression', params: expression },
-                label: `Entity ${entityId} (${description})`
+                label: `Entity ${entityId} (${description})`,
             }, undefined, `entity-${entityId}`);
             selections[entityId] = entitySelection;
         }
@@ -312,7 +312,7 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
     /** Create a component from a stucture, based on chainId (label_asym_id) */
     async makeChain(chainId: string, authChainId?: string): Promise<StructureNode | undefined> {
         const expression = MolScriptBuilder.struct.generator.atomGroups({
-            'chain-test': MolScriptBuilder.core.rel.eq([MolScriptBuilder.struct.atomProperty.macromolecular.label_asym_id(), chainId])
+            'chain-test': MolScriptBuilder.core.rel.eq([MolScriptBuilder.struct.atomProperty.macromolecular.label_asym_id(), chainId]),
         });
         return await this.makeComponent({
             type: { name: 'expression', params: expression },
@@ -323,7 +323,7 @@ export class StructureNode extends Node<PluginStateObject.Molecule.Structure> {
     /** Create a component from a stucture, based on authChainId (auth_asym_id) */
     async makeAuthChain(authChainId: string, labelChainId?: string): Promise<StructureNode | undefined> {
         const expression = MolScriptBuilder.struct.generator.atomGroups({
-            'chain-test': MolScriptBuilder.core.rel.eq([MolScriptBuilder.struct.atomProperty.macromolecular.auth_asym_id(), authChainId])
+            'chain-test': MolScriptBuilder.core.rel.eq([MolScriptBuilder.struct.atomProperty.macromolecular.auth_asym_id(), authChainId]),
         });
         return await this.makeComponent({
             type: { name: 'expression', params: expression },
@@ -400,7 +400,7 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
             const tags = this.node.cell?.transform.tags ?? [];
             update.to(this.node).update(
                 StructureRepresentation3D,
-                old => deepMerge(old, change instanceof Function ? change(old, tags) : change)
+                old => deepMerge(old, change instanceof Function ? change(old, tags) : change),
             );
         }
         await update.commit();
@@ -423,7 +423,7 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
         return this.updateVisual(old => ({
             colorTheme: (old.type.name === 'ball-and-stick' && !options?.ignoreElementColors) ?
                 { name: 'element-symbol', params: { carbonColor: { name: 'entity-id', params: { palette } } } }
-                : { name: 'entity-id', params: { palette } }
+                : { name: 'entity-id', params: { palette } },
         }));
     }
     /** Color this visual by auth chain ID (i.e. copies of the same chain in an assembly will have the same color), color balls-and-sticks by element with chainId-colored carbons. */
@@ -432,7 +432,7 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
         return this.updateVisual(old => ({
             colorTheme: (old.type.name === 'ball-and-stick' && !options?.ignoreElementColors) ?
                 { name: 'element-symbol', params: { carbonColor: { name: 'chain-id', params: { palette } } } }
-                : { name: 'chain-id', params: { palette } }
+                : { name: 'chain-id', params: { palette } },
         }));
     }
     /** Color this visual by chain instance (i.e. copies of the same chain in an assembly will have different colors), color balls-and-sticks by element with gray carbons. */
@@ -441,7 +441,7 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
         return this.updateVisual(old => ({
             colorTheme: (old.type.name === 'ball-and-stick' && !options?.ignoreElementColors) ?
                 { name: 'element-symbol', params: { carbonColor: { name: 'unit-index', params: { palette } } } }
-                : { name: 'unit-index', params: { palette } }
+                : { name: 'unit-index', params: { palette } },
         }));
     }
     /** Color this visual with a single colore. */
@@ -457,7 +457,7 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
     async setColorByGeometryValidation(validationAvailable: boolean = true) {
         if (validationAvailable) {
             return await this.updateVisual({
-                colorTheme: { name: 'pdbe-structure-quality-report' }
+                colorTheme: { name: 'pdbe-structure-quality-report' },
             });
         } else {
             return await this.setColorUniform(VALIDATION_UNAVAILABLE_COLOR);
@@ -467,7 +467,7 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
     /** Color this visual by pLDDT values */
     async setColorByPlddt() {
         return this.updateVisual({
-            colorTheme: { name: 'plddt-confidence', params: {} }
+            colorTheme: { name: 'plddt-confidence', params: {} },
         });
     }
 
@@ -480,9 +480,9 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
             colorTheme: {
                 name: 'uncertainty',
                 params: {
-                    list: colorList
-                }
-            }
+                    list: colorList,
+                },
+            },
         });
     }
 
@@ -490,7 +490,7 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
     async setPutty() {
         return this.updateVisual({
             type: { name: 'putty', params: { visuals: null } },
-            sizeTheme: { name: 'uncertainty' }
+            sizeTheme: { name: 'uncertainty' },
         });
     }
 
@@ -498,7 +498,7 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
     async setCartoon() {
         return this.updateVisual({
             type: { name: 'carton', params: { visuals: null } },
-            sizeTheme: { name: 'uniform', params: null }
+            sizeTheme: { name: 'uniform', params: null },
         });
     }
 
@@ -514,7 +514,7 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
             type: {
                 params: {
                     alpha: opacity * (tags.includes('branchedSticks') ? BRANCHED_STICKS_OPACITY : 1),
-                }
+                },
             },
             colorTheme: { name: 'uniform', params: { value: FADED_COLOR } },
             sizeTheme: {
@@ -533,9 +533,9 @@ export class VisualNode extends Node<PluginStateObject.Molecule.Structure.Repres
                     sizeFactor: (tags.includes('ligandSticks') || tags.includes('ionSticks') || tags.includes('modresSticks')) ?
                         HIGHTLIGHT_STICK_SIZE_FACTOR
                         : old.type.params.sizeFactor,
-                }
+                },
             },
-            colorTheme: { name: 'uniform', params: { value: color } }
+            colorTheme: { name: 'uniform', params: { value: color } },
         }));
     }
 
@@ -639,7 +639,7 @@ function decideVisualQuality(structure: Structure | undefined, minimumQuality: '
 function paletteParam(colorList?: Color[]) {
     return {
         name: 'colors',
-        params: { list: { kind: 'set', colors: colorList ?? DEFAULT_COLORS } }
+        params: { list: { kind: 'set', colors: colorList ?? DEFAULT_COLORS } },
     };
 }
 

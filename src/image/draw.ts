@@ -147,8 +147,8 @@ function addTriangle(img: RawImageData, triangle: [Point, Point, Point], color: 
     }
 }
 
-type Point = [number, number]
-type Vector = [number, number]
+type Point = [number, number];
+type Vector = [number, number];
 
 /** Return the vector from point `A` to `B` (i.e. B minus A) */
 function diff(B: Point, A: Point): Vector {

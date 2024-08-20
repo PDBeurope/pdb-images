@@ -13,10 +13,17 @@ import { getLogger } from './logging';
 const logger = getLogger(module);
 
 /** Entity type (i.e. value of _entity.type in mmCIF): polymer, non-polymer, water... */
-type EntityType = ReturnType<Entities['data']['type']['value']>
+type EntityType = ReturnType<Entities['data']['type']['value']>;
 
 /** Basic info about several entities, mapped by entityId */
-export type EntityInfo = { [entityId: string]: { description: string, type: EntityType, chains: ChainIndex[], index: number } }
+export interface EntityInfo {
+    [entityId: string]: {
+        description: string,
+        type: EntityType,
+        chains: ChainIndex[],
+        index: number,
+    },
+}
 
 /** Return basic info about entities in the structure, mapped by entityId */
 export function getEntityInfo(structure: Structure) {

@@ -35,7 +35,7 @@ describe('structure-info', () => {
                 description: 'water',
                 index: 3,
                 type: 'water',
-            }
+            },
         });
     });
 
@@ -65,7 +65,7 @@ describe('structure-info', () => {
         expect(countChainResidues(model)).toEqual({
             A: 141, B: 145, C: 141, D: 145, // proteins
             E: 1, F: 1, G: 1, H: 1, // hems
-            I: 19, J: 8, K: 10, L: 5 // waters
+            I: 19, J: 8, K: 10, L: 5, // waters
         });
     });
 

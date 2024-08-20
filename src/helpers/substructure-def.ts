@@ -9,7 +9,7 @@ import { Expression } from 'molstar/lib/commonjs/mol-script/language/expression'
 
 
 /** Definition of a substructure */
-export type SubstructureDef = SubstructureDef.Domain | SubstructureDef.Sets
+export type SubstructureDef = SubstructureDef.Domain | SubstructureDef.Sets;
 
 export namespace SubstructureDef {
     /** Definition of a Domain substructure, i.e. set of residue ranges within one chain */
@@ -19,7 +19,7 @@ export namespace SubstructureDef {
         chainId: string,
         /** List of residue ranges `[from, to]`, including both `from` and `to` */
         ranges: [number, number][],
-        label?: string
+        label?: string,
     }
     export namespace Domain {
         /** Return a new Domain substructure definition */
@@ -31,7 +31,7 @@ export namespace SubstructureDef {
             const rangeSubexprs = def.ranges.map(r => MolScriptBuilder.core.rel.inRange([MolScriptBuilder.struct.atomProperty.macromolecular.label_seq_id(), r[0], r[1]]));
             return MolScriptBuilder.struct.generator.atomGroups({
                 'chain-test': MolScriptBuilder.core.rel.eq([MolScriptBuilder.struct.atomProperty.macromolecular.label_asym_id(), def.chainId]),
-                'residue-test': MolScriptBuilder.core.logic.or(rangeSubexprs)
+                'residue-test': MolScriptBuilder.core.logic.or(rangeSubexprs),
             });
         }
     }
@@ -41,7 +41,7 @@ export namespace SubstructureDef {
         kind: 'sets',
         /** List of residue numbers in each chain (label_seq_id, label_asym_id) */
         sets: { [chainId: string]: number[] },
-        label?: string
+        label?: string,
     }
     export namespace Sets {
         /** Return a new Sets substructure definition */
@@ -56,9 +56,9 @@ export namespace SubstructureDef {
                     MolScriptBuilder.core.logic.and([
                         MolScriptBuilder.core.rel.eq([MolScriptBuilder.struct.atomProperty.macromolecular.label_asym_id(), chainId]),
                         MolScriptBuilder.core.logic.or(
-                            def.sets[chainId].map(r => MolScriptBuilder.core.rel.eq([MolScriptBuilder.struct.atomProperty.macromolecular.label_seq_id(), r]))
-                        )
-                    ])
+                            def.sets[chainId].map(r => MolScriptBuilder.core.rel.eq([MolScriptBuilder.struct.atomProperty.macromolecular.label_seq_id(), r])),
+                        ),
+                    ]),
                 );
             }
             return MolScriptBuilder.struct.generator.atomGroups({

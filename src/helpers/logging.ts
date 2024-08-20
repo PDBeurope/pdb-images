@@ -11,7 +11,7 @@ import util from 'util';
 
 /** Available levels for logging */
 export const LogLevels = ['ALL', 'TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL', 'MARK', 'OFF'] as const;
-export type LogLevel = typeof LogLevels[number]
+export type LogLevel = typeof LogLevels[number];
 
 const ROOT_DIRS = ['src', 'lib', 'build'];
 

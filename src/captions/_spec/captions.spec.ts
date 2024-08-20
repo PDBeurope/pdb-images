@@ -16,11 +16,11 @@ const COMMON_CONTEXT = {
         '1': { description: 'HEMOGLOBIN (DEOXY) (ALPHA CHAIN)', type: 'polymer', chains: [0, 1] as any, index: 0 },
         '2': { description: 'HEMOGLOBIN (DEOXY) (BETA CHAIN)', type: 'polymer', chains: [2, 3] as any, index: 1 },
         '3': { description: 'PROTOPORPHYRIN IX CONTAINING FE', type: 'non-polymer', chains: [4, 5, 6, 7] as any, index: 2 },
-        '4': { description: 'water', type: 'water', chains: [8] as any, index: 3 }
+        '4': { description: 'water', type: 'water', chains: [8] as any, index: 3 },
     } as EntityInfo,
     entityNames: { '1': ['Hemoglobin alpha chain'], '2': ['Hemoglobin beta chain', 'blablabla'], '3': [] },
     nModels: 1,
-    view: undefined
+    view: undefined,
 };
 
 
@@ -116,7 +116,7 @@ describe('captions', () => {
     it('domain', () => {
         expect(Captions.forDomain({
             ...COMMON_CONTEXT, entityId: '2',
-            source: 'CATH', familyId: '1.10.490.10', familyName: 'Globin-like', totalCopies: 2, shownCopies: 1, outOfRangeCopies: 0, chainId: 'B', authChainId: 'B', view: 'front'
+            source: 'CATH', familyId: '1.10.490.10', familyName: 'Globin-like', totalCopies: 2, shownCopies: 1, outOfRangeCopies: 0, chainId: 'B', authChainId: 'B', view: 'front',
         })).toEqual({
             _entry_id: '1hda',
             _extras: undefined,

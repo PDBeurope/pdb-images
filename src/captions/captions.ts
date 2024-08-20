@@ -11,7 +11,7 @@ import { TextBuilder } from './text-builder';
 
 /** Orientation of a 3D view.
  * Use `undefined` when only one view is being rendered, thus it is not necessary to specify orientation. */
-export type ViewType = 'front' | 'side' | 'top' | undefined
+export type ViewType = 'front' | 'side' | 'top' | undefined;
 
 
 /** Data needed to save an image, related captions, and metadata. */
@@ -24,7 +24,7 @@ export interface ImageSpec {
     description: string,
     /** Image caption, plain-text */
     clean_description: string,
-    /** PDB or AlphaFoldDB identifier*/
+    /** PDB or AlphaFoldDB identifier */
     _entry_id: string,
     /** View orientation */
     _view: ViewType,
@@ -172,7 +172,7 @@ export namespace Captions {
         shownCopies: number,
         /** Number of domain instances in the shown chain which are completely out of the observed residue range (therefore not visible) */
         outOfRangeCopies: number,
-        view: ViewType
+        view: ViewType,
     }): ImageSpec {
         const { entryId, source, familyId, familyName, entityId, chainId, authChainId, totalCopies, shownCopies, outOfRangeCopies, view } = context;
         const name = entityName(context, entityId);

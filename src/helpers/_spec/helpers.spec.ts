@@ -57,7 +57,7 @@ describe('helpers', () => {
                     label: undefined,
                     sets: { 'X': [123] },
                 },
-            }
+            },
         });
 
         expect(getModifiedResidueInfo([
@@ -85,7 +85,7 @@ describe('helpers', () => {
                     label: undefined,
                     sets: { 'Z': [999] },
                 },
-            }
+            },
         });
     });
 
