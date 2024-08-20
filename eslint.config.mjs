@@ -1,107 +1,46 @@
-import globals from "globals";
-import stylisticEslintPlugin from "@stylistic/eslint-plugin";
-import typescriptEslint from "@typescript-eslint/eslint-plugin";
-import tsParser from "@typescript-eslint/parser";
+import eslint from '@eslint/js';
+import tsEslint from 'typescript-eslint';
+import stylisticEslint from '@stylistic/eslint-plugin';
 
-export default [{
-    languageOptions: {
-        globals: {
-            ...globals.browser,
-            ...globals.node,
-        },
-        ecmaVersion: 2018,
-        sourceType: "module",
-        parserOptions: {
-            ecmaFeatures: {
-                impliedStrict: true,
-            },
-        },
-    },
 
-    rules: {
-        "indent": "off",
-        "arrow-parens": ["off", "as-needed"],
-        "brace-style": "off",
-        "comma-spacing": "off",
-        "space-infix-ops": "off",
-        "comma-dangle": "off",
-        "eqeqeq": ["error", "smart"],
-        "import/order": "off",
-        "no-eval": "warn",
-        "no-new-wrappers": "warn",
-        "no-trailing-spaces": "error",
-        "no-unsafe-finally": "warn",
-        "no-var": "error",
-        "spaced-comment": "error",
-        "semi": "warn",
-        "no-restricted-syntax": ["error", {
-            selector: "ExportDefaultDeclaration",
-            message: "Default exports are not allowed",
+export default tsEslint.config(
+    eslint.configs.recommended,
+    ...tsEslint.configs.recommended,
+    ...tsEslint.configs.stylistic,
+    {
+      plugins: {
+          '@stylistic': stylisticEslint,
+      },
+      rules:{
+        'prefer-const': 'off',
+        '@typescript-eslint/no-explicit-any': 'off',
+        '@typescript-eslint/no-inferrable-types': 'off',
+        '@typescript-eslint/consistent-indexed-object-style': 'off',
+        '@typescript-eslint/no-namespace': 'off',
+        '@typescript-eslint/no-unused-vars': 'off',
+        '@typescript-eslint/consistent-type-definitions': 'off',
+        '@typescript-eslint/no-unused-expressions': 'off',
+        '@typescript-eslint/no-empty-object-type': 'off',
+
+        '@stylistic/indent': ['error', 4],
+        '@stylistic/quotes': ['error', 'single', {
+          avoidEscape: true,
+          allowTemplateLiterals: true,
         }],
-        "no-throw-literal": "error",
-        "key-spacing": "error",
-        "object-curly-spacing": ["error", "always"],
-        "array-bracket-spacing": "error",
-        "space-in-parens": "error",
-        "computed-property-spacing": "error",
-        "prefer-const": ["error", {
-            destructuring: "all",
-            ignoreReadBeforeAssign: false,
-        }],
-        "space-before-function-paren": "off",
-        "func-call-spacing": "off",
-        "no-multi-spaces": "error",
-        "block-spacing": "error",
-        "keyword-spacing": "off",
-        "space-before-blocks": "error",
-        "semi-spacing": "error",
-    },
-}, {
-    files: ["**/*.ts", "**/*.tsx"],
-
-    plugins: {
-        "@typescript-eslint": typescriptEslint,
-        "@stylistic": stylisticEslintPlugin,
-    },
-
-    languageOptions: {
-        parser: tsParser,
-        ecmaVersion: 5,
-        sourceType: "module",
-        parserOptions: {
-            project: ["tsconfig.json", "tsconfig-eslint.json"],
-        },
-    },
-
-    rules: {
-        "@stylistic/indent": ["error", 4],
-        "@stylistic/member-delimiter-style": ["off", {
-            multiline: {
-                delimiter: "none",
-                requireLast: true,
-            },
-            singleline: {
-                delimiter: "semi",
-                requireLast: false,
-            },
-        }],
-        "@stylistic/quotes": ["error", "single", {
-            avoidEscape: true,
-            allowTemplateLiterals: true,
-        }],
-        "@stylistic/semi": ["off", null],
-        "@stylistic/type-annotation-spacing": "error",
-        "@stylistic/brace-style": ["error", "1tbs", {
+        '@stylistic/semi': 'off',
+        '@stylistic/type-annotation-spacing': 'error',
+        '@stylistic/brace-style': ['error', '1tbs', {
             allowSingleLine: true,
         }],
-        "@stylistic/comma-spacing": "error",
-        "@stylistic/space-infix-ops": "error",
-        "@stylistic/space-before-function-paren": ["error", {
-            anonymous: "always",
-            named: "never",
-            asyncArrow: "always",
+        '@stylistic/comma-spacing': 'error',
+        '@stylistic/space-infix-ops': 'error',
+        '@stylistic/space-before-function-paren': ['error', {
+            anonymous: 'always',
+            named: 'never',
+            asyncArrow: 'always',
         }],
-        "@stylistic/func-call-spacing": ["error"],
-        "@stylistic/keyword-spacing": ["error"],
+        '@stylistic/func-call-spacing': ['error'],
+        '@stylistic/keyword-spacing': ['error'],
+      },
     },
-}];
+  );
