@@ -68,7 +68,7 @@ export function assignEntityAndUnitColors(structure: Structure) {
     for (let i = 0; i < entities.data._rowCount; i++) {
         const id = entities.data.id.value(i);
         const typ = entities.data.type.value(i);
-        const elementSymbols = getElementsInChains(structure, entityInfo[id]?.chains ?? []);
+        const elementSymbols = getElementsInChains(structure, entityInfo[id]?.chains ?? []).filter(symbol => symbol !== 'H' && symbol !== 'D' && symbol !== 'T');
         let color: Color | undefined;
         if (typ === 'water') {
             color = waterColor;
