@@ -28,6 +28,12 @@ Generate all images for PDB entry `1ad5` and save in directory `data/output_1ad5
 pdb-images 1ad5 data/output_1ad5/
 ```
 
+Generate images for AlphaFold entry `AF-Q5VSL9-F1-model_v4` and save in directory `data/output_Q5VSL9/`, with default settings:
+
+```sh
+pdb-images AF-Q5VSL9-F1-model_v4 data/output_Q5VSL9/ --mode alphafold
+```
+
 Another example, with all command line arguments given:
 
 ```sh
