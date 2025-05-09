@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Treat ligands like H2S, NH3 as single-element for coloring purposes
+- Updated Molstar version to 4.7.1
 
 ## [2.5.0] - 2024-08-20
 
