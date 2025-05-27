@@ -35,7 +35,7 @@ const logger = getLogger(module);
 /** ${id} will be replaced by actual identifier (PDB ID or AlphaFoldDB ID) */
 const DEFAULT_INPUT_URL_TEMPLATES: { [mode in Mode]: string } = {
     pdb: 'https://www.ebi.ac.uk/pdbe/entry-files/download/${id}.bcif',
-    alphafold: 'https://alphafold.ebi.ac.uk/files/${id}.cif', // There is some issue with AlphaFold bcifs, this might be fixed in the future
+    alphafold: 'https://alphafold.ebi.ac.uk/files/${id}.bcif',
 };
 const DEFAULT_IMAGE_SIZE_STRINGS = Defaults.size.map(s => `${s.width}x${s.height}`);
 
