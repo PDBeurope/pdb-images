@@ -1,5 +1,7 @@
 # PDBImages
 
+[![Published on NPM](https://img.shields.io/npm/v/pdb-images.svg)](https://www.npmjs.com/package/pdb-images)
+
 **PDBImages** is a command-line tool for generating images of macromolecular structures from mmCIF or binary CIF structure files based on Mol*.
 
 
