@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.0] - 2025-06-12
+
 - Treat ligands like H2S, NH3 as single-element for coloring purposes
 - Default structure source in Alphafold mode is BCIF
 - Updated Molstar version to 4.18.0
