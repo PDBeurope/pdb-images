@@ -14,7 +14,7 @@ import { ImageSpec } from './captions/captions';
 import { MoljStateSaver } from './helpers/helpers';
 import { getLogger } from './helpers/logging';
 import { addAxisIndicators } from './image/draw';
-import { resizeRawImage, saveImage } from './image/resize';
+import { saveImage } from './image/resize';
 import * as Paths from './paths';
 
 
@@ -35,24 +35,20 @@ export function makeSaveFunction(plugin: HeadlessPluginContext, outDir: string, 
         await stateSaver.save(Paths.imageStateMolj(outDir, spec.filename));
 
         const imageSizes = Array.from(args.size).sort((a, b) => b.width * b.height - a.width * a.height); // Sort from largest to smallest
-        let fullsizeImage: RawImageData | undefined = undefined;
+        let image: RawImageData | undefined = undefined;
 
         for (const size of imageSizes) {
-            let image: RawImageData;
-            if (args.render_each_size || !fullsizeImage) {
+            if (!image || args.render_each_size) {
                 // Render new image
                 plugin.canvas3d!.commit(true);
                 image = await plugin.getImageRaw(size, postprocessing);
                 if (!args.no_axes) {
                     addAxisIndicators(image, spec._view);
                 }
-                fullsizeImage ??= image;
-            } else {
-                // Resize existing image
-                image = resizeRawImage(fullsizeImage, size);
             }
             for (const format of args.format) {
-                await saveImage(image, Paths.image(outDir, spec.filename, format, size));
+                const filepath = Paths.image(outDir, spec.filename, format, size);
+                await saveImage(image, filepath, size);
             }
         }
     };
