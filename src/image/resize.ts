@@ -88,4 +88,14 @@ export async function saveImage(imageData: RawImageData, outPath: string) {
             .toFile(outPath, (error, info) => error ? reject(error) : resolve(info));
     });
 }
+
+/** Used in tests. Do not delete. */
+export async function loadImage(inPath: string): Promise<RawImageData> {
+    const img = sharp(inPath).ensureAlpha().raw();
+    const buffer = await img.toBuffer();
+    const metadata = await img.metadata();
+    if (metadata.channels !== 4) new Error('AssertionError: should have 4 channels');
+    return { data: Uint8ClampedArray.from(buffer), width: metadata.width, height: metadata.height };
+}
+
 // TODO resize images directly in saveRawToWebp

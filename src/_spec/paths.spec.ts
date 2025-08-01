@@ -39,9 +39,10 @@ describe('paths', () => {
         expect(Paths.imageStateMolj('data/out', '1hda_deposited_chain_front')).toEqual('data/out/1hda_deposited_chain_front.molj');
     });
 
-    it('imagePng', async () => {
-        expect(Paths.imagePng(undefined, '1hda_deposited_chain_front', { width: 100, height: 100 })).toEqual('1hda_deposited_chain_front_image-100x100.png');
-        expect(Paths.imagePng(undefined, '1hda_deposited_chain_front', { width: 400, height: 300 })).toEqual('1hda_deposited_chain_front_image-400x300.png');
-        expect(Paths.imagePng('data/out', '1hda_deposited_chain_front', { width: 400, height: 300 })).toEqual('data/out/1hda_deposited_chain_front_image-400x300.png');
+    it('image', async () => {
+        expect(Paths.image(undefined, '1hda_deposited_chain_front', 'png', { width: 100, height: 100 })).toEqual('1hda_deposited_chain_front_image-100x100.png');
+        expect(Paths.image(undefined, '1hda_deposited_chain_front', 'png', { width: 400, height: 300 })).toEqual('1hda_deposited_chain_front_image-400x300.png');
+        expect(Paths.image('data/out', '1hda_deposited_chain_front', 'png', { width: 400, height: 300 })).toEqual('data/out/1hda_deposited_chain_front_image-400x300.png');
+        expect(Paths.image('data/out', '1hda_deposited_chain_front', 'webp', { width: 400, height: 300 })).toEqual('data/out/1hda_deposited_chain_front_image-400x300.webp');
     });
 });

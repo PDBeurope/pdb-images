@@ -7,7 +7,7 @@
 import { RawImageData } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 
 import { addAxisIndicators } from '../draw';
-import { loadPngToRaw } from '../resize';
+import { loadImage } from '../resize';
 
 
 function getTestingImageWhite() {
@@ -22,34 +22,34 @@ function getTestingImageWhite() {
 describe('draw', () => {
     it('check image comparison', async () => {
         const img = getTestingImageWhite();
-        const expected = await loadPngToRaw('./test_data/sample_images/white.png');
+        const expected = await loadImage('./test_data/sample_images/white.png');
         expect(img).toEqual(expected);
     });
 
     it('addAxisIndicators - no axes', async () => {
         const img = getTestingImageWhite();
-        const expected = await loadPngToRaw('./test_data/sample_images/white.png');
+        const expected = await loadImage('./test_data/sample_images/white.png');
         expect(img).toEqual(expected);
     });
 
     it('addAxisIndicators - front view', async () => {
         const img = getTestingImageWhite();
         addAxisIndicators(img, 'front');
-        const expected = await loadPngToRaw('./test_data/sample_images/axes_front.png');
+        const expected = await loadImage('./test_data/sample_images/axes_front.png');
         expect(img).toEqual(expected);
     });
 
     it('addAxisIndicators - side view', async () => {
         const img = getTestingImageWhite();
         addAxisIndicators(img, 'side');
-        const expected = await loadPngToRaw('./test_data/sample_images/axes_side.png');
+        const expected = await loadImage('./test_data/sample_images/axes_side.png');
         expect(img).toEqual(expected);
     });
 
     it('addAxisIndicators - top view', async () => {
         const img = getTestingImageWhite();
         addAxisIndicators(img, 'top');
-        const expected = await loadPngToRaw('./test_data/sample_images/axes_top.png');
+        const expected = await loadImage('./test_data/sample_images/axes_top.png');
         expect(img).toEqual(expected);
     });
 });

@@ -7,7 +7,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { loadPngToRaw } from '../image/resize';
+import { loadImage } from '../image/resize';
 import { makeSaveFunction } from '../save';
 import { getTestingHeadlessPlugin, isBorderBlank, isImageBlank } from './_utils';
 
@@ -22,7 +22,7 @@ describe('makeSaveFunction', () => {
 
         const plugin = await getTestingHeadlessPlugin();
         try {
-            const saveFunction = makeSaveFunction(plugin, OUTPUT_DIR, { size: [{ width: 200, height: 200 }, { width: 100, height: 100 }], render_each_size: false, no_axes: false }, 'https://nope.nope');
+            const saveFunction = makeSaveFunction(plugin, OUTPUT_DIR, { format: ['png'], size: [{ width: 200, height: 200 }, { width: 100, height: 100 }], render_each_size: false, no_axes: false }, 'https://nope.nope');
             await saveFunction({ filename: 'example_empty', description: 'Description', clean_description: 'Clean description', alt: 'Alt', _entry_id: 'empty', _view: 'front', _section: [] });
         } finally {
             plugin.dispose();
@@ -35,11 +35,11 @@ describe('makeSaveFunction', () => {
         ]);
 
         // Check no generated images are blank, or overflowing through border
-        const imageFull = await loadPngToRaw(path.join(OUTPUT_DIR, 'example_empty_image-200x200.png'));
+        const imageFull = await loadImage(path.join(OUTPUT_DIR, 'example_empty_image-200x200.png'));
         expect(isImageBlank(imageFull)).toBeFalsy();
         expect(isBorderBlank(imageFull)).toBeTruthy();
 
-        const imageDownscaled = await loadPngToRaw(path.join(OUTPUT_DIR, 'example_empty_image-100x100.png'));
+        const imageDownscaled = await loadImage(path.join(OUTPUT_DIR, 'example_empty_image-100x100.png'));
         expect(isImageBlank(imageDownscaled)).toBeFalsy();
         expect(isBorderBlank(imageDownscaled)).toBeTruthy();
     });

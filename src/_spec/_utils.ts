@@ -8,6 +8,7 @@ import fs from 'fs';
 import gl from 'gl';
 import { MAQualityAssessment } from 'molstar/lib/commonjs/extensions/model-archive/quality-assessment/behavior';
 import { PDBeStructureQualityReport } from 'molstar/lib/commonjs/extensions/pdbe';
+import { StringLike } from 'molstar/lib/commonjs/mol-io/common/string-like';
 import { CIF, CifFrame } from 'molstar/lib/commonjs/mol-io/reader/cif';
 import { trajectoryFromMmCIF } from 'molstar/lib/commonjs/mol-model-formats/structure/mmcif';
 import { Model, Structure } from 'molstar/lib/commonjs/mol-model/structure';
@@ -47,7 +48,7 @@ export async function getTestingPlugin(): Promise<PluginContext> {
 export async function getTestingModel(pdbId: TestingPdb): Promise<Model> {
     const fileName = `./test_data/structures/${pdbId}.cif`;
     const content = fs.readFileSync(fileName, { encoding: 'utf8' });
-    const comp = CIF.parse(content);
+    const comp = CIF.parse(content as unknown as StringLike); // TODO remove `as unknown as StringLike` once Molstar dep updated to 5.0
     const parsed = await comp.run();
     if (parsed.isError) throw parsed;
     const cif = parsed.result;

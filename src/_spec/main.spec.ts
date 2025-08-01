@@ -9,9 +9,9 @@ import fs from 'fs';
 import path from 'path';
 
 import { Args } from '../args';
-import { loadPngToRaw } from '../image/resize';
 import { VERSION, main, parseArguments } from '../main';
 import { LONG_TEST_TIMEOUT, isBorderBlank, isImageBlank, versionFromPackageJson } from './_utils';
+import { loadImage } from '../image/resize';
 
 
 const EXPECTED_FILENAMES_1AD5 = [
@@ -57,10 +57,10 @@ describe('version', () => {
 
 describe('isImageBlank', () => {
     it('check isImageBlank works', async () => {
-        expect(isImageBlank(await loadPngToRaw('./test_data/sample_images/white.png'))).toBeTruthy();
-        expect(isImageBlank(await loadPngToRaw('./test_data/sample_images/axes_front.png'))).toBeFalsy();
-        expect(isBorderBlank(await loadPngToRaw('./test_data/sample_images/white.png'))).toBeTruthy();
-        expect(isBorderBlank(await loadPngToRaw('./test_data/sample_images/axes_front.png'))).toBeTruthy();
+        expect(isImageBlank(await loadImage('./test_data/sample_images/white.png'))).toBeTruthy();
+        expect(isImageBlank(await loadImage('./test_data/sample_images/axes_front.png'))).toBeFalsy();
+        expect(isBorderBlank(await loadImage('./test_data/sample_images/white.png'))).toBeTruthy();
+        expect(isBorderBlank(await loadImage('./test_data/sample_images/axes_front.png'))).toBeTruthy();
     }, LONG_TEST_TIMEOUT);
 });
 
@@ -94,6 +94,7 @@ describe('args', () => {
                 api_url: 'https://www.ebi.ac.uk/pdbe/api',
                 api_retry: false,
                 no_api: false,
+                format: ['png'],
                 size: [{ width: 800, height: 800 }],
                 view: 'auto',
                 render_each_size: false,
@@ -123,9 +124,9 @@ describe('args', () => {
             ArgumentParser.prototype.exit = () => { console.error('ArgumentParser exiting (this is bad)'); throw Error('Exit'); };
             process.argv = 'node index.js 1ad5 /data/1ad5 --input http://smelly_cat.cif \
                 --input-public http://very_public_server.com/smelly_cat.cif --mode alphafold \
-                --api-url https://smelly_api.com --api-retry --no-api --size 500x500 300x200 --view front --render-each-size \
-                --type entry assembly plddt --opaque-background --no-axes --show-hydrogens --show-branched-sticks --ensemble-shades \
-                --allow-lowest-quality --force-bfactor --date 2023/04/20 --clear --log DEBUG \
+                --api-url https://smelly_api.com --api-retry --no-api --format png webp gif --size 500x500 300x200 --view front \
+                --render-each-size --type entry assembly plddt --opaque-background --no-axes --show-hydrogens --show-branched-sticks \
+                --ensemble-shades --allow-lowest-quality --force-bfactor --date 2023/04/20 --clear --log DEBUG \
                 '.trim().split(/\s+/);
             const expectedArgs: Args = {
                 entry_id: '1ad5',
@@ -136,6 +137,7 @@ describe('args', () => {
                 api_url: 'https://smelly_api.com',
                 api_retry: true,
                 no_api: true,
+                format: ['png', 'webp', 'gif'],
                 size: [{ width: 500, height: 500 }, { width: 300, height: 200 }],
                 view: 'front',
                 render_each_size: true,
@@ -175,6 +177,7 @@ describe('main', () => {
             api_url: 'file://./test_data/api',
             api_retry: false,
             no_api: false,
+            format: ['png'],
             size: [{ width: 200, height: 200 }, { width: 100, height: 100 }],
             view: 'front',
             render_each_size: false,
@@ -214,7 +217,7 @@ describe('main', () => {
         // Check generated images are not blank, or overflowing through border
         for (const file of expectedFiles) {
             if (file.endsWith('.png')) {
-                const image = await loadPngToRaw(path.join(OUTPUT_DIR, file));
+                const image = await loadImage(path.join(OUTPUT_DIR, file));
                 expect(isImageBlank(image)).toBeFalsy();
                 expect(isBorderBlank(image)).toBeTruthy();
             }
@@ -235,6 +238,7 @@ describe('main', () => {
             api_url: 'file://./test_data/api',
             api_retry: false,
             no_api: false,
+            format: ['png'],
             size: [{ width: 200, height: 200 }, { width: 100, height: 100 }],
             view: 'all',
             render_each_size: false,
@@ -274,7 +278,7 @@ describe('main', () => {
         // Check generated images are not blank, or overflowing through border
         for (const file of expectedFiles) {
             if (file.endsWith('.png')) {
-                const image = await loadPngToRaw(path.join(OUTPUT_DIR, file));
+                const image = await loadImage(path.join(OUTPUT_DIR, file));
                 expect(isImageBlank(image)).toBeFalsy();
                 expect(isBorderBlank(image)).toBeTruthy();
             }

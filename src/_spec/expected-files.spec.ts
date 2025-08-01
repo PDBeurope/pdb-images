@@ -13,7 +13,7 @@ const API = new PDBeAPI('file://./test_data/api');
 
 describe('expected-filenames', () => {
     it('getExpectedFiles - defaults', async () => {
-        expect(await getExpectedFiles({ entry_id: '1tqn', mode: 'pdb', type: ['all'], view: 'auto', size: [{ width: 800, height: 800 }] }, API))
+        expect(await getExpectedFiles({ entry_id: '1tqn', mode: 'pdb', type: ['all'], view: 'auto', format: ['png'], size: [{ width: 800, height: 800 }] }, API))
             .toEqual([
                 '1tqn_filelist',
                 '1tqn.json',
@@ -111,7 +111,7 @@ describe('expected-filenames', () => {
     });
 
     it('getExpectedFiles - selected types, NMR', async () => {
-        expect(await getExpectedFiles({ entry_id: '176d', mode: 'pdb', type: ['entry', 'validation', 'bfactor'], view: 'front', size: [{ width: 100, height: 75 }, { width: 400, height: 300 }] }, API))
+        expect(await getExpectedFiles({ entry_id: '176d', mode: 'pdb', type: ['entry', 'validation', 'bfactor'], view: 'front', format: ['png'], size: [{ width: 100, height: 75 }, { width: 400, height: 300 }] }, API))
             .toEqual([
                 '176d_filelist',
                 '176d.json',
@@ -131,7 +131,7 @@ describe('expected-filenames', () => {
     });
 
     it('getExpectedFiles - modres', async () => {
-        expect(await getExpectedFiles({ entry_id: '1hcj', mode: 'pdb', type: ['modres'], view: 'front', size: [{ width: 800, height: 800 }] }, API))
+        expect(await getExpectedFiles({ entry_id: '1hcj', mode: 'pdb', type: ['modres'], view: 'front', format: ['png'], size: [{ width: 800, height: 800 }] }, API))
             .toEqual([
                 '1hcj_filelist',
                 '1hcj.json',
@@ -145,7 +145,7 @@ describe('expected-filenames', () => {
     });
 
     it('getExpectedFiles - Alphafold', async () => {
-        expect(await getExpectedFiles({ entry_id: 'AF-Q8W3K0-F1-model_v4', mode: 'alphafold', type: ['all'], view: 'auto', size: [{ width: 800, height: 800 }] }, API))
+        expect(await getExpectedFiles({ entry_id: 'AF-Q8W3K0-F1-model_v4', mode: 'alphafold', type: ['all'], view: 'auto', format: ['png'], size: [{ width: 800, height: 800 }] }, API))
             .toEqual([
                 'AF-Q8W3K0-F1-model_v4_filelist',
                 'AF-Q8W3K0-F1-model_v4.json',
