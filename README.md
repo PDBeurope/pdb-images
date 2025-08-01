@@ -46,6 +46,7 @@ pdb-images 1hda data/output_1hda/ \
     --api-url https://www.ebi.ac.uk/pdbe/api \
     --api-retry \
     --no-api \
+    --format webp \
     --size 500x500 300x200 \
     --render-each-size \
     --type entry assembly \
@@ -89,9 +90,13 @@ pdb2cif data/1ad5.pdb data/1ad5.cif
 
 #### Image files
 
-The program creates a collection of image types. Each scene can be rendered in different views (front, side, top; `--view` option) and in different resolutions (`--size` option). Besides the rendered images in PNG format, the program also saves `.molj` files (Mol* plugin states, aka snapshots, which can be loaded in Mol*) and `.caption.json` files (image captions).
+The program creates a collection of image types. Each scene can be rendered in different views (front, side, top; `--view` option) and in different resolutions (`--size` option). 
+The rendered images can be saved in a variety of file formats (PNG (default), WEBP, JPEG, GIF, TIFF, AVIF; `--format` option).
+Besides the images, the program also saves `.molj` files (Mol* plugin states, aka snapshots, which can be loaded in Mol*) and `.caption.json` files (image captions).
 
 (Names of the individual files may be a bit confusing, as they were inherited from an older image generation process. See section *Generated image types* for explanation of the filenames.)
+
+(Note that output image files in WEBP format tend to be much smaller when rendered with `--opaque-background`).
 
 #### Summary files
 
@@ -135,7 +140,7 @@ After creating all output files, the program will perform a self-check, i.e. it 
 By default, some image types are rendered in three views (front, side, top view) with axis arrows shown in the left bottom corner, while other image types are only rendered in front view without axis arrows. This can be changed by the `--view` and `--no-axes` options.
 
 By default, the images are rendered in one resolution, 800x800. This can be changed by the `--size` option. If multiple sizes are provided (e.g. `--size 100x100 800x800 1600x1600`), only the largest size (measured by area) will be rendered and the others will be obtained by resizing (use `--render_each_size` to render each size separately). 
-If you use `--size` without any value, no PNG images will be rendered but captions (`.caption.json`) and state files (`.molj`) will still be created.
+If you use `--size` without any value, no images will be rendered but captions (`.caption.json`) and state files (`.molj`) will still be created.
 
 ### Overview of the command-line arguments
 
@@ -161,6 +166,8 @@ optional arguments:
   --no-api              Do not use PDBe API at all (some images will be
                         skipped, some entity names will be different in
                         captions, etc.).
+  --format [{png,webp,jpg,jpeg,gif,tif,tiff,avif} ...]
+                        One or more output image formats. Default: png.
   --size [SIZE ...]     One or more output image sizes, e.g. 800x800 200x200.
                         Default: 800x800. Only the largest size is rendered,
                         others are obtained by resizing unless

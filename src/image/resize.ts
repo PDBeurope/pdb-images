@@ -88,5 +88,4 @@ export async function saveImage(imageData: RawImageData, outPath: string) {
             .toFile(outPath, (error, info) => error ? reject(error) : resolve(info));
     });
 }
-// TODO replace saveRawToPng with saveRawToWebp, optionally support other output formats
 // TODO resize images directly in saveRawToWebp

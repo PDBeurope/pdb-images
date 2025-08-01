@@ -51,7 +51,7 @@ export function parseArguments(): Args {
     parser.add_argument('--api-url', { default: Defaults.api_url, help: `PDBe API URL (can use http:, https:, or file: protocol). Default: ${Defaults.api_url}.` });
     parser.add_argument('--api-retry', { action: 'store_true', help: 'Retry any failed API call up to 5 times, waiting random time (up to 30 seconds) before each retry.' });
     parser.add_argument('--no-api', { action: 'store_true', help: 'Do not use PDBe API at all (some images will be skipped, some entity names will be different in captions, etc.).' });
-    parser.add_argument('--format', { nargs: '*', choices: [...ImageFormats], default: Defaults.format, help: `One or more output image formats. Default: ${Defaults.format.join(' ')}` });
+    parser.add_argument('--format', { nargs: '*', choices: [...ImageFormats], default: Defaults.format, help: `One or more output image formats. Default: ${Defaults.format.join(' ')}.` });
     parser.add_argument('--size', { nargs: '*', default: DEFAULT_IMAGE_SIZE_STRINGS, help: `One or more output image sizes, e.g. 800x800 200x200. Default: ${DEFAULT_IMAGE_SIZE_STRINGS.join(' ')}. Only the largest size is rendered, others are obtained by resizing unless --render_each_size is used. Use without any value to disable image rendering (only create captions and MOLJ files).` });
     parser.add_argument('--render-each-size', { action: 'store_true', help: 'Render image for each size listed in --size, instead of rendering only the first size and resampling to the other sizes.' });
     parser.add_argument('--type', { nargs: '*', choices: [...ImageTypes], default: Defaults.type, help: `One or more image types to be created. Use "all" as a shortcut for all types. See README.md for details on image types. Default: ${Defaults.type.join(' ')}. Use without any value to skip all types (only create summary files from existing outputs).` });
@@ -130,8 +130,8 @@ export async function main(args: Args) {
 
     collectCaptions(args.output_dir, args.entry_id, args.date);
     if (expectedFiles) {
-        checkMissingFiles(args.output_dir, expectedFiles, args.entry_id)
-        // fs.rmSync(Paths.expectedFilelist(args.output_dir, args.entry_id)); // TODO uncomment
+        checkMissingFiles(args.output_dir, expectedFiles, args.entry_id);
+        fs.rmSync(Paths.expectedFilelist(args.output_dir, args.entry_id));
     }
 }
 

@@ -24,7 +24,7 @@ export const ImageTypesForModes = {
 } satisfies { [mode in Mode]: ImageType[] };
 
 /** Image file formats that can be saved */
-export const ImageFormats = ['png', 'webp'] as const;
+export const ImageFormats = ['png', 'webp', 'jpg', 'jpeg', 'gif', 'tif', 'tiff', 'avif'] as const;
 /** Image file formats that can be saved */
 export type ImageFormat = typeof ImageFormats[number];
 

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Option `--format` to save in PNG, WEBP, JPEG, GIF, TIFF, AVIF
+
 ## [2.6.0] - 2025-06-12
 
 - Treat ligands like H2S, NH3 as single-element for coloring purposes
