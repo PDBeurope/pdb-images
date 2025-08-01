@@ -4,9 +4,7 @@
  * @author Adam Midlik <midlik@gmail.com>
  */
 
-import fs from 'fs';
 import { RawImageData } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
-import { PNG } from 'pngjs';
 import sharp from 'sharp';
 
 /** Up- or down-sample image to a new size. */
@@ -73,27 +71,12 @@ function resamplingCoefficients(nOld: number, nNew: number) {
     };
 }
 
-/** Load an image from a PNG file. */
-export async function loadPngToRaw(inPath: string): Promise<RawImageData> {
-    const data = fs.readFileSync(inPath);
-    const png = PNG.sync.read(data);
-    return { width: png.width, height: png.height, data: Uint8ClampedArray.from(png.data) };
-}
-
-/** Save an image as a PNG file.
+/** Save an image as a PNG/WEBP file (format decided based on outPath extension).
  * `imageData.data` is an array of length `imageData.width * imageData.height * 4`,
  * where each 4 numbers represent R, G, B, and alpha value of one pixels,
  * and pixels are ordered in C-style (i.e. by rows).
  */
-export async function saveRawToPng(imageData: RawImageData, outPath: string) {
-    const png = new PNG({ width: imageData.width, height: imageData.height });
-    png.data = Buffer.from(imageData.data.buffer);
-    await new Promise<void>(resolve => {
-        png.pack().pipe(fs.createWriteStream(outPath)).on('finish', resolve);
-    });
-}
-
-export async function saveRawToWebp(imageData: RawImageData, outPath: string) {
+export async function saveImage(imageData: RawImageData, outPath: string) {
     const { data, width, height } = imageData;
     const channels = Math.floor(data.length / (height * width));
     if (channels !== 1 && channels !== 2 && channels !== 3 && channels !== 4) {

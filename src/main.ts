@@ -8,7 +8,6 @@ import { ArgumentParser } from 'argparse';
 import fs from 'fs';
 import gl from 'gl';
 import path from 'path';
-import pngjs from 'pngjs';
 
 import { MAQualityAssessment } from 'molstar/lib/commonjs/extensions/model-archive/quality-assessment/behavior';
 import { PDBeStructureQualityReport } from 'molstar/lib/commonjs/extensions/pdbe';
@@ -152,7 +151,7 @@ async function createHeadlessPlugin(args: Pick<Args, 'size' | 'opaque_background
     pluginSpec.behaviors.push(PluginSpec.Behavior(MAQualityAssessment));
 
     const canvasSize = args.size[0] ?? { width: 800, height: 800 };
-    const plugin = new HeadlessPluginContext({ gl, pngjs }, pluginSpec, canvasSize, options);
+    const plugin = new HeadlessPluginContext({ gl }, pluginSpec, canvasSize, options);
 
     try {
         await plugin.init();

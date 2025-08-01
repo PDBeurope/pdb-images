@@ -14,7 +14,7 @@ import { ImageSpec } from './captions/captions';
 import { MoljStateSaver } from './helpers/helpers';
 import { getLogger } from './helpers/logging';
 import { addAxisIndicators } from './image/draw';
-import { resizeRawImage, saveRawToPng, saveRawToWebp } from './image/resize';
+import { resizeRawImage, saveImage } from './image/resize';
 import * as Paths from './paths';
 
 
@@ -51,11 +51,9 @@ export function makeSaveFunction(plugin: HeadlessPluginContext, outDir: string, 
                 // Resize existing image
                 image = resizeRawImage(fullsizeImage, size);
             }
-            if (args.format.includes('png')) await saveRawToPng(image, Paths.image(outDir, spec.filename, 'png', size));
-            if (args.format.includes('webp')) await saveRawToWebp(image, Paths.image(outDir, spec.filename, 'webp', size));
-            // for (const format of args.format) {
-            //     await saveRawToWebp(image, Paths.image(outDir, spec.filename, format, size));
-            // }
+            for (const format of args.format) {
+                await saveImage(image, Paths.image(outDir, spec.filename, format, size));
+            }
         }
     };
 }

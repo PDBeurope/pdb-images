@@ -16,6 +16,7 @@ import { Encoder } from 'molstar/lib/commonjs/mol-io/writer/cif/encoder';
 import { pdbToMmCif } from 'molstar/lib/commonjs/mol-model-formats/structure/pdb/to-cif';
 
 import { VERSION } from '../main';
+import { StringLike } from 'molstar/lib/commonjs/mol-io/common/string-like';
 
 
 /** Command line argument values for `main` */
@@ -47,7 +48,7 @@ async function main(args: Args) {
 
 /** Converts contents of a PDB format file into mmCIF string */
 async function pdbToCif(pdbInput: string, id: string): Promise<string> {
-    const parsed = await parsePDB(pdbInput, id).run();
+    const parsed = await parsePDB(pdbInput as unknown as StringLike, id).run(); // TODO remove `as unknown as StringLike` once Molstar dep updated to 5.0
     if (parsed.isError) throw new Error(`Failed to parse PDB file: ${parsed.message}`);
     const cif = await pdbToMmCif(parsed.result);
     const database = CIF.schema.mmCIF(cif);
