@@ -1,12 +1,18 @@
+/**
+ * Copyright (c) 2023-2025 EMBL - European Bioinformatics Institute, licensed under Apache 2.0, see LICENSE file for more info.
+ *
+ * @author Adam Midlik <midlik@gmail.com>
+ */
+
 import fs from 'fs';
 import path from 'path';
 
 import { PDBeAPI } from './api';
 import { Args, ImageType, ImageTypesForModes } from './args';
+import { safePromise } from './helpers/helpers';
 import { getLogger } from './helpers/logging';
 import { selectBestChainForDomains, sortDomainsByEntity } from './helpers/sifts';
 import * as Paths from './paths';
-import { safePromise } from './helpers/helpers';
 
 
 const logger = getLogger(module);
@@ -206,7 +212,7 @@ async function getExpectedFilenameStemsForAlphafoldMode(entryId: string, types: 
 
 
 /** Return list of files expected to be created, with suffixes, e.g. '1tqn_deposited_chain_front_image-800x800.png' */
-export async function getExpectedFiles(args: Pick<Args, 'entry_id' | 'mode' | 'type' | 'view' | 'size'>, api: PDBeAPI): Promise<string[]> {
+export async function getExpectedFiles(args: Pick<Args, 'entry_id' | 'mode' | 'type' | 'view' | 'format' | 'size'>, api: PDBeAPI): Promise<string[]> {
     const result = [
         Paths.filelist(undefined, args.entry_id),
         Paths.captionsJson(undefined, args.entry_id),
@@ -216,7 +222,9 @@ export async function getExpectedFiles(args: Pick<Args, 'entry_id' | 'mode' | 't
         result.push(Paths.imageCaptionJson(undefined, stem));
         result.push(Paths.imageStateMolj(undefined, stem));
         for (const size of args.size) {
-            result.push(Paths.imagePng(undefined, stem, size));
+            for (const format of args.format) {
+                result.push(Paths.image(undefined, stem, format, size));
+            }
         }
     }
     return result;

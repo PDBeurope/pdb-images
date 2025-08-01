@@ -1,13 +1,13 @@
 /**
- * Copyright (c) 2023 EMBL - European Bioinformatics Institute, licensed under Apache 2.0, see LICENSE file for more info.
+ * Copyright (c) 2023-2025 EMBL - European Bioinformatics Institute, licensed under Apache 2.0, see LICENSE file for more info.
  *
  * @author Adam Midlik <midlik@gmail.com>
  */
 
 import fs from 'fs';
-import { PNG } from 'pngjs';
 import { RawImageData } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
-
+import { PNG } from 'pngjs';
+import sharp from 'sharp';
 
 /** Up- or down-sample image to a new size. */
 export function resizeRawImage(img: RawImageData, newSize: { width: number, height: number }): RawImageData {
@@ -92,3 +92,18 @@ export async function saveRawToPng(imageData: RawImageData, outPath: string) {
         png.pack().pipe(fs.createWriteStream(outPath)).on('finish', resolve);
     });
 }
+
+export async function saveRawToWebp(imageData: RawImageData, outPath: string) {
+    const { data, width, height } = imageData;
+    const channels = Math.floor(data.length / (height * width));
+    if (channels !== 1 && channels !== 2 && channels !== 3 && channels !== 4) {
+        throw new Error('AssertionError: webp export is only supported for images with 1-4 channels');
+    }
+    await new Promise<sharp.OutputInfo>((resolve, reject) => {
+        sharp(Uint8Array.from(data), { raw: { width, height, channels } })
+            // .resize(200, 200)
+            .toFile(outPath, (error, info) => error ? reject(error) : resolve(info));
+    });
+}
+// TODO replace saveRawToPng with saveRawToWebp, optionally support other output formats
+// TODO resize images directly in saveRawToWebp

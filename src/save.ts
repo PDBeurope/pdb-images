@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023 EMBL - European Bioinformatics Institute, licensed under Apache 2.0, see LICENSE file for more info.
+ * Copyright (c) 2023-2025 EMBL - European Bioinformatics Institute, licensed under Apache 2.0, see LICENSE file for more info.
  *
  * @author Adam Midlik <midlik@gmail.com>
  */
@@ -14,15 +14,15 @@ import { ImageSpec } from './captions/captions';
 import { MoljStateSaver } from './helpers/helpers';
 import { getLogger } from './helpers/logging';
 import { addAxisIndicators } from './image/draw';
-import { resizeRawImage, saveRawToPng } from './image/resize';
+import { resizeRawImage, saveRawToPng, saveRawToWebp } from './image/resize';
 import * as Paths from './paths';
 
 
 const logger = getLogger(module);
 
 
-/** Return a function that takes ImageSpec object and produces all types of output files (.png, .molj, .caption.json) for the current plugin state */
-export function makeSaveFunction(plugin: HeadlessPluginContext, outDir: string, args: Pick<Args, 'size' | 'render_each_size' | 'no_axes'>, wwwUrl: string) {
+/** Return a function that takes ImageSpec object and produces all types of output files (.png/.webp, .molj, .caption.json) for the current plugin state */
+export function makeSaveFunction(plugin: HeadlessPluginContext, outDir: string, args: Pick<Args, 'format' | 'size' | 'render_each_size' | 'no_axes'>, wwwUrl: string) {
     const stateSaver = new MoljStateSaver(plugin, {
         downloadUrl: wwwUrl,
         downloadBinary: wwwUrl.endsWith('.bcif'),
@@ -51,7 +51,11 @@ export function makeSaveFunction(plugin: HeadlessPluginContext, outDir: string, 
                 // Resize existing image
                 image = resizeRawImage(fullsizeImage, size);
             }
-            await saveRawToPng(image, Paths.imagePng(outDir, spec.filename, size));
+            if (args.format.includes('png')) await saveRawToPng(image, Paths.image(outDir, spec.filename, 'png', size));
+            if (args.format.includes('webp')) await saveRawToWebp(image, Paths.image(outDir, spec.filename, 'webp', size));
+            // for (const format of args.format) {
+            //     await saveRawToWebp(image, Paths.image(outDir, spec.filename, format, size));
+            // }
         }
     };
 }

@@ -1,4 +1,11 @@
+/**
+ * Copyright (c) 2023-2025 EMBL - European Bioinformatics Institute, licensed under Apache 2.0, see LICENSE file for more info.
+ *
+ * @author Adam Midlik <midlik@gmail.com>
+ */
+
 import path from 'path';
+import { ImageFormat } from './args';
 
 
 /** Return path for list of created filenames (without suffixes), like `out/1tqn_filelist` */
@@ -33,8 +40,8 @@ export function imageStateMolj(outDir: string | undefined, filenameStem: string)
 }
 
 /** Return path for image, like `out/1tqn_deposited_chain_front_image-800x800.png` */
-export function imagePng(outDir: string | undefined, filenameStem: string, size: { width: number, height: number }) {
-    return join(outDir, `${filenameStem}_image-${size.width}x${size.height}.png`);
+export function image(outDir: string | undefined, filenameStem: string, format: ImageFormat, size: { width: number, height: number }) {
+    return join(outDir, `${filenameStem}_image-${size.width}x${size.height}.${format}`);
 }
 
 

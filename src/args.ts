@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023 EMBL - European Bioinformatics Institute, licensed under Apache 2.0, see LICENSE file for more info.
+ * Copyright (c) 2023-2025 EMBL - European Bioinformatics Institute, licensed under Apache 2.0, see LICENSE file for more info.
  *
  * @author Adam Midlik <midlik@gmail.com>
  */
@@ -23,6 +23,11 @@ export const ImageTypesForModes = {
     'alphafold': ['plddt'],
 } satisfies { [mode in Mode]: ImageType[] };
 
+/** Image file formats that can be saved */
+export const ImageFormats = ['png', 'webp'] as const;
+/** Image file formats that can be saved */
+export type ImageFormat = typeof ImageFormats[number];
+
 
 /** Command line argument values for `main` */
 export interface Args {
@@ -42,6 +47,8 @@ export interface Args {
     api_retry: boolean,
     /** Do not use PDBe API at all (some images will be skipped, some entity names will be different in captions, etc.) */
     no_api: boolean,
+    /** One or more output image formats. */
+    format: ImageFormat[],
     /** One or more output image sizes. Only the largest size is rendered, others are obtained by resizing unless `render_each_size` is true. Use without any value to disable image rendering (only create captions and MOLJ files). */
     size: { width: number, height: number }[],
     /** Render image for each size listed in `size`, instead of rendering only the first size and resampling to the other sizes */
@@ -82,6 +89,7 @@ export const Defaults = {
     api_url: 'https://www.ebi.ac.uk/pdbe/api',
     api_retry: false,
     no_api: false,
+    format: ['png'],
     size: [{ width: 800, height: 800 }],
     render_each_size: false,
     type: ['all'],
