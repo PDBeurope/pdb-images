@@ -9,9 +9,9 @@ import fs from 'fs';
 import path from 'path';
 
 import { Args } from '../args';
+import { loadImage } from '../image/io';
 import { VERSION, main, parseArguments } from '../main';
 import { LONG_TEST_TIMEOUT, isBorderBlank, isImageBlank, versionFromPackageJson } from './_utils';
-import { loadImage } from '../image/resize';
 
 
 const EXPECTED_FILENAMES_1AD5 = [

@@ -14,7 +14,7 @@ import { ImageSpec } from './captions/captions';
 import { MoljStateSaver } from './helpers/helpers';
 import { getLogger } from './helpers/logging';
 import { addAxisIndicators } from './image/draw';
-import { saveImage } from './image/resize';
+import { saveImage } from './image/io';
 import * as Paths from './paths';
 
 

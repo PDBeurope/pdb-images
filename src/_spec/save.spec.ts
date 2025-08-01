@@ -7,7 +7,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { loadImage } from '../image/resize';
+import { loadImage } from '../image/io';
 import { makeSaveFunction } from '../save';
 import { getTestingHeadlessPlugin, isBorderBlank, isImageBlank } from './_utils';
 

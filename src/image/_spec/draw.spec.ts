@@ -7,7 +7,7 @@
 import { RawImageData } from 'molstar/lib/commonjs/mol-plugin/util/headless-screenshot';
 
 import { addAxisIndicators } from '../draw';
-import { loadImage } from '../resize';
+import { loadImage } from '../io';
 
 
 function getTestingImageWhite() {
