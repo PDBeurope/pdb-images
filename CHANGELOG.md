@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Option `--format` to save in PNG, WEBP, JPEG, GIF, TIFF, AVIF
-- If sizes have different aspect ration, contain instead of stretch
+- If sizes have different aspect ratio, contain instead of stretch
 
 ## [2.6.0] - 2025-06-12
 

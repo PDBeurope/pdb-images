@@ -106,18 +106,18 @@ export function toKebabCase(text: string): string {
 }
 
 /** Fetch data from `url` (http://, https://, file://) and return as bytes */
-export async function fetchUrl(url: string): Promise<ArrayBuffer> {
+export async function fetchUrl(url: string): Promise<Uint8Array> {
     if (url.startsWith('file://')) {
         return fs.readFileSync(url.substring('file://'.length));
     } else {
         const response = await fetch(url);
         if (!response.ok) throw new Error(`Fetch failed with code ${response.status} (${url})`);
-        return await response.arrayBuffer();
+        return await response.bytes();
     }
 }
 
 /** Uncompress data using compressed by gzip */
-export function gunzipData(data: ArrayBuffer): Promise<Buffer> {
+export function gunzipData(data: Uint8Array): Promise<Buffer> {
     return new Promise((resolve, reject) => {
         return zlib.gunzip(data, (err, result) => {
             if (err) reject(err);
