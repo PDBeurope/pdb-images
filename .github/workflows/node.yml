@@ -4,6 +4,11 @@ on:
   push:
   pull_request:
 
+# Permission setup needed for NPM publish:
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -37,12 +42,11 @@ jobs:
     needs: [build, valid_tag]
     runs-on: ubuntu-latest
     steps:
-        - uses: actions/checkout@v4
-        - uses: actions/setup-node@v4
+        - uses: actions/checkout@v6
+        - uses: actions/setup-node@v6
           with:
-            node-version: 18
+            node-version: 24
             registry-url: https://registry.npmjs.org/
-        - run: npm ci
         - name: Download Build Artifact
           uses: actions/download-artifact@v4
           with:
@@ -50,8 +54,6 @@ jobs:
             path: lib/
         - name: NPM Publish
           run: npm publish
-          env:
-            NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   docker_build_and_push_to_dockerhub:
     needs: [build, valid_tag]
