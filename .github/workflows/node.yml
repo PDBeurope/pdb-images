@@ -13,10 +13,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
+    - uses: actions/checkout@v6
+    - uses: actions/setup-node@v6
       with:
-        node-version: 18
+        node-version: 24
     - run: npm ci
     - run: sudo apt-get install xvfb
     - name: Lint
@@ -26,7 +26,7 @@ jobs:
     - name: Build
       run: npm run build
     - name: Upload Build Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: build-artifact
         path: lib/
@@ -48,7 +48,7 @@ jobs:
             node-version: 24
             registry-url: https://registry.npmjs.org/
         - name: Download Build Artifact
-          uses: actions/download-artifact@v4
+          uses: actions/download-artifact@v8
           with:
             name: build-artifact
             path: lib/
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
@@ -84,7 +84,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Login to GitLab Container Registry
         run: echo ${{ secrets.REGISTRY_PASSWORD }} | docker login -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin ${{ vars.REGISTRY_URL }}
